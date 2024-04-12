@@ -7,7 +7,7 @@ def make_undersampling(
     seeb_path: str = None,
     str_dfrm: DataFrame = None,
     seebeck_dfrm: DataFrame = None,
-):
+) -> DataFrame:
     """
     Reduces the number of structures per Seebeck value to 50, pre-rounds Seebeck value to a whole number.
     """
