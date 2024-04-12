@@ -1,5 +1,5 @@
 """
-Get median value for Seebeck and structures.
+Main file that starts collecting data for training models. Get median value for Seebeck and structures.
 1 phase_id <-> 1 Seebeck <-> many structures.
 """
 import pandas as pd
@@ -67,7 +67,9 @@ def get_structures_and_seebeck(
     return result_dfrm
 
 
-def convert_structure_to_vectors(handler: DataHandler, dfrm: DataFrame, path_to_save: str = None) -> DataFrame:
+def convert_structure_to_vectors(
+    handler: DataHandler, dfrm: DataFrame, path_to_save: str = None
+) -> DataFrame:
     """
     Converts to a structure in a format of 2 vectors. In the first vector, periodic number of atom is stored,
     in the second, the distance from the origin of coordinates.
@@ -95,10 +97,13 @@ if __name__ == "__main__":
         handler,
         is_uniq_structure_for_phase,
         path_to_save=raw_path,
-        raw_seebeck_path=raw_path+"seebeck.json", raw_str_path=raw_path+"structures.json"
+        raw_seebeck_path=raw_path + "seebeck.json",
+        raw_str_path=raw_path + "structures.json",
     )
     dfrm_str, dfrm_seeb = convert_structure_to_vectors(
-        handler, str_seeb_dfrm, path_to_save=processed_path,
+        handler,
+        str_seeb_dfrm,
+        path_to_save=processed_path,
     )
     df_structs, df_seebeck = make_undersampling(
         str_dfrm=dfrm_str, seebeck_dfrm=dfrm_seeb
