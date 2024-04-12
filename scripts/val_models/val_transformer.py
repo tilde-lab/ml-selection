@@ -28,5 +28,3 @@ model.load_state_dict(
 )
 
 model.val(model, test_data)
-
-

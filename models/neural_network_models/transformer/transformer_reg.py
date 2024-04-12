@@ -18,6 +18,7 @@ from tqdm import tqdm
 r2 = R2Score()
 mean_absolute_error = MeanAbsoluteError()
 
+
 class TransformerModel(nn.Module):
     """A transformer model. Contains an encoder (without decoder)"""
 
@@ -67,8 +68,9 @@ class TransformerModel(nn.Module):
         x = self.activ(x)
         x = self.layer3(x)
         return x
+
     def fit(self, model, optimizer, train_data: Subset) -> None:
-        """"""
+        """Train model"""
         model.train()
         for epoch in tqdm(range(5)):
             mean_loss = 0
@@ -90,9 +92,12 @@ class TransformerModel(nn.Module):
             if epoch % 5 == 0:
                 torch.save(
                     model.state_dict(),
-                    r"/root/projects/ml-selection/models/neural_network_models/transformer/weights/01.pth"
+                    r"/root/projects/ml-selection/models/neural_network_models/transformer/weights/01.pth",
                 )
+
     def val(self, model, test_data: Subset) -> None:
+        """Test model"""
+
         model.eval()
 
         preds = []
@@ -115,10 +120,11 @@ class TransformerModel(nn.Module):
 
         torch.save(
             model.state_dict(),
-            r"/root/projects/ml-selection/models/neural_network_models/transformer/weights/01.pth"
+            r"/root/projects/ml-selection/models/neural_network_models/transformer/weights/01.pth",
         )
 
         print("R2: ", r2_res, " MAE: ", mae_result)
+
 
 if __name__ == "__main__":
     total = pd.read_csv(
@@ -141,4 +147,3 @@ if __name__ == "__main__":
 
     model.fit(model, optimizer, train_data)
     model.val(model, test_data)
-
