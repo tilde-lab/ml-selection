@@ -1,0 +1,8 @@
+ase
+metis-backend
+mpds_client
+numpy
+pandas
+smogn
+turicreate
+torch
