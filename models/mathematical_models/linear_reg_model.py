@@ -8,7 +8,7 @@ from sklearn import linear_model
 from torcheval.metrics import R2Score
 from torchmetrics import MeanAbsoluteError
 
-mean_absolute_error = MeanAbsoluteError()
+mae = MeanAbsoluteError()
 r2 = R2Score()
 
 # Crystal in vectors format
@@ -47,7 +47,7 @@ pred = regr.predict(test_x)
 
 r2.update(torch.tensor(pred), torch.tensor(test_y))
 r2_res = r2.compute()
-mean_absolute_error.update(torch.tensor(pred), torch.tensor(test_y))
-mae = mean_absolute_error.compute()
+mae.update(torch.tensor(pred), torch.tensor(test_y))
+mae = mae.compute()
 
 print(f"MAE: {mae}, R2: {r2_res}, min pred: {pred.min()}, max pred {pred.max()}")

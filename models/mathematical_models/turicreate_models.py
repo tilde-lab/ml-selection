@@ -9,7 +9,7 @@ from torcheval.metrics import R2Score
 from torchmetrics import MeanAbsoluteError
 from turicreate import SFrame
 
-mean_absolute_error = MeanAbsoluteError()
+mae = MeanAbsoluteError()
 metric = R2Score()
 
 # Crystal in vectors format
@@ -40,10 +40,10 @@ metric.update(
     torch.tensor(predictions_linear), torch.tensor(test_r["Seebeck coefficient"])
 )
 r2_res_r = metric.compute()
-mean_absolute_error.update(
+mae.update(
     torch.tensor(predictions_linear), torch.tensor(test_r["Seebeck coefficient"])
 )
-mae_result_r = mean_absolute_error.compute()
+mae_result_r = mae.compute()
 
 # DECISION TREE MODEL
 train_d, test_d = SFrame(train), SFrame(test)
@@ -57,10 +57,10 @@ metric.update(
     torch.tensor(predictions_decision), torch.tensor(test_d["Seebeck coefficient"])
 )
 r2_res_d = metric.compute()
-mean_absolute_error.update(
+mae.update(
     torch.tensor(predictions_decision), torch.tensor(test_d["Seebeck coefficient"])
 )
-mae_result_d = mean_absolute_error.compute()
+mae_result_d = mae.compute()
 
 # BOOSTED TREES MODEL
 train_b, test_b = SFrame(train), SFrame(test)
@@ -74,10 +74,10 @@ metric.update(
     torch.tensor(predictions_boosted), torch.tensor(test_b["Seebeck coefficient"])
 )
 r2_res_b = metric.compute()
-mean_absolute_error.update(
+mae.update(
     torch.tensor(predictions_boosted), torch.tensor(test_b["Seebeck coefficient"])
 )
-mae_result_b = mean_absolute_error.compute()
+mae_result_b = mae.compute()
 
 # RANDOM FOREST MODEL
 train_r, test_r = SFrame(train), SFrame(test)
@@ -91,10 +91,10 @@ metric.update(
     torch.tensor(predictions_random), torch.tensor(test_r["Seebeck coefficient"])
 )
 r2_res_rf = metric.compute()
-mean_absolute_error.update(
+mae.update(
     torch.tensor(predictions_random), torch.tensor(test_r["Seebeck coefficient"])
 )
-mae_result_rf = mean_absolute_error.compute()
+mae_result_rf = mae.compute()
 
 print(
     f"LINEAR REGRESSION MODEL:\nR2: {r2_res_r}, MAE: {mae_result_r}, min pred: {predictions_linear.min()}, max pred: {predictions_linear.max()}\n\n"
