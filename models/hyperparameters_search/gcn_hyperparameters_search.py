@@ -5,14 +5,11 @@ Selection of hyperparameters for GCN.
 import numpy as np
 import torch
 from torch_geometric.loader import DataLoader
-from models.neural_network_models.GCN.gcn_regression_model import GCN
 from torcheval.metrics import R2Score
 from torchmetrics import MeanAbsoluteError
 
 from datasets.vectors_graph_dataset import CrystalGraphVectorsDataset
-
-r2 = R2Score()
-mae = MeanAbsoluteError()
+from models.neural_network_models.GCN.gcn_regression_model import GCN
 
 
 def create_params(seed: int = 1) -> tuple:

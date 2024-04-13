@@ -1,15 +1,14 @@
-from mpds_client import MPDSDataTypes
-from pandas import DataFrame
 import numpy as np
 import pandas as pd
 from ase import Atoms
 from ase.data import chemical_symbols
+from pandas import DataFrame
 
 from data.mendeleev_table import periodic_numbers
 from data_massage.database_handlers.MPDS.request_to_mpds import RequestMPDS
-
 # change path if another
-from metis_backend.metis_backend.structures.struct_utils import order_disordered
+from metis_backend.metis_backend.structures.struct_utils import \
+    order_disordered
 
 
 class DataHandler:
@@ -18,7 +17,7 @@ class DataHandler:
     Implemented support for processing data just from MPDS.
     """
 
-    def __init__(self, is_MPDS: bool, api_key: str, dtype: int = 1):
+    def __init__(self, is_MPDS: bool, api_key: str, dtype: int = 1) -> None:
         """
         Initializes the client to access database.
         Parameters

@@ -1,4 +1,5 @@
 import pickle
+
 from pandas import DataFrame
 from sklearn.preprocessing import MinMaxScaler
 

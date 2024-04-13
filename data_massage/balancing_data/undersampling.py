@@ -3,13 +3,31 @@ from pandas import DataFrame
 
 
 def make_undersampling(
+    structure_limit: int = 50,
     str_path: str = None,
     seeb_path: str = None,
     str_dfrm: DataFrame = None,
     seebeck_dfrm: DataFrame = None,
 ) -> DataFrame:
     """
-    Reduces the number of structures per Seebeck value to 50, pre-rounds Seebeck value to a whole number.
+    Reduces the number of structures per Seebeck value to 50 (or another),
+    pre-rounds Seebeck value to a whole number
+
+    Parameters
+    ----------
+    str_path : str, optional
+        Path to structures
+    seeb_path : str, optional
+        Path to Seebeck coefficient
+    str_dfrm : DataFrame
+        DataFrame with next columns: 'atom', 'distance'
+    seebeck_dfrm : DataFrame
+        DataFrame with Seebeck coefficient
+
+    Returns
+    -------
+    (df_str, df_seeb)
+       A tuple of 2 DataFrames, first consist of atoms and distance, second - Seebeck value
     """
     if str_path and seeb_path:
         str_dfrm = pd.read_csv(str_path)
@@ -33,7 +51,7 @@ def make_undersampling(
             new_list_seeb.append(float(round(row[0])))
             new_list_str.append([row[1], row[2]])
         else:
-            if cnt >= 50:
+            if cnt >= structure_limit:
                 cnt += 1
                 continue
             else:

@@ -2,11 +2,10 @@
 Test GCN on CrystalGraphVectorsDataset
 """
 import torch
-from models.neural_network_models.GCN.gcn_regression_model import GCN
 from torch_geometric.loader import DataLoader
 
-
 from datasets.vectors_graph_dataset import CrystalGraphVectorsDataset
+from models.neural_network_models.GCN.gcn_regression_model import GCN
 
 dataset = CrystalGraphVectorsDataset()
 

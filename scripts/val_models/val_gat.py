@@ -2,11 +2,10 @@
 Test GAT on CrystalGraphVectorsDataset
 """
 import torch
-from models.neural_network_models.GAT.gat_regression_model import GAT
 from torch_geometric.loader import DataLoader
 
-
 from datasets.vectors_graph_dataset import CrystalGraphVectorsDataset
+from models.neural_network_models.GAT.gat_regression_model import GAT
 
 dataset = CrystalGraphVectorsDataset()
 

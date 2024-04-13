@@ -3,10 +3,10 @@ Generation and selection of hyperparameters. Goal: increasing R2 metric.
 """
 import optuna
 import torch
-from models.neural_network_models.GAT.gat_regression_model import GAT
 from torch_geometric.loader import DataLoader
 
 from datasets.vectors_graph_dataset import CrystalGraphVectorsDataset
+from models.neural_network_models.GAT.gat_regression_model import GAT
 
 
 def objective(trial) -> int:
