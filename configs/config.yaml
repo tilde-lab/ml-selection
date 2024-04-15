@@ -1,0 +1,3 @@
+api_key: KEY_FROM_MPDS
+structure_path: /root/projects/ml-selection/data/processed_data/rep_str.csv
+seebeck_path: /root/projects/ml-selection/data/processed_data/rep_seebeck.csv
