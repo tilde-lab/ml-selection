@@ -12,7 +12,7 @@ from data_massage.data_handler import DataHandler
 
 class TestDataHandler(unittest.TestCase):
     def setUp(self):
-        with open("/root/projects/ml-selection/config.yaml", "r") as yamlfile:
+        with open("/configs/config.yaml", "r") as yamlfile:
             self.api_key = yaml.load(yamlfile, Loader=yaml.FullLoader)["api_key"]
 
         self.raw_path = "/root/projects/ml-selection/data/raw_data/"

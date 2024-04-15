@@ -1,9 +1,10 @@
 import statistics
 
 import pandas as pd
+from pandas import DataFrame
 
 
-def seebeck_median_value(data: pd.DataFrame, phases: list) -> pd.DataFrame:
+def seebeck_median_value(data: pd.DataFrame, phases: list) -> DataFrame:
     """
     Calculates the median value of Seebeck coefficient from samples with the same 'phase_id'.
     Parameters

@@ -12,7 +12,7 @@ from data_massage.balancing_data.undersampling import make_undersampling
 
 class TestBalancing(unittest.TestCase):
     def setUp(self):
-        with open("/root/projects/ml-selection/config.yaml", "r") as yamlfile:
+        with open("/configs/config.yaml", "r") as yamlfile:
             yaml_file = yaml.load(yamlfile, Loader=yaml.FullLoader)
             self.str_path = yaml_file["structure_path"]
             self.seebeck_path = yaml_file["seebeck_path"]
@@ -51,3 +51,7 @@ class TestBalancing(unittest.TestCase):
             len(df_seeb),
             "number of samples in undersampling more then number in raw data",
         )
+
+
+if __name__ == "__main__":
+    unittest.main()

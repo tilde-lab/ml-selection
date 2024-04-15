@@ -5,8 +5,7 @@ import pandas as pd
 import torch
 import torch.utils.data as data
 
-from models.neural_network_models.transformer.transformer_reg import \
-    TransformerModel
+from models.neural_network_models.transformer.transformer_reg import TransformerModel
 
 total = pd.read_csv(
     r"/root/projects/ml-selection/data/processed_data/under_str.csv",

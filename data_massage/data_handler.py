@@ -6,9 +6,9 @@ from pandas import DataFrame
 
 from data.mendeleev_table import periodic_numbers
 from data_massage.database_handlers.MPDS.request_to_mpds import RequestMPDS
+
 # change path if another
-from metis_backend.metis_backend.structures.struct_utils import \
-    order_disordered
+from metis_backend.metis_backend.structures.struct_utils import order_disordered
 
 
 class DataHandler:
@@ -38,7 +38,7 @@ class DataHandler:
         self.api_key = api_key
 
     def just_seebeck(
-        self, max_value: int, min_value: int, is_uniq_phase_id: bool
+        self, max_value: int, min_value: int, is_uniq_phase_id: bool = False
     ) -> DataFrame:
         """
         Get Seebeck coefficient from db.
@@ -207,32 +207,6 @@ class DataHandler:
             ],
         )
         return data
-
-    def data_structure_refactoring(self, data: DataFrame) -> DataFrame:
-        """
-        Refactor in format: 'phase_id', 'Formula', 'Seebeck coefficient',
-        'cell_abc', 'sg_n', 'basis_noneq', 'els_noneq'
-        """
-        new_df = pd.DataFrame(
-            columns=[
-                "phase_id",
-                "Formula",
-                "Seebeck coefficient",
-                "cell_abc",
-                "sg_n",
-                "basis_noneq",
-                "els_noneq",
-            ]
-        )
-        new_df["phase_id"] = data["phase_id"]
-        new_df["Formula"] = data["Formula"]
-        new_df["Seebeck coefficient"] = data["Seebeck coefficient"]
-        new_df["cell_abc"] = data["cell_abc"]
-        new_df["sg_n"] = data["sg_n"]
-        new_df["basis_noneq"] = data["basis_noneq"]
-        new_df["els_noneq"] = data["els_noneq"]
-
-        return new_df
 
     def combine_data(self, data_f: DataFrame, data_s: DataFrame) -> DataFrame:
         """Simply connects 2 dataframes"""

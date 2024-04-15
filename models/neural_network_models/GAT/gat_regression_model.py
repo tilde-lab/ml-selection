@@ -63,7 +63,12 @@ class GAT(torch.nn.Module):
         return x
 
     def fit(
-            self, model, ep: int, train_dataloader: DataLoader, optimizer: torch.optim, device: torch.device
+        self,
+        model,
+        ep: int,
+        train_dataloader: DataLoader,
+        optimizer: torch.optim,
+        device: torch.device,
     ) -> None:
         """
         Train model.
@@ -101,7 +106,9 @@ class GAT(torch.nn.Module):
                 r"/root/projects/ml-selection/models/neural_network_models/GAT/weights/01.pth",
             )
 
-    def val(self, model, test_dataloader: DataLoader, device: torch.device) -> torch.Tensor:
+    def val(
+        self, model, test_dataloader: DataLoader, device: torch.device
+    ) -> torch.Tensor:
         """Test model"""
 
         model.eval()
@@ -150,7 +157,13 @@ if __name__ == "__main__":
     model = GAT(in_ch=2).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.005919, weight_decay=5e-4)
 
-    model.fit(model, 5, train_dataloader, optimizer, device, )
+    model.fit(
+        model,
+        5,
+        train_dataloader,
+        optimizer,
+        device,
+    )
     model.val(model, test_dataloader, device)
 
     torch.save(
