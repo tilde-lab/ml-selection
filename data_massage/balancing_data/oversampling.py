@@ -37,7 +37,7 @@ def make_oversampling(
     else:
         X, y = str_dfrm, seebeck_dfrm
 
-    if seeb_path:
+    if seeb_path != None:
         atoms = [eval(i) for i in X["atom"].values.tolist()]
         distance = [eval(i) for i in X["distance"].values.tolist()]
     else:
@@ -78,3 +78,38 @@ def make_oversampling(
         )
     return (df_str, df_seeb)
 
+
+if __name__ == "__main__":
+    total = pd.read_csv(
+        "/Users/alina/PycharmProjects/ml-selection/data/processed_data/cut_str.csv",
+    )
+    seebeck = pd.read_csv(
+        "/Users/alina/PycharmProjects/ml-selection/data/processed_data/cut_seeb.csv",
+    )
+    total = pd.concat([seebeck["Seebeck coefficient"], total], axis=1)
+    features = ["atom", "distance"]
+
+    train_size = int(0.9 * len(total))
+    test_size = len(total) - train_size
+
+    train_str = total.iloc[:train_size]
+    test_str = total.iloc[train_size:]
+
+    train_seebeck = seebeck.iloc[:train_size]
+    test_seebeck = seebeck.iloc[train_size:]
+
+    test_str.to_csv(
+        "/Users/alina/PycharmProjects/ml-selection/data/processed_data/test_over_str.csv",
+        index=False,
+    )
+
+    test_seebeck.to_csv(
+        "/Users/alina/PycharmProjects/ml-selection/data/processed_data/test_over_seeb.csv",
+        index=False,
+    )
+
+    make_oversampling(
+        str_dfrm=train_str,
+        seebeck_dfrm=train_seebeck,
+        path_to_save="/Users/alina/PycharmProjects/ml-selection/data/processed_data/",
+    )
