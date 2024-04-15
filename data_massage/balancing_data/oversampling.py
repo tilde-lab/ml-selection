@@ -37,8 +37,13 @@ def make_oversampling(
     else:
         X, y = str_dfrm, seebeck_dfrm
 
-    atoms = [eval(i) for i in X["atom"].values.tolist()]
-    distance = [eval(i) for i in X["distance"].values.tolist()]
+    if seeb_path:
+        atoms = [eval(i) for i in X["atom"].values.tolist()]
+        distance = [eval(i) for i in X["distance"].values.tolist()]
+    else:
+        atoms = [i for i in X["atom"].values.tolist()]
+        distance = [i for i in X["distance"].values.tolist()]
+
     total = []
 
     for i in range(len(atoms)):
@@ -72,3 +77,4 @@ def make_oversampling(
             index=False,
         )
     return (df_str, df_seeb)
+

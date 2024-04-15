@@ -7,6 +7,7 @@ import yaml
 from pandas import DataFrame
 
 from data_massage.balancing_data.undersampling import make_undersampling
+from data_massage.balancing_data.oversampling import make_oversampling
 from data_massage.calculate_median_value import seebeck_median_value
 from data_massage.data_handler import DataHandler
 
@@ -87,12 +88,12 @@ def convert_structure_to_vectors(
 
 
 if __name__ == "__main__":
-    with open("/root/projects/ml-selection/config.yaml", "r") as yamlfile:
+    with open("/Users/alina/PycharmProjects/ml-selection/configs/config.yaml", "r") as yamlfile:
         api_key = yaml.load(yamlfile, Loader=yaml.FullLoader)['api_key']
         print("Key is read successful")
 
-    raw_path = "/root/projects/ml-selection/data/raw_data/"
-    processed_path = "/root/projects/ml-selection/data/processed_data/"
+    raw_path = "/Users/alina/PycharmProjects/ml-selection/data/raw_data/"
+    processed_path = "/Users/alina/PycharmProjects/ml-selection/data/processed_data/"
 
     is_uniq_structure_for_phase = False
     handler = DataHandler(True, api_key)
@@ -100,25 +101,38 @@ if __name__ == "__main__":
     str_seeb_dfrm = get_structures_and_seebeck(
         handler,
         is_uniq_structure_for_phase,
-        path_to_save=raw_path,
-        raw_seebeck_path=raw_path + "seebeck.json",
-        raw_str_path=raw_path + "structures.json",
+        path_to_save=raw_path
     )
     dfrm_str, dfrm_seeb = convert_structure_to_vectors(
         handler,
         str_seeb_dfrm,
         path_to_save=processed_path,
     )
+
+    dfrm_str.to_csv(
+        "/Users/alina/PycharmProjects/ml-selection/data/processed_data/cut_str.csv",
+        index=False,
+    )
+    dfrm_seeb.to_csv(
+        "/Users/alina/PycharmProjects/ml-selection/data/processed_data/cut_seeb.csv",
+        index=False,
+    )
+
     df_structs, df_seebeck = make_undersampling(
         str_dfrm=dfrm_str, seebeck_dfrm=dfrm_seeb
     )
-
     df_structs.to_csv(
-        "/root/projects/ml-selection/data/processed_data/under_str.csv",
+        "/Users/alina/PycharmProjects/ml-selection/data/processed_data/under_str.csv",
         index=False,
     )
 
     df_seebeck.to_csv(
-        "/root/projects/ml-selection/data/processed_data/under_seeb.csv",
+        "/Users/alina/PycharmProjects/ml-selection/data/processed_data/under_seeb.csv",
         index=False,
     )
+    df_structs, df_seebeck = make_oversampling(
+        str_dfrm=dfrm_str, seebeck_dfrm=dfrm_seeb, path_to_save=processed_path
+    )
+
+
+
