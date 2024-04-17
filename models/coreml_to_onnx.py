@@ -17,8 +17,7 @@ def core_onnx(core_model: str, path_to_save: str) -> None:
     path_to_save : str
         Path to save ONNX model
     """
-    c_model = str(core_model)
-    coreml_model = coremltools.utils.load_spec(c_model)
+    coreml_model = coremltools.utils.load_spec(core_model)
 
     onnx_model = onnxmltools.convert_coreml(coreml_model, "Linear regression model")
     onnxmltools.utils.save_model(onnx_model, path_to_save)
