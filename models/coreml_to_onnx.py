@@ -6,7 +6,7 @@ import coremltools
 import onnxmltools
 
 
-def core_onnx(core_model, path_to_save):
+def core_onnx(core_model: str, path_to_save: str):
     """
     Converts CoreML model into ONNX format
 
@@ -22,11 +22,10 @@ def core_onnx(core_model, path_to_save):
 
     onnx_model = onnxmltools.convert_coreml(coreml_model, "Linear regression model")
     onnxmltools.utils.save_model(onnx_model, path_to_save)
-    return onnx_model
 
 
 if __name__ == "__main__":
-    model = core_onnx(
+    core_onnx(
         "/root/projects/ml-selection/models/mathematical_models/linear_regression_model.mlmodel",
         "/root/projects/ml-selection/models/mathematical_models/linear_regression_model.onnx",
     )
