@@ -2,10 +2,11 @@
 Run Linear Regression model in ONNX format
 """
 import pandas as pd
-from models.run_onnx import run_model_onnx
 import torch
 from torcheval.metrics import R2Score
 from torchmetrics import MeanAbsoluteError
+
+from models.run_onnx import run_model_onnx
 
 mae = MeanAbsoluteError()
 r2 = R2Score()

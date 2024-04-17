@@ -6,7 +6,7 @@ from pandas import DataFrame
 
 class RequestMPDS:
     """
-    Makes requests to MPDS database.
+    Make requests to MPDS database
     """
 
     def __init__(self, dtype: int, api_key: str = None) -> None:
@@ -19,8 +19,20 @@ class RequestMPDS:
         self, is_seebeck: bool = False, is_structure: bool = False, phases: list = None
     ) -> DataFrame:
         """
-        Requests data from the MPDS according to the input parms.
-        Return DataFrame or dict.
+        Requests data from the MPDS according to the input parameters
+
+        Parameters
+        ----------
+        is_seebeck : bool
+            True, if you need to request a Seebeck coefficient
+        is_structure : bool
+            True, if you need to request a structure
+        phases : list, optional
+            Phases of structure, if you need request structures for specific phases
+
+        Returns
+        -------
+            Answer from MPDS
         """
         if is_seebeck:
             dfrm = self.client.get_dataframe({"props": "Seebeck coefficient"})

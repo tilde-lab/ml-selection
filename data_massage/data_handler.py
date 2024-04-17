@@ -6,20 +6,21 @@ from pandas import DataFrame
 
 from data.mendeleev_table import periodic_numbers
 from data_massage.database_handlers.MPDS.request_to_mpds import RequestMPDS
-
 # change path if another
-from metis_backend.metis_backend.structures.struct_utils import order_disordered
+from metis_backend.metis_backend.structures.struct_utils import \
+    order_disordered
 
 
 class DataHandler:
     """
     Receiving and processing data.
-    Implemented support for processing data just from MPDS.
+    Implemented support for processing data just from MPDS
     """
 
     def __init__(self, is_MPDS: bool, api_key: str, dtype: int = 1) -> None:
         """
-        Initializes the client to access database.
+        Initializes the client to access database
+
         Parameters
         ----------
         is_MPDS : bool
@@ -41,7 +42,8 @@ class DataHandler:
         self, max_value: int, min_value: int, is_uniq_phase_id: bool = False
     ) -> DataFrame:
         """
-        Get Seebeck coefficient from db.
+        Get Seebeck coefficient from db
+
         Parameters
         ----------
         max_value : int
@@ -51,6 +53,11 @@ class DataHandler:
         is_uniq_phase_id : bool
             Affects the filtering out of data with duplicate 'phase_id',
             if parm is True data will contain only a unique 'phase_id'
+
+        Returns
+        -------
+        res_dfrm : DataFrame
+            Seebeck coefficients in DataFrame format
         """
         res_dfrm = pd.DataFrame(columns=["Phase", "Formula", "Seebeck coefficient"])
 
@@ -81,7 +88,7 @@ class DataHandler:
     ) -> DataFrame:
         """
         Make order in disordered structures.
-        Return pandas Dataframe with ordered structures.
+        Return pandas Dataframe with ordered structures
         """
         # get disordered structures from db, save random structure for specific 'phase_id'
         all_data_df = self.cleaning_trash_data(
@@ -172,7 +179,7 @@ class DataHandler:
 
     def just_uniq_phase_id(self, df: DataFrame) -> DataFrame:
         """
-        Save one example for a specific 'phase_id', deletes subsequent ones.
+        Save one example for a specific 'phase_id', deletes subsequent ones
         """
         try:
             mask = ~df["Phase"].duplicated()
@@ -185,7 +192,7 @@ class DataHandler:
         self, df: DataFrame, idx_check: int = 5, type_of_trash=[]
     ) -> DataFrame:
         """
-        Delete data with wrong information or empty data.
+        Delete data with wrong information or empty data
         """
         data = df.values.tolist()
         data_res = []
@@ -216,14 +223,15 @@ class DataHandler:
     def change_disord_on_ord(self, data_disord: list, ordered: list) -> DataFrame:
         """
         Create DataFrame with updated ordered values for disordered data.
-        Other structures copy to new list without changes.
+        Other structures copy to new list without changes
+
         Parameters
         ----------
         data_disord : list
             Made of 'phase_id', 'occs_noneq', 'cell_abc',
             'sg_n', 'basis_noneq', 'els_noneq'
         ordered : list
-            Made of next columns 'phase_id', 'cell_abc',
+            Made of next columns: 'phase_id', 'cell_abc',
             'sg_n', 'basis_noneq', 'els_noneq'
         """
         update_data = []
@@ -312,13 +320,19 @@ class DataHandler:
         self, file_path: str = None, dfrm: DataFrame = None
     ) -> list:
         """
-        Reduce vectors representing structure to 100 elements.
+        Reduce vectors representing structure to 100 elements
+
         Parameters
         ----------
         file_path : str, optional
             Path to file which containing data
         dfrm : DataFrame, optional
             DataFrame, which contain processed Seebeck and structures
+
+        Returns
+        -------
+        dfrm_str, dfrm_seeb
+           2 DataFrames, first consist of atoms and distance, second - Seebeck value
         """
         if file_path:
             dfrm = pd.read_csv(file_path)

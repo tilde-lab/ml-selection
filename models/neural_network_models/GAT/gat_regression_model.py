@@ -32,7 +32,8 @@ class GAT(torch.nn.Module):
 
     def forward(self, data) -> torch.Tensor:
         """
-        Forward pass.
+        Forward pass
+
         Parameters
         ----------
         data : DataBatch
@@ -71,7 +72,8 @@ class GAT(torch.nn.Module):
         device: torch.device,
     ) -> None:
         """
-        Train model.
+        Train model
+
         Parameters
         ----------
         model : GAT

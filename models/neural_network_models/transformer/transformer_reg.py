@@ -47,7 +47,8 @@ class TransformerModel(nn.Module):
         Forward pass.
         'agg_token' is concatenated to every matrix of crystal. Feeding into the transformer
         occurs separately for each crystal. Before transfer to fully connected layer, token embeddings
-        are extracted.
+        are extracted
+
         Parameters
         ----------
         data : list

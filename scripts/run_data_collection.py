@@ -6,8 +6,8 @@ import pandas as pd
 import yaml
 from pandas import DataFrame
 
-from data_massage.balancing_data.undersampling import make_undersampling
 from data_massage.balancing_data.oversampling import make_oversampling
+from data_massage.balancing_data.undersampling import make_undersampling
 from data_massage.calculate_median_value import seebeck_median_value
 from data_massage.data_handler import DataHandler
 

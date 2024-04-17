@@ -32,7 +32,8 @@ class GCN(torch.nn.Module):
 
     def forward(self, data) -> torch.Tensor:
         """
-        Forward pass.
+        Forward pass
+
         Parameters
         ----------
         data : DataBatch
