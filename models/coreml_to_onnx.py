@@ -1,12 +1,12 @@
 """
-Converting coreml format to onnx format.
+Converting CoreMl format to ONNX format.
 Run just by Python=2.7. CoreML not supported in newest versions of Onnxmltools.
 """
 import coremltools
 import onnxmltools
 
 
-def core_onnx(core_model: str, path_to_save: str):
+def core_onnx(core_model: str, path_to_save: str) -> None:
     """
     Converts CoreML model into ONNX format
 
@@ -27,5 +27,5 @@ def core_onnx(core_model: str, path_to_save: str):
 if __name__ == "__main__":
     core_onnx(
         "/root/projects/ml-selection/models/mathematical_models/linear_regression_model.mlmodel",
-        "/root/projects/ml-selection/models/mathematical_models/linear_regression_model.onnx",
+        "/models/onnx/linear_regression_model.onnx",
     )
