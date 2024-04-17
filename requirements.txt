@@ -1,4 +1,6 @@
 ase
+coremltools == 4.0
+onnxmltools == 1.0.0.0
 metis-backend
 mpds_client
 numpy
