@@ -118,6 +118,7 @@ class RequestMPDS:
                     ).find_next("table")
                 except:
                     loss_data += 1
+                    time.sleep(2)
                     continue
 
                 rows = atomic_table.find_all("tr")[1:]
@@ -134,9 +135,11 @@ class RequestMPDS:
                         )
                     except:
                         continue
-                time.sleep(0.1)
+                time.sleep(2)
             else:
                 loss_data += 1
+                time.sleep(2)
+
         update_res = [i for i in atomic_data if len(i) == 3]
         res = pd.DataFrame(update_res, columns=["phase_id", "entry", "polyhedra"])
         print(f"Answers without table Atomic environments: {loss_data}")
