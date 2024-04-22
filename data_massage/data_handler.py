@@ -112,6 +112,7 @@ class DataHandler:
                 "sg_n",
                 "basis_noneq",
                 "els_noneq",
+                "entry"
             ],
         )
 
@@ -151,6 +152,7 @@ class DataHandler:
                         disordered_df["sg_n"].tolist()[i],
                         obj.get_positions().tolist(),
                         list(obj.symbols),
+                        disordered_df["entry"].tolist()[i]
                     ]
                 )
             else:
@@ -158,7 +160,7 @@ class DataHandler:
 
         new_ordered_df = pd.DataFrame(
             result_list,
-            columns=["phase_id", "cell_abc", "sg_n", "basis_noneq", "els_noneq"],
+            columns=["phase_id", "cell_abc", "sg_n", "basis_noneq", "els_noneq", 'entry'],
         )
 
         result_df = self.change_disord_on_ord(
@@ -211,6 +213,7 @@ class DataHandler:
                 "sg_n",
                 "basis_noneq",
                 "els_noneq",
+                "entry"
             ],
         )
         return data
@@ -229,17 +232,17 @@ class DataHandler:
         ----------
         data_disord : list
             Made of 'phase_id', 'occs_noneq', 'cell_abc',
-            'sg_n', 'basis_noneq', 'els_noneq'
+            'sg_n', 'basis_noneq', 'els_noneq', 'entry'
         ordered : list
             Made of next columns: 'phase_id', 'cell_abc',
-            'sg_n', 'basis_noneq', 'els_noneq'
+            'sg_n', 'basis_noneq', 'els_noneq', 'entry'
         """
         update_data = []
         loss_str = 0
 
         for dis_sample in data_disord:
             for i, ord_sample in enumerate(ordered):
-                if dis_sample[0] == ord_sample[0]:
+                if dis_sample[6] == ord_sample[5]:
                     update_data.append(ord_sample)
                     break
                 elif i == len(ordered) - 1:
@@ -252,6 +255,7 @@ class DataHandler:
                                 dis_sample[3],
                                 dis_sample[4],
                                 dis_sample[5],
+                                dis_sample[6]
                             ]
                         )
                     else:
@@ -263,7 +267,7 @@ class DataHandler:
 
         dfrm = pd.DataFrame(
             update_data,
-            columns=["phase_id", "cell_abc", "sg_n", "basis_noneq", "els_noneq"],
+            columns=["phase_id", "cell_abc", "sg_n", "basis_noneq", "els_noneq", "entry"],
         )
         return dfrm
 
