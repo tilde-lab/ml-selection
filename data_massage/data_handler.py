@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import yaml
 from ase import Atoms
 from ase.data import chemical_symbols
 from pandas import DataFrame
@@ -17,7 +18,7 @@ class DataHandler:
     Implemented support for processing data just from MPDS
     """
 
-    def __init__(self, is_MPDS: bool, api_key: str, dtype: int = 1) -> None:
+    def __init__(self, is_MPDS: bool, dtype: int = 1) -> None:
         """
         Initializes the client to access database
 
@@ -30,13 +31,17 @@ class DataHandler:
         dtype : int
             Indicates the type of data being requested
         """
+        with open("/root/projects/ml-selection/configs/config.yaml", "r") as yamlfile:
+            yaml_f = yaml.load(yamlfile, Loader=yaml.FullLoader)
+            self.api_key = yaml_f["api_key"]
+            self.polyheadra_path = yaml_f["raw_polyhedra_path"]
+
         if is_MPDS:
-            self.client_handler = RequestMPDS(dtype=dtype, api_key=api_key)
+            self.client_handler = RequestMPDS(dtype=dtype, api_key=self.api_key)
         else:
             self.client_handler = None
         self.available_dtypes = [1, 4]
         self.dtype = dtype
-        self.api_key = api_key
 
     def just_seebeck(
         self, max_value: int, min_value: int, is_uniq_phase_id: bool = False
@@ -112,7 +117,7 @@ class DataHandler:
                 "sg_n",
                 "basis_noneq",
                 "els_noneq",
-                "entry"
+                "entry",
             ],
         )
 
@@ -152,7 +157,7 @@ class DataHandler:
                         disordered_df["sg_n"].tolist()[i],
                         obj.get_positions().tolist(),
                         list(obj.symbols),
-                        disordered_df["entry"].tolist()[i]
+                        disordered_df["entry"].tolist()[i],
                     ]
                 )
             else:
@@ -160,7 +165,14 @@ class DataHandler:
 
         new_ordered_df = pd.DataFrame(
             result_list,
-            columns=["phase_id", "cell_abc", "sg_n", "basis_noneq", "els_noneq", 'entry'],
+            columns=[
+                "phase_id",
+                "cell_abc",
+                "sg_n",
+                "basis_noneq",
+                "els_noneq",
+                "entry",
+            ],
         )
 
         result_df = self.change_disord_on_ord(
@@ -213,7 +225,7 @@ class DataHandler:
                 "sg_n",
                 "basis_noneq",
                 "els_noneq",
-                "entry"
+                "entry",
             ],
         )
         return data
@@ -255,7 +267,7 @@ class DataHandler:
                                 dis_sample[3],
                                 dis_sample[4],
                                 dis_sample[5],
-                                dis_sample[6]
+                                dis_sample[6],
                             ]
                         )
                     else:
@@ -267,7 +279,14 @@ class DataHandler:
 
         dfrm = pd.DataFrame(
             update_data,
-            columns=["phase_id", "cell_abc", "sg_n", "basis_noneq", "els_noneq", "entry"],
+            columns=[
+                "phase_id",
+                "cell_abc",
+                "sg_n",
+                "basis_noneq",
+                "els_noneq",
+                "entry",
+            ],
         )
         return dfrm
 
@@ -368,3 +387,25 @@ class DataHandler:
         dfrm_seeb = pd.DataFrame(seebeck, columns=["Seebeck coefficient"])
 
         return [dfrm_str, dfrm_seeb]
+
+    def add_polyhedra(self, structure_path: str) -> DataFrame:
+        """
+        Add polyhedra info by entry for each structure entry
+
+        Parameters
+        ----------
+        structure_path : str
+            Path to json file with structures
+
+        Returns
+        -------
+        dfrm : pd.DataFrame
+           Table with next columns:
+           'phase_id', 'cell_abc', 'sg_n', 'basis_noneq',
+           'els_noneq', 'entry', 'Site', 'Type', 'Composition'
+        """
+        poly = pd.read_csv(self.polyheadra_path).rename(columns={"Entry": "entry"})
+        structs = pd.read_json(structure_path, orient="split")
+
+        dfrm = pd.merge(structs, poly, on="entry", how="inner")
+        return dfrm

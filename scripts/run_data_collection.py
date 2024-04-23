@@ -55,7 +55,7 @@ def get_structures_and_seebeck(
         structures_dfrm = handler.to_order_disordered_str(
             phases=phases, is_uniq_phase_id=is_uniq_structure_for_phase
         )
-        file_path = path_to_save + "structures.json"
+        file_path = path_to_save + "rep_structures.json"
         structures_dfrm.to_json(file_path, orient="split")
     else:
         structures_dfrm = pd.read_json(raw_str_path, orient="split")
@@ -77,14 +77,13 @@ def convert_structure_to_vectors(
     in the second, the distance from the origin of coordinates.
     Saves only the first 100 atoms falling within a given distance.
     """
+    dfrm_str, dfrm_seeb = handler.to_cut_vectors_struct(dfrm=dfrm)
+
     if path_to_save:
-        dfrm_str, dfrm_seeb = handler.to_cut_vectors_struct(dfrm=dfrm)
+        dfrm_str.to_csv(path_to_save + "rep_vect_str.csv", index=False)
+        dfrm_seeb.to_csv(path_to_save + "rep_vect_seebeck.csv", index=False)
 
-        if path_to_save:
-            dfrm_str.to_csv(path_to_save + "rep_str.csv", index=False)
-            dfrm_seeb.to_csv(path_to_save + "rep_seebeck.csv", index=False)
-
-        return dfrm_str, dfrm_seeb
+    return dfrm_str, dfrm_seeb
 
 
 if __name__ == "__main__":
@@ -102,7 +101,7 @@ if __name__ == "__main__":
         handler,
         is_uniq_structure_for_phase,
         raw_seebeck_path=raw_path+'seebeck.json',
-        raw_str_path=raw_path+'structure.json',
+        # raw_str_path=raw_path+'structure.json',
         path_to_save=raw_path
     )
     dfrm_str, dfrm_seeb = convert_structure_to_vectors(
@@ -111,25 +110,16 @@ if __name__ == "__main__":
         path_to_save=processed_path,
     )
 
-    dfrm_str.to_csv(
-        "/Users/alina/PycharmProjects/ml-selection/data/processed_data/cut_str.csv",
-        index=False,
-    )
-    dfrm_seeb.to_csv(
-        "/Users/alina/PycharmProjects/ml-selection/data/processed_data/cut_seeb.csv",
-        index=False,
-    )
-
     df_structs, df_seebeck = make_undersampling(
         str_dfrm=dfrm_str, seebeck_dfrm=dfrm_seeb
     )
     df_structs.to_csv(
-        "/Users/alina/PycharmProjects/ml-selection/data/processed_data/under_str.csv",
+        "/root/projects/ml-selection/data/processed_data/under_str.csv",
         index=False,
     )
 
     df_seebeck.to_csv(
-        "/Users/alina/PycharmProjects/ml-selection/data/processed_data/under_seeb.csv",
+        "/root/projects/ml-selection/data/processed_data/under_seeb.csv",
         index=False,
     )
 

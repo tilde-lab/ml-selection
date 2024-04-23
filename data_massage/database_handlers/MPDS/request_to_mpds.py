@@ -106,7 +106,7 @@ class RequestMPDS:
 
         for i, entry in enumerate(entrys):
             query = f"https://api.mpds.io/v0/download/s?q={entry}&fmt=pdf&sid={sid}"
-
+            time.sleep(10)
             response = requests.get(query)
 
             if response.status_code == 200:
@@ -118,7 +118,6 @@ class RequestMPDS:
                     ).find_next("table")
                 except:
                     loss_data += 1
-                    time.sleep(2)
                     continue
 
                 rows = atomic_table.find_all("tr")[1:]
@@ -135,10 +134,8 @@ class RequestMPDS:
                         )
                     except:
                         continue
-                time.sleep(2)
             else:
                 loss_data += 1
-                time.sleep(2)
 
         update_res = [i for i in atomic_data if len(i) == 3]
         res = pd.DataFrame(update_res, columns=["phase_id", "entry", "polyhedra"])
