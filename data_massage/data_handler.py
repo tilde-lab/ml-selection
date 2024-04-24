@@ -10,6 +10,7 @@ from data_massage.database_handlers.MPDS.request_to_mpds import RequestMPDS
 # change path if another
 from metis_backend.metis_backend.structures.struct_utils import \
     order_disordered
+from create_polyheadra import get_poly_elements, get_int_poly_type, size_customization
 
 
 class DataHandler:
@@ -409,3 +410,23 @@ class DataHandler:
 
         dfrm = pd.merge(structs, poly, on="entry", how="inner")
         return dfrm
+
+    @classmethod
+    def process_polyhedra(self, crystals_json_path: str):
+        crystals = pd.read_json(crystals_json_path, orient='split').values.tolist()
+        poly_store = []
+
+        for poly in crystals:
+            elements = get_poly_elements(poly)
+            if elements == [None]:
+                continue
+            poly_type = get_int_poly_type(poly)
+            descriptor = [[i, poly_type] for i in elements]
+            ready_descriptor = size_customization(descriptor)
+            poly_store.append([poly[0], ready_descriptor])
+
+        return pd.DataFrame(poly_store, columns=['phase_id', 'poly'])
+
+if __name__ == "__main__":
+    descriptor = DataHandler.process_polyhedra('/root/projects/ml-selection/data/raw_data/poly.json')
+    descriptor.to_csv('/root/projects/ml-selection/data/processed_data/poly_descriptor.csv')

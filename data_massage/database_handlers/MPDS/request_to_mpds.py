@@ -1,10 +1,6 @@
-import time
-
 import numpy as np
 import pandas as pd
-import requests
 import yaml
-from bs4 import BeautifulSoup
 from mpds_client import MPDSDataRetrieval, MPDSDataTypes
 from pandas import DataFrame
 
