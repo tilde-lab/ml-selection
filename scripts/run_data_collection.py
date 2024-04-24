@@ -6,7 +6,6 @@ import pandas as pd
 import yaml
 from pandas import DataFrame
 
-from data_massage.balancing_data.oversampling import make_oversampling
 from data_massage.balancing_data.undersampling import make_undersampling
 from data_massage.calculate_median_value import seebeck_median_value
 from data_massage.data_handler import DataHandler
@@ -47,8 +46,11 @@ def get_structures_and_seebeck(
         seebeck_dfrm = pd.read_json(raw_seebeck_path, orient="split")
 
     phases = set(seebeck_dfrm["Phase"].tolist())
+
     # make median Seebeck value
     median_seebeck = seebeck_median_value(seebeck_dfrm, phases)
+    file_path = path_to_save + "median_seebeck.json"
+    median_seebeck.to_json(file_path, orient="split")
 
     if not raw_str_path:
         # get structure and make it ordered

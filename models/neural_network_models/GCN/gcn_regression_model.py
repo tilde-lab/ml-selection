@@ -7,7 +7,7 @@ from torcheval.metrics import R2Score
 from torchmetrics import MeanAbsoluteError
 from tqdm import tqdm
 
-from datasets.vectors_graph_dataset import CrystalGraphVectorsDataset
+from datasets.poly_graph_dataset import PolyGraphDataset
 
 r2 = R2Score()
 mae = MeanAbsoluteError()
@@ -80,7 +80,7 @@ class GCN(torch.nn.Module):
             print(
                 f"--------Mean loss for epoch {epoch} is {mean_loss / cnt}--------R2 is {r2.compute()}"
             )
-            if epoch % 5 == 0:
+            if epoch % 1 == 0:
                 torch.save(
                     model.state_dict(),
                     r"/root/projects/ml-selection/models/neural_network_models/GCN/weights/01.pth",
@@ -118,7 +118,7 @@ class GCN(torch.nn.Module):
 
 if __name__ == "__main__":
     # dataset with atoms and distance info
-    dataset = CrystalGraphVectorsDataset()
+    dataset = PolyGraphDataset()
 
     train_size = int(0.9 * len(dataset))
     test_size = len(dataset) - train_size
@@ -136,10 +136,10 @@ if __name__ == "__main__":
     device = torch.device("cpu")
     model = GCN(13, 16, "relu").to(device)
 
-    model.fit(model, 1, train_dataloader, device, lr=0.008598391737229157)
+    model.fit(model, 50, train_dataloader, device, lr=0.008598391737229157)
     model.val(model, test_dataloader, device)
 
     torch.save(
         model.state_dict(),
-        r"/root/projects/ml-selection/models/neural_network_models/GCN/weights/01.pth",
+        r"/root/projects/ml-selection/models/neural_network_models/GCN/weights/20_01.pth",
     )

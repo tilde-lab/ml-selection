@@ -28,12 +28,12 @@ def get_int_poly_type(poly: list) -> int:
     type = ord(values[1]) - ord('a') + 1
     return vertex + type
 
-def size_customization(descriptors: list) -> list:
-    if len(descriptors) >= 100:
-        return descriptors[:100]
+def size_customization(elements, size_v=100) -> list:
+    if len(elements) >= size_v:
+        return elements[:size_v]
 
-    res = descriptors.copy()
-    while len(res) < 100:
-        res = res + descriptors
+    res = elements.copy()
+    while len(res) < size_v:
+        res = res + elements
 
-    return res[:100]
+    return res[:size_v]
