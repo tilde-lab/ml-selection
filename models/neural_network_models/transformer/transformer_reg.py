@@ -73,11 +73,11 @@ class TransformerModel(nn.Module):
     def fit(self, model, optimizer, train_data: Subset) -> None:
         """Train model"""
         model.train()
-        for epoch in tqdm(range(5)):
+        for epoch in tqdm(range(50)):
             mean_loss = 0
             cnt = 0
-            for y, atoms, dist in train_data:
-                data = [eval(atoms), eval(dist)]
+            for y, poly, p_type in train_data:
+                data = [eval(poly), eval(p_type)]
                 if len(data[0]) == 0:
                     continue
                 cnt += 1
@@ -90,10 +90,10 @@ class TransformerModel(nn.Module):
 
             print(f"--------Mean loss for epoch {epoch} is {mean_loss / cnt}--------")
 
-            if epoch % 5 == 0:
+            if epoch % 1 == 0:
                 torch.save(
                     model.state_dict(),
-                    r"/root/projects/ml-selection/models/neural_network_models/transformer/weights/01.pth",
+                    r"/root/projects/ml-selection/models/neural_network_models/transformer/weights/20_01.pth",
                 )
 
     def val(self, model, test_data: Subset) -> None:
@@ -105,8 +105,8 @@ class TransformerModel(nn.Module):
         y_s = []
 
         with torch.no_grad():
-            for y, atoms, dist in test_data:
-                data = [eval(atoms), eval(dist)]
+            for y, poly, p_type in test_data:
+                data = [eval(poly), eval(p_type)]
                 if len(data[0]) == 0:
                     continue
                 pred = model([torch.tensor(data).permute(1, 0).unsqueeze(0)])
@@ -121,20 +121,20 @@ class TransformerModel(nn.Module):
 
         torch.save(
             model.state_dict(),
-            r"/root/projects/ml-selection/models/neural_network_models/transformer/weights/01.pth",
+            r"/root/projects/ml-selection/models/neural_network_models/transformer/weights/20_01.pth",
         )
 
         print("R2: ", r2_res, " MAE: ", mae_result)
 
 
 if __name__ == "__main__":
-    total = pd.read_csv(
-        r"/root/projects/ml-selection/data/processed_data/under_str.csv",
+    poly = pd.read_csv(
+        f"/root/projects/ml-selection/data/processed_data/large_poly_descriptor.csv",
     )
-    seebeck = pd.read_csv(
-        r"/root/projects/ml-selection/data/processed_data/under_seeb.csv",
+    seebeck = pd.read_json(
+        "/root/projects/ml-selection/data/raw_data/median_seebeck.json", orient='split',
     )
-    dataset = pd.concat([seebeck["Seebeck coefficient"], total], axis=1).values.tolist()
+    dataset = pd.merge(seebeck, poly, on="phase_id", how="inner").drop(columns=['phase_id', 'Formula']).values.tolist()
 
     train_size = int(0.9 * len(dataset))
     test_size = len(dataset) - train_size

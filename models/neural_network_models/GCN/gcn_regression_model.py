@@ -18,7 +18,7 @@ class GCN(torch.nn.Module):
 
     def __init__(self, n_hidden, n_hidden2=4, activation="elu"):
         super().__init__()
-        self.conv1 = GCNConv(2, n_hidden)
+        self.conv1 = GCNConv(3, n_hidden)
         self.conv2 = GCNConv(n_hidden, n_hidden2)
         self.layer3 = Linear(n_hidden2, 1)
         if activation == "elu":
@@ -83,7 +83,7 @@ class GCN(torch.nn.Module):
             if epoch % 1 == 0:
                 torch.save(
                     model.state_dict(),
-                    r"/root/projects/ml-selection/models/neural_network_models/GCN/weights/01.pth",
+                    r"/root/projects/ml-selection/models/neural_network_models/GCN/weights/20_02.pth",
                 )
 
     def val(
@@ -136,10 +136,10 @@ if __name__ == "__main__":
     device = torch.device("cpu")
     model = GCN(13, 16, "relu").to(device)
 
-    model.fit(model, 50, train_dataloader, device, lr=0.008598391737229157)
+    model.fit(model, 80, train_dataloader, device, lr=0.008598391737229157)
     model.val(model, test_dataloader, device)
 
     torch.save(
         model.state_dict(),
-        r"/root/projects/ml-selection/models/neural_network_models/GCN/weights/20_01.pth",
+        r"/root/projects/ml-selection/models/neural_network_models/GCN/weights/20_02.pth",
     )

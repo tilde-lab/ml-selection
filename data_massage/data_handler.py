@@ -412,22 +412,56 @@ class DataHandler:
         return dfrm
 
     @classmethod
-    def process_polyhedra(self, crystals_json_path: str):
+    def process_polyhedra(self, crystals_json_path: str, features: int = 2) -> DataFrame:
+        """
+        Create descriptor from polyhedra
+
+        Parameters
+        ----------
+        crystals_json_path : str
+            Path to json file with structures
+        features : int
+
+
+        Returns
+        -------
+        dfrm : pd.DataFrame
+           Table with next columns:
+           'phase_id', 'cell_abc', 'sg_n', 'basis_noneq',
+           'els_noneq', 'entry', 'Site', 'Type', 'Composition'
+        """
         crystals = pd.read_json(crystals_json_path, orient='split').values.tolist()
         poly_store = []
         descriptor_store = []
+
+        if features == 2:
+            columns = ['phase_id', 'poly_elements', 'poly_type']
+        else:
+            columns = ['phase_id', 'poly_elements', 'poly_vertex', 'poly_type']
 
         for poly in crystals:
             elements = get_poly_elements(poly)
             if elements == [None]:
                 continue
-            poly_type = get_int_poly_type(poly)
+            vertex, p_type = get_int_poly_type(poly)
+            # features: elements, poly (number of vertex + number of type poly)
+            if features == 2:
+                poly_type = vertex + p_type
+                poly_type_large = [poly_type] * 100
+            # features: elements, number of vertex in poly, type of poly
+            elif features == 3:
+                vertex_large, p_type_large = [vertex] * 100, [p_type] * 100
+                poly_type_large = [vertex_large, p_type_large]
+            else:
+                return None
             elements_large = size_customization(elements)
-            poly_type_large = [poly_type]*100
 
             if [elements_large, poly_type_large] not in descriptor_store:
                 descriptor_store.append([elements_large, poly_type_large])
-                poly_store.append([poly[0], elements_large, poly_type_large])
+                if features == 2:
+                    poly_store.append([poly[0], elements_large, poly_type_large])
+                elif features == 3:
+                    poly_store.append([poly[0], elements_large, vertex_large, p_type_large])
 
-        return pd.DataFrame(poly_store, columns=['phase_id', 'poly_elements', 'poly_type'])
+        return pd.DataFrame(poly_store, columns=columns)
 

@@ -7,7 +7,7 @@ from torcheval.metrics import R2Score
 from torchmetrics import MeanAbsoluteError
 from tqdm import tqdm
 
-from datasets.vectors_graph_dataset import CrystalGraphVectorsDataset
+from datasets.poly_graph_dataset import PolyGraphDataset
 
 r2 = R2Score()
 mae = MeanAbsoluteError()
@@ -105,7 +105,7 @@ class GAT(torch.nn.Module):
             )
             torch.save(
                 model.state_dict(),
-                r"/root/projects/ml-selection/models/neural_network_models/GAT/weights/01.pth",
+                r"/root/projects/ml-selection/models/neural_network_models/GAT/weights/20_02.pth",
             )
 
     def val(
@@ -140,7 +140,7 @@ class GAT(torch.nn.Module):
 
 if __name__ == "__main__":
     # dataset with atoms and distance info
-    dataset = CrystalGraphVectorsDataset()
+    dataset = PolyGraphDataset()
 
     train_size = int(0.9 * len(dataset))
     test_size = len(dataset) - train_size
@@ -156,12 +156,12 @@ if __name__ == "__main__":
     )
 
     device = torch.device("cpu")
-    model = GAT(in_ch=2).to(device)
+    model = GAT(in_ch=3).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.005919, weight_decay=5e-4)
 
     model.fit(
         model,
-        5,
+        80,
         train_dataloader,
         optimizer,
         device,
@@ -170,5 +170,5 @@ if __name__ == "__main__":
 
     torch.save(
         model.state_dict(),
-        r"/root/projects/ml-selection/models/neural_network_models/GAT/weights/01.pth",
+        r"/root/projects/ml-selection/models/neural_network_models/GAT/weights/20_02.pth",
     )

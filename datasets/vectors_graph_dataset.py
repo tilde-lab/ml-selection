@@ -48,7 +48,6 @@ class CrystalGraphVectorsDataset(Dataset):
         # create list with features for every node
         x_vector = []
 
-        # add coordinates to every node
         for i, d in enumerate(eval(distance)):
             x_vector.append([])
             x_vector[i].append(eval(atoms)[i])

@@ -13,20 +13,20 @@ mae = MeanAbsoluteError()
 metric = R2Score()
 
 # Crystal in vectors format
-total = pd.read_csv(
-    "/root/projects/ml-selection/data/processed_data/under_str.csv",
+poly = pd.read_csv(
+    "/root/projects/ml-selection/data/processed_data/3_features_poly_descriptor.csv",
 )
-seebeck = pd.read_csv(
-    "/root/projects/ml-selection/data/processed_data/under_seeb.csv",
-)
-total = pd.concat([seebeck["Seebeck coefficient"], total], axis=1)
-features = ["atom", "distance"]
+seebeck = pd.read_json(
+   "/root/projects/ml-selection/data/raw_data/median_seebeck.json", orient='split'
+).rename(columns={"Phase": "phase_id"})
+data = pd.merge(seebeck, poly, on="phase_id", how="inner")
+features = ["poly_elements", "poly_vertex", "poly_type"]
 
-train_size = int(0.9 * len(total))
-test_size = len(total) - train_size
+train_size = int(0.9 * len(data))
+test_size = len(data) - train_size
 
-train = total.iloc[:train_size]
-test = total.iloc[train_size:]
+train = data.iloc[:train_size]
+test = data.iloc[train_size:]
 
 # LINEAR REGRESSION MODEL
 train_r, test_r = SFrame(train), SFrame(test)

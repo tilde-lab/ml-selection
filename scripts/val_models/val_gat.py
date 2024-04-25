@@ -4,10 +4,10 @@ Test GAT on CrystalGraphVectorsDataset
 import torch
 from torch_geometric.loader import DataLoader
 
-from datasets.vectors_graph_dataset import CrystalGraphVectorsDataset
+from datasets.poly_graph_dataset import PolyGraphDataset
 from models.neural_network_models.GAT.gat_regression_model import GAT
 
-dataset = CrystalGraphVectorsDataset()
+dataset = PolyGraphDataset()
 
 train_size = int(0.9 * len(dataset))
 test_size = len(dataset) - train_size
@@ -21,7 +21,7 @@ model = GAT(in_ch=2).to(device)
 
 model.load_state_dict(
     torch.load(
-        r"/root/projects/ml-selection/models/neural_network_models/GAT/weights/01.pth"
+        r"/root/projects/ml-selection/models/neural_network_models/GAT/weights/20_01.pth"
     )
 )
 

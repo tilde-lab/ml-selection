@@ -26,7 +26,7 @@ def get_int_poly_type(poly: list) -> int:
     values = poly[7].replace('-', ' ').replace('#', ' ').split(' ')
     vertex = int(values[0])*10
     type = ord(values[1]) - ord('a') + 1
-    return vertex + type
+    return [vertex , type]
 
 def size_customization(elements, size_v=100) -> list:
     if len(elements) >= size_v:
