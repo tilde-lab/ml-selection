@@ -13,4 +13,4 @@ if __name__ == "__main__":
     num, dfrm = check_same_features(total, columns=['atom', 'distance'])
     print(f'Number of removed duplicates: {num}')
 
-    dfrm.to_csv('/root/projects/ml-selection/data/processed_data/rep_vect_str_clear.csv')
+    dfrm.to_csv('/root/projects/ml-selection/data/processed_data/rep_vect_str_clear.csv', index=False)

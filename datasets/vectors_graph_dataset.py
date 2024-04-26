@@ -12,14 +12,8 @@ class CrystalGraphVectorsDataset(Dataset):
 
     def __init__(self):
         super().__init__()
-        self.total = pd.read_csv(
-            "/root/projects/ml-selection/data/processed_data/under_str.csv",
-        )
-        self.seebeck = pd.read_csv(
-            "/root/projects/ml-selection/data/processed_data/under_seeb.csv",
-        )
-        self.data = pd.concat(
-            [self.seebeck["Seebeck coefficient"], self.total], axis=1
+        self.data = pd.read_csv(
+            "/root/projects/ml-selection/data/processed_data/rep_vect_str_clear.csv",
         ).values.tolist()
 
     def __len__(self):
