@@ -11,100 +11,153 @@ from turicreate import SFrame
 
 mae = MeanAbsoluteError()
 metric = R2Score()
+models = {
+    '0': 'LINEAR REGRESSION', '1': 'DECISION TREE MODEL',
+    '2': 'BOOSTED TREES MODEL', '3': 'RANDOM FOREST MODEL'
+}
 
-# Crystal in vectors format
-poly = pd.read_csv(
-    "/root/projects/ml-selection/data/processed_data/3_features_poly_descriptor.csv",
-)
-seebeck = pd.read_json(
-   "/root/projects/ml-selection/data/raw_data/median_seebeck.json", orient='split'
-).rename(columns={"Phase": "phase_id"})
-data = pd.merge(seebeck, poly, on="phase_id", how="inner")
-features = ["poly_elements", "poly_vertex", "poly_type"]
 
-train_size = int(0.9 * len(data))
-test_size = len(data) - train_size
+def split_data_for_turi_models(poly_path, seebeck_path):
+    # Crystal in vectors format
+    poly = pd.read_csv(poly_path)
+    seebeck = pd.read_json(
+       seebeck_path, orient='split'
+    ).rename(columns={"Phase": "phase_id"})
+    data = pd.merge(seebeck, poly, on="phase_id", how="inner")
 
-train = data.iloc[:train_size]
-test = data.iloc[train_size:]
+    train_size = int(0.9 * len(data))
 
-# LINEAR REGRESSION MODEL
-train_r, test_r = SFrame(train), SFrame(test)
-model_linear = tc.linear_regression.create(
-    train_r, target="Seebeck coefficient", features=features, validation_set=test_r
-)
-coefficients_linear = model_linear.coefficients
-predictions_linear = model_linear.predict(test_r)
+    train = data.iloc[:train_size]
+    test = data.iloc[train_size:]
 
-metric.update(
-    torch.tensor(predictions_linear), torch.tensor(test_r["Seebeck coefficient"])
-)
-r2_res_r = metric.compute()
-mae.update(
-    torch.tensor(predictions_linear), torch.tensor(test_r["Seebeck coefficient"])
-)
-mae_result_r = mae.compute()
+    return train, test
 
-# DECISION TREE MODEL
-train_d, test_d = SFrame(train), SFrame(test)
-model_decision = tc.decision_tree_regression.create(
-    train_d, target="Seebeck coefficient", features=features, validation_set=test_r
-)
-predictions_decision = model_decision.predict(test_d)
+def run_linear_regression(train, test, features):
+    # LINEAR REGRESSION MODEL
+    train_r, test_r = SFrame(train), SFrame(test)
+    model_linear = tc.linear_regression.create(
+        train_r, target="Seebeck coefficient", features=features, validation_set=test_r
+    )
+    predictions_linear = model_linear.predict(test_r)
 
-featureimp_decision = model_decision.get_feature_importance()
-metric.update(
-    torch.tensor(predictions_decision), torch.tensor(test_d["Seebeck coefficient"])
-)
-r2_res_d = metric.compute()
-mae.update(
-    torch.tensor(predictions_decision), torch.tensor(test_d["Seebeck coefficient"])
-)
-mae_result_d = mae.compute()
+    metric.update(
+        torch.tensor(predictions_linear), torch.tensor(test_r["Seebeck coefficient"])
+    )
+    r2_res_r = metric.compute()
+    mae.update(
+        torch.tensor(predictions_linear), torch.tensor(test_r["Seebeck coefficient"])
+    )
+    mae_result_r = mae.compute()
+    print(
+        f"LINEAR REGRESSION MODEL:\nR2: {r2_res_r}, MAE: {mae_result_r}, min pred: {predictions_linear.min()}, max pred: {predictions_linear.max()}\n\n"
+    )
+    return [r2_res_r, mae_result_r]
 
-# BOOSTED TREES MODEL
-train_b, test_b = SFrame(train), SFrame(test)
-model_boosted = tc.boosted_trees_regression.create(
-    train_b, target="Seebeck coefficient", features=features, validation_set=test_r
-)
-predictions_boosted = model_boosted.predict(test_b)
-results_boosted = model_boosted.evaluate(test_b)
-featureboosted = model_boosted.get_feature_importance()
-metric.update(
-    torch.tensor(predictions_boosted), torch.tensor(test_b["Seebeck coefficient"])
-)
-r2_res_b = metric.compute()
-mae.update(
-    torch.tensor(predictions_boosted), torch.tensor(test_b["Seebeck coefficient"])
-)
-mae_result_b = mae.compute()
 
-# RANDOM FOREST MODEL
-train_r, test_r = SFrame(train), SFrame(test)
-model_random = tc.random_forest_regression.create(
-    train_r, target="Seebeck coefficient", features=features, validation_set=test_r
-)
-predictions_random = model_random.predict(test_r)
-results_random = model_random.evaluate(test_r)
-featureimp_random = model_random.get_feature_importance()
-metric.update(
-    torch.tensor(predictions_random), torch.tensor(test_r["Seebeck coefficient"])
-)
-r2_res_rf = metric.compute()
-mae.update(
-    torch.tensor(predictions_random), torch.tensor(test_r["Seebeck coefficient"])
-)
-mae_result_rf = mae.compute()
+def run_decision_tree(train, test, features):
+    # DECISION TREE MODEL
+    train_d, test_d = SFrame(train), SFrame(test)
+    model_decision = tc.decision_tree_regression.create(
+        train_d, target="Seebeck coefficient", features=features, validation_set=test_d
+    )
+    predictions_decision = model_decision.predict(test_d)
 
-print(
-    f"LINEAR REGRESSION MODEL:\nR2: {r2_res_r}, MAE: {mae_result_r}, min pred: {predictions_linear.min()}, max pred: {predictions_linear.max()}\n\n"
-)
-print(
-    f"DECISION TREE MODEL\nR2: {r2_res_d}, MAE: {mae_result_d}, min pred: {predictions_decision.min()}, max pred: {predictions_decision.max()}\n\n"
-)
-print(
-    f"BOOSTED TREES MODEL\nR2: {r2_res_b}, MAE: {mae_result_b}, min pred: {predictions_boosted.min()}, max pred: {predictions_boosted.max()}\n\n"
-)
-print(
-    f"RANDOM FOREST MODEL\nR2: {r2_res_rf}, MAE: {mae_result_rf}, min pred: {predictions_random.min()}, max pred: {predictions_random.max()}\n\n"
-)
+    metric.update(
+        torch.tensor(predictions_decision), torch.tensor(test_d["Seebeck coefficient"])
+    )
+    r2_res_d = metric.compute()
+    mae.update(
+        torch.tensor(predictions_decision), torch.tensor(test_d["Seebeck coefficient"])
+    )
+    mae_result_d = mae.compute()
+    print(
+        f"DECISION TREE MODEL\nR2: {r2_res_d}, MAE: {mae_result_d}, min pred: {predictions_decision.min()}, max pred: {predictions_decision.max()}\n\n"
+    )
+    return [r2_res_d, mae_result_d]
+
+
+def run_boosted_trees(train, test, features):
+    # BOOSTED TREES MODEL
+    train_b, test_b = SFrame(train), SFrame(test)
+    model_boosted = tc.boosted_trees_regression.create(
+        train_b, target="Seebeck coefficient", features=features, validation_set=test_b
+    )
+    predictions_boosted = model_boosted.predict(test_b)
+    metric.update(
+        torch.tensor(predictions_boosted), torch.tensor(test_b["Seebeck coefficient"])
+    )
+    r2_res_b = metric.compute()
+    mae.update(
+        torch.tensor(predictions_boosted), torch.tensor(test_b["Seebeck coefficient"])
+    )
+    mae_result_b = mae.compute()
+    print(
+        f"BOOSTED TREES MODEL\nR2: {r2_res_b}, MAE: {mae_result_b}, min pred: {predictions_boosted.min()}, max pred: {predictions_boosted.max()}\n\n"
+    )
+    return [r2_res_b, mae_result_b]
+
+
+def run_random_forest(train, test, features):
+    # RANDOM FOREST MODEL
+    train_r, test_r = SFrame(train), SFrame(test)
+    model_random = tc.random_forest_regression.create(
+        train_r, target="Seebeck coefficient", features=features, validation_set=test_r
+    )
+    predictions_random = model_random.predict(test_r)
+    metric.update(
+        torch.tensor(predictions_random), torch.tensor(test_r["Seebeck coefficient"])
+    )
+    r2_res_rf = metric.compute()
+    mae.update(
+        torch.tensor(predictions_random), torch.tensor(test_r["Seebeck coefficient"])
+    )
+    mae_result_rf = mae.compute()
+    print(
+        f"RANDOM FOREST MODEL\nR2: {r2_res_rf}, MAE: {mae_result_rf}, min pred: {predictions_random.min()}, max pred: {predictions_random.max()}\n\n"
+    )
+    return [r2_res_rf, mae_result_rf]
+
+def run_all_models(poly_paths: list, seebeck_path: list, features: list) -> None:
+    result = []
+
+    for i, poly in enumerate(poly_paths):
+        metrics = []
+        train, test = split_data_for_turi_models(poly, seebeck_path)
+        metrics.append(run_linear_regression(train, test, features[i]))
+        metrics.append(run_decision_tree(train, test, features[i]))
+        metrics.append(run_boosted_trees(train, test, features[i]))
+        metrics.append(run_random_forest(train, test, features[i]))
+        result.append(metrics)
+
+    best_result = -1
+    best_model = None
+    dataset = 1
+
+    for idx, data in enumerate(result):
+        r2 = [i[0] for i in data]
+        best_for_that_data = max(r2)
+        print(f'Best result in DATASET {idx + 1}: {max(r2)}, model: {models[str(r2.index(max(r2)))]}')
+
+        if best_for_that_data > best_result:
+            best_result = best_for_that_data
+            best_model = models[str(r2.index(max(r2)))]
+            dataset = idx + 1
+
+    print(f'\n\nBest result from all experiments: {best_result}, model: {best_model}, dataset: {dataset}')
+
+
+if __name__ == '__main__':
+    seebeck_path = "/root/projects/ml-selection/data/raw_data/median_seebeck.json"
+    poly_path = [
+        "/root/projects/ml-selection/data/processed_data/poly/2_features.csv",
+        "/root/projects/ml-selection/data/processed_data/poly/3_features.csv",
+        "/root/projects/ml-selection/data/processed_data/poly/poly_vector_of_count.csv"
+    ]
+
+    features = [
+        ["poly_elements", "poly_type"],
+        ['poly_elements', 'poly_vertex', 'poly_type'],
+        ["poly_elements", "poly_type"]
+    ]
+
+    run_all_models(poly_path, seebeck_path, features)

@@ -22,8 +22,8 @@ def get_different_descriptors():
         make_poly_descriptor(f, str(f) + '_features')
 
     is_one_hot = True
-    make_poly_descriptor(3, 'poly_vector_of_count', is_one_hot)
-
+    make_poly_descriptor(2, 'poly_vector_of_count', is_one_hot)
+    print(f'Creating {len(features)+1} data with different presents of descriptors for PolyDataset are completed')
 
 if __name__ == "__main__":
     combine_structure_and_poly()
