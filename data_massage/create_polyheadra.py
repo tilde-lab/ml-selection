@@ -1,7 +1,21 @@
 from data.mendeleev_table import get_periodic_number
 import re
 
+
 def get_poly_elements(poly: list) -> list:
+    """
+    Get periodic element number for each atom in a polyhedra
+
+    Parameters
+    ----------
+    poly  : list
+        Data with atoms name
+
+    Returns
+    -------
+    elements  : list
+         Periodic numbers of elements
+    """
     if poly[8] == None:
         return [None]
     formula = re.sub(r"(?<=\w)([A-Z])", r" \1", poly[8])
@@ -22,13 +36,39 @@ def get_poly_elements(poly: list) -> list:
 
     return elements
 
-def get_int_poly_type(poly: list) -> int:
-    values = poly[7].replace('-', ' ').replace('#', ' ').split(' ')
-    vertex = int(values[0])*10
-    type = ord(values[1]) - ord('a') + 1
-    return [vertex , type]
 
-def size_customization(elements, size_v=100) -> list:
+def get_int_poly_type(poly: list) -> int:
+    """
+    Get type of polyhedra
+
+    Parameters
+    ----------
+    poly  : list
+        Data consist of name polyhedra and number of vertex
+    """
+    values = poly[7].replace('-', ' ').replace('#', ' ').split(' ')
+    vertex = int(values[0])
+    type = ord(values[1]) - ord('a') + 1
+
+    return [vertex * 10, type]
+
+
+def size_customization(elements: list, size_v: int = 100) -> list:
+    """
+    Add required number of elements to get the desired size of list
+
+    Parameters
+    ----------
+    elements  : list
+        Include of periodic numbers of elements in polyhedra
+    size_v : int
+        Number of elements in final list
+
+    Returns
+    -------
+    res : list
+        Data in desired size
+    """
     if len(elements) >= size_v:
         return elements[:size_v]
 
