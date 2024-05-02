@@ -117,7 +117,7 @@ def run_random_forest(train, test, features):
     )
     return [r2_res_rf, mae_result_rf]
 
-def run_all_models(poly_paths: list, seebeck_path: list, features: list) -> None:
+def run_math_models(poly_paths: list, seebeck_path: list, features: list) -> None:
     result = []
 
     for i, poly in enumerate(poly_paths):
@@ -160,4 +160,4 @@ if __name__ == '__main__':
         ["poly_elements", "poly_type"]
     ]
 
-    run_all_models(poly_path, seebeck_path, features)
+    run_math_models(poly_path, seebeck_path, features)

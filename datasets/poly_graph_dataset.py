@@ -8,11 +8,15 @@ class PolyGraphDataset(Dataset):
     """
     Graph from polyhedra of crystal
     """
-    def __init__(self):
+    def __init__(self, poly_path, features_type=3):
+        """
+        features_type == 3 -> features: elements, vertex, types
+        features_type == 2 -> features: elements, types
+        """
         super().__init__()
-        self.poly = pd.read_csv(
-            "/root/projects/ml-selection/data/processed_data/3_features_poly_descriptor.csv",
-        )
+        self.features_type = features_type
+        # now is 3 features
+        self.poly = pd.read_csv(poly_path)
         self.seebeck = pd.read_json(
             "/root/projects/ml-selection/data/raw_data/median_seebeck.json", orient='split'
         ).rename(columns={"Phase": "phase_id"})
@@ -26,10 +30,16 @@ class PolyGraphDataset(Dataset):
         "Return 1 graph and 1 seebeck"
         seebeck = self.data[idx][2]
         elements = self.data[idx][3]
-        vertex = self.data[idx][4]
-        types = self.data[idx][5]
 
-        graph = self.build_graph([elements, vertex, types])
+        if self.features_type == 3:
+            vertex = self.data[idx][4]
+            types = self.data[idx][5]
+            graph = self.build_graph([elements, vertex, types])
+
+        if self.features_type == 2:
+            types = self.data[idx][4]
+            graph = self.build_graph([elements, types])
+
         return [graph, seebeck]
 
     def build_graph(self, poly: list) -> Data:
@@ -38,18 +48,32 @@ class PolyGraphDataset(Dataset):
         Every node represent atom from polyhedra, witch has z-period and type of polyhedra.
         Graph is fully connected
         """
-        poly_el, poly_vertex, poly_type = poly
+        if len(poly) == 3:
+            poly_el, poly_vertex, poly_type = poly
 
-        # create list with features for every node
-        x_vector = []
+            # create list with features for every node
+            x_vector = []
 
-        for i, d in enumerate(eval(poly_type)):
-            x_vector.append([])
-            x_vector[i].append(eval(poly_el)[i])
-            x_vector[i].append(eval(poly_vertex)[i])
-            x_vector[i].append(d)
+            for i, d in enumerate(eval(poly_type)):
+                x_vector.append([])
+                x_vector[i].append(eval(poly_el)[i])
+                x_vector[i].append(eval(poly_vertex)[i])
+                x_vector[i].append(d)
 
-        node_features = torch.tensor(x_vector)
+            node_features = torch.tensor(x_vector)
+
+        elif len(poly) == 2:
+            poly_el, poly_type = poly
+
+            # create list with features for every node
+            x_vector = []
+
+            for i, d in enumerate(eval(poly_type)):
+                x_vector.append([])
+                x_vector[i].append(eval(poly_el)[i])
+                x_vector[i].append(d)
+
+            node_features = torch.tensor(x_vector)
 
         edge_index = []
 
