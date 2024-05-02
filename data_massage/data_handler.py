@@ -421,7 +421,8 @@ class DataHandler:
         crystals_json_path : str
             Path to json file with structures
         features : int
-
+            If 2 -> features: elements, poly (number of vertex + number of type poly)
+            If 3 -> features: elements, number of vertex in poly, type of poly
 
         Returns
         -------
