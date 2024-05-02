@@ -411,8 +411,17 @@ class DataHandler:
         dfrm = pd.merge(structs, poly, on="entry", how="inner")
         return dfrm
 
+
     @classmethod
-    def process_polyhedra(self, crystals_json_path: str, features: int = 2) -> DataFrame:
+    def vectors_count_elements(cls, elements):
+        count_el = [0 for i in range(118)]
+        for el in elements:
+            count_el[el-1] += 10
+        return count_el
+
+
+    @classmethod
+    def process_polyhedra(cls, crystals_json_path: str, features: int = 2, is_one_hot: bool = False) -> DataFrame:
         """
         Create descriptor from polyhedra
 
@@ -424,6 +433,8 @@ class DataHandler:
             If 2 -> features: elements, poly (number of vertex + number of type poly)
             If 3 -> features: elements, number of vertex in poly, type of poly
             If 0 -> features: elements without size customization (data just for graph models), type of poly
+        is_one_hot : bool
+            Present elements in vectors of count, where periodic number of element is index in vector
 
         Returns
         -------
@@ -436,30 +447,34 @@ class DataHandler:
         poly_store = []
         descriptor_store = []
 
-        if features == 3:
+        if features == 3 and not(is_one_hot):
             columns = ['phase_id', 'poly_elements', 'poly_vertex', 'poly_type']
         else:
             columns = ['phase_id', 'poly_elements', 'poly_type']
 
         for poly in crystals:
             elements = get_poly_elements(poly)
+
             if elements == [None]:
                 continue
+            if is_one_hot:
+                elements = cls.vectors_count_elements(elements)
+
             vertex, p_type = get_int_poly_type(poly)
             # features: elements, poly (number of vertex + number of type poly)
-            if features == 2:
+            if features == 2 and not(is_one_hot):
                 poly_type = vertex + p_type
                 poly_type_large = [poly_type] * 100
             # features: elements, number of vertex in poly, type of poly
-            elif features == 3:
+            elif features == 3 and not(is_one_hot):
                 vertex_large, p_type_large = [vertex] * 100, [p_type] * 100
                 poly_type_large = [vertex_large, p_type_large]
-            elif features == 0:
-                poly_type_large = p_type
+            elif features == 0 or is_one_hot:
+                poly_type_large = [p_type] * 100
             else:
                 return None
 
-            if features != 0:
+            if features != 0 and not(is_one_hot):
                 elements_large = size_customization(elements)
             # elements without size customization (just for graph models)
             else:
@@ -468,7 +483,7 @@ class DataHandler:
             # replay protection
             if [elements_large, poly_type_large] not in descriptor_store:
                 descriptor_store.append([elements_large, poly_type_large])
-                if features == 2 or features == 0:
+                if features == 2 or features == 0 or is_one_hot:
                     poly_store.append([poly[0], elements_large, poly_type_large])
                 elif features == 3:
                     poly_store.append([poly[0], elements_large, vertex_large, p_type_large])

@@ -12,14 +12,18 @@ def combine_structure_and_poly():
     dfrm = hand.add_polyhedra(raw_data + "rep_structures.json")
     dfrm.to_json(raw_data + "large_poly.json", orient="split")
 
-def make_poly_descriptor(features=2, file_name='test'):
-    descriptor = hand.process_polyhedra(raw_data + "large_poly.json", features=features)
+def make_poly_descriptor(features=2, file_name='test', is_one_hot=False):
+    descriptor = hand.process_polyhedra(raw_data + "large_poly.json", features=features, is_one_hot=is_one_hot)
     descriptor.to_csv(processed_data + file_name + ".csv", index=False)
 
 def get_different_descriptors():
-    des_types = [2, 3, 0]
-    for des in des_types:
-        make_poly_descriptor(des, str(des) + '_features')
+    features = [2, 3, 0]
+    for f in features:
+        make_poly_descriptor(f, str(f) + '_features')
+
+    is_one_hot = True
+    make_poly_descriptor(3, 'poly_vector_of_count', is_one_hot)
+
 
 if __name__ == "__main__":
     combine_structure_and_poly()
