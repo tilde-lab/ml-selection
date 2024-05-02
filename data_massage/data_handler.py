@@ -423,6 +423,7 @@ class DataHandler:
         features : int
             If 2 -> features: elements, poly (number of vertex + number of type poly)
             If 3 -> features: elements, number of vertex in poly, type of poly
+            If 0 -> features: elements without size customization (data just for graph models), type of poly
 
         Returns
         -------
@@ -435,10 +436,10 @@ class DataHandler:
         poly_store = []
         descriptor_store = []
 
-        if features == 2:
-            columns = ['phase_id', 'poly_elements', 'poly_type']
-        else:
+        if features == 3:
             columns = ['phase_id', 'poly_elements', 'poly_vertex', 'poly_type']
+        else:
+            columns = ['phase_id', 'poly_elements', 'poly_type']
 
         for poly in crystals:
             elements = get_poly_elements(poly)
@@ -453,13 +454,21 @@ class DataHandler:
             elif features == 3:
                 vertex_large, p_type_large = [vertex] * 100, [p_type] * 100
                 poly_type_large = [vertex_large, p_type_large]
+            elif features == 0:
+                poly_type_large = p_type
             else:
                 return None
-            elements_large = size_customization(elements)
 
+            if features != 0:
+                elements_large = size_customization(elements)
+            # elements without size customization (just for graph models)
+            else:
+                elements_large = elements
+
+            # replay protection
             if [elements_large, poly_type_large] not in descriptor_store:
                 descriptor_store.append([elements_large, poly_type_large])
-                if features == 2:
+                if features == 2 or features == 0:
                     poly_store.append([poly[0], elements_large, poly_type_large])
                 elif features == 3:
                     poly_store.append([poly[0], elements_large, vertex_large, p_type_large])
