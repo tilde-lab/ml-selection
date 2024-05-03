@@ -117,7 +117,7 @@ def run_random_forest(train, test, features):
     )
     return [r2_res_rf, mae_result_rf]
 
-def run_math_models(poly_paths: list, seebeck_path: list, features: list) -> None:
+def run_math_models(poly_paths: list, seebeck_path: str, features: list) -> None:
     result = []
 
     for i, poly in enumerate(poly_paths):
@@ -129,21 +129,25 @@ def run_math_models(poly_paths: list, seebeck_path: list, features: list) -> Non
         metrics.append(run_random_forest(train, test, features[i]))
         result.append(metrics)
 
-    best_result = -1
+    best_result_r2 = -1
+    mae_for_best_r2 = None
     best_model = None
     dataset = 1
 
     for idx, data in enumerate(result):
         r2 = [i[0] for i in data]
+        mae = [i[1] for i in data]
         best_for_that_data = max(r2)
         print(f'Best result in DATASET {idx + 1}: {max(r2)}, model: {models[str(r2.index(max(r2)))]}')
 
-        if best_for_that_data > best_result:
-            best_result = best_for_that_data
+        if best_for_that_data > best_result_r2:
+            best_result_r2 = best_for_that_data
             best_model = models[str(r2.index(max(r2)))]
             dataset = idx + 1
+            mae_for_best_r2 = mae[r2.index(max(r2))]
 
-    print(f'\n\nBest result from all experiments: {best_result}, model: {best_model}, dataset: {dataset}')
+    print(f'\n\nBest result from all experiments: {best_result_r2}, model: {best_model}, dataset: {dataset}')
+    return [best_result_r2, mae_for_best_r2, best_model, dataset]
 
 
 if __name__ == '__main__':
