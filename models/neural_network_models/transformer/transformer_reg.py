@@ -100,8 +100,9 @@ class TransformerModel(nn.Module):
             else:
                 for y, els, p_type in train_data:
                     data = [eval(els), eval(p_type)]
-                    if len(data[0]) == 0:
-                        continue
+                    if len(data[0]) != len(data[1]):
+                        while len(data[0]) != len(data[1]):
+                            data[1].append(data[1][0])
                     cnt += 1
                     optimizer.zero_grad()
                     out = model([torch.tensor(data).permute(1, 0).unsqueeze(0)])
@@ -138,8 +139,9 @@ class TransformerModel(nn.Module):
             else:
                 for y, els, p_type in test_data:
                     data = [eval(els), eval(p_type)]
-                    if len(data[0]) == 0:
-                        continue
+                    if len(data[0]) != len(data[1]):
+                        while len(data[0]) != len(data[1]):
+                            data[1].append(data[1][0])
                     pred = model([torch.tensor(data).permute(1, 0).unsqueeze(0)])
                     preds.append(pred)
                     y_s.append(y)
