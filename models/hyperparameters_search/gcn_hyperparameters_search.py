@@ -5,84 +5,69 @@ Selection of hyperparameters for GCN.
 import numpy as np
 import torch
 from torch_geometric.loader import DataLoader
-from torcheval.metrics import R2Score
-from torchmetrics import MeanAbsoluteError
+import optuna
 
-from datasets.vectors_graph_dataset import CrystalGraphVectorsDataset
+from datasets.poly_graph_dataset import PolyGraphDataset
 from models.neural_network_models.GCN.gcn_regression_model import GCN
 
 
-def create_params(seed: int = 1) -> tuple:
-    """
-    Create params:
-    n_hidden, n_hidden2 - hidden layers in the specified range
-    activation - activation function
-    max_ep - total number of epoch
-    """
-    rnd = np.random.RandomState(seed)
+def main(path, features):
+    features = features
+    def objective(trial) -> int:
+        """Search of hyperparameters"""
+        dataset = PolyGraphDataset(path, features)
 
-    n_hidden = rnd.randint(1, 32)
-    n_hidden2 = rnd.randint(1, 32)
-    activation = rnd.choice(["leaky_relu", "relu", "elu", "tanh"])
-
-    lr = rnd.uniform(low=0.001, high=0.01)
-    max_ep = rnd.randint(3, 25)
-
-    return (n_hidden, n_hidden2, activation, lr, max_ep)
-
-
-def search_params(test_dataloader: DataLoader, train_dataloader: DataLoader) -> list:
-    """
-    Train and test on visible hyperparameters, measure metrics: R2, MAE
-    """
-    max_trials = 25
-    results = []
-
-    for i in range(max_trials):
-        print("Search trial " + str(i + 1))
-        (n_hidden, n_hidden2, activation, lr, max_ep) = create_params(seed=i * 24)
-
-        results.append([[n_hidden, n_hidden2, activation, lr, max_ep]])
-        print((n_hidden, n_hidden2, activation, lr, max_ep))
+        train_size = int(0.9 * len(dataset))
+        test_size = len(dataset) - train_size
+        train_data = torch.utils.data.Subset(dataset, range(train_size))
+        test_data = torch.utils.data.Subset(
+            dataset, range(train_size, train_size + test_size)
+        )
+        train_dataloader = DataLoader(
+            train_data, batch_size=64, shuffle=True, num_workers=0
+        )
+        test_dataloader = DataLoader(
+            test_data, batch_size=5240, shuffle=False, num_workers=0
+        )
 
         device = torch.device("cpu")
-        model = GCN(n_hidden, n_hidden2, activation).to(device)
 
-        model.train()
-        model.fit(model, max_ep, train_dataloader, lr=lr, device=device)
+        hidden = trial.suggest_categorical("hidden", [8, 16, 32])
+        hidden2 = trial.suggest_categorical("hidden2", [8, 16, 32, 64])
+        lr = trial.suggest_float("lr", 0.0001, 0.01)
+        ep = trial.suggest_int("ep", 1, 2)
+        activ = trial.suggest_categorical("activ", ["leaky_relu", "relu", "elu", "tanh"])
 
-        model.eval()
-        r2_res, mae_result = model.val(model, test_dataloader, device)
-        results[i].append([mae_result, r2_res])
-        print(f"MAE: {mae_result}, R2: {r2_res}")
+        model = GCN(features, hidden, hidden2, activation=activ).to(device)
 
-    return results
+        # train and test
+        model.fit(model, ep, train_dataloader, device, lr=lr)
+        r2, mae = model.val(model, test_dataloader, device)
 
+        return r2
 
-def main():
-    print("\nBegin hyperparameter random search")
+    study = optuna.create_study(sampler=optuna.samplers.TPESampler(), direction="maximize")
+    study.optimize(objective, n_trials=1)
 
-    dataset = CrystalGraphVectorsDataset()
+    res = [study.best_trial]
 
-    train_size = int(0.9 * len(dataset))
-    test_size = len(dataset) - train_size
+    print("Number of finished trials: ", len(study.trials))
+    print("Best trial:")
+    trial = study.best_trial
 
-    train_data = torch.utils.data.Subset(dataset, range(train_size))
-    test_data = torch.utils.data.Subset(
-        dataset, range(train_size, train_size + test_size)
-    )
-    train_dataloader = DataLoader(
-        train_data, batch_size=64, shuffle=False, num_workers=0
-    )
-    test_dataloader = DataLoader(
-        test_data, batch_size=1000, shuffle=False, num_workers=0
-    )
+    print("  R2: ", trial.values)
+    print("  Params: ")
 
-    result = search_params(train_dataloader, test_dataloader)
+    parms = []
+    for key, value in trial.params.items():
+        print(f"    {key}: {value}")
+        parms.append([key, value])
+    res.append(parms)
 
-    for res in result:
-        print(res)
+    return res
 
 
 if __name__ == "__main__":
-    main()
+    path = '/root/projects/ml-selection/data/processed_data/poly/0_features.csv'
+    features = 2
+    main(path, features)

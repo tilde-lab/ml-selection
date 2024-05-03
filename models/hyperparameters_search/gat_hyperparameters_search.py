@@ -5,52 +5,65 @@ import optuna
 import torch
 from torch_geometric.loader import DataLoader
 
-from datasets.vectors_graph_dataset import CrystalGraphVectorsDataset
+from datasets.poly_graph_dataset import PolyGraphDataset
 from models.neural_network_models.GAT.gat_regression_model import GAT
 
 
-def objective(trial) -> int:
-    """Search of hyperparameters"""
-    dataset = CrystalGraphVectorsDataset()
+def main(path, features):
+    features = features
+    def objective(trial) -> int:
+        """Search of hyperparameters"""
+        dataset = PolyGraphDataset(path, features)
 
-    train_size = int(0.9 * len(dataset))
-    test_size = len(dataset) - train_size
-    train_data = torch.utils.data.Subset(dataset, range(train_size))
-    test_data = torch.utils.data.Subset(
-        dataset, range(train_size, train_size + test_size)
-    )
-    train_dataloader = DataLoader(
-        train_data, batch_size=64, shuffle=True, num_workers=0
-    )
-    test_dataloader = DataLoader(
-        test_data, batch_size=5240, shuffle=False, num_workers=0
-    )
+        train_size = int(0.9 * len(dataset))
+        test_size = len(dataset) - train_size
+        train_data = torch.utils.data.Subset(dataset, range(train_size))
+        test_data = torch.utils.data.Subset(
+            dataset, range(train_size, train_size + test_size)
+        )
+        train_dataloader = DataLoader(
+            train_data, batch_size=64, shuffle=True, num_workers=0
+        )
+        test_dataloader = DataLoader(
+            test_data, batch_size=5240, shuffle=False, num_workers=0
+        )
 
-    device = torch.device("cpu")
+        device = torch.device("cpu")
 
-    hidden = trial.suggest_categorical("hidden", [8, 16, 32])
-    hidden2 = trial.suggest_categorical("hidden2", [8, 16, 32, 64])
-    lr = trial.suggest_float("lr", 0.0001, 0.01)
-    activ = trial.suggest_categorical("activ", ["leaky_relu", "relu", "elu", "tanh"])
+        hidden = trial.suggest_categorical("hidden", [8, 16, 32])
+        hidden2 = trial.suggest_categorical("hidden2", [8, 16, 32, 64])
+        lr = trial.suggest_float("lr", 0.0001, 0.01)
+        ep = trial.suggest_int("ep", 1, 2)
+        activ = trial.suggest_categorical("activ", ["leaky_relu", "relu", "elu", "tanh"])
 
-    model = GAT(2, hidden=hidden, hidden2=hidden2, activation=activ).to(device)
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=5e-4)
+        model = GAT(features, hidden=hidden, hidden2=hidden2, activation=activ).to(device)
+        optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=5e-4)
 
-    # train and test
-    model.fit(model, train_dataloader, optimizer, device)
-    r2, mae = model.val(model, test_dataloader, device)
+        # train and test
+        model.fit(model, ep, train_dataloader, optimizer, device)
+        r2, mae = model.val(model, test_dataloader, device)
 
-    return r2
+        return r2
 
+    study = optuna.create_study(sampler=optuna.samplers.TPESampler(), direction="maximize")
+    study.optimize(objective, n_trials=1)
 
-study = optuna.create_study(sampler=optuna.samplers.TPESampler(), direction="maximize")
-study.optimize(objective, n_trials=100)
+    res = [study.best_trial]
 
-print("Number of finished trials: ", len(study.trials))
-print("Best trial:")
-trial = study.best_trial
+    print("Number of finished trials: ", len(study.trials))
+    print("Best trial:")
+    trial = study.best_trial
 
-print("  R2: ", trial.values)
-print("  Params: ")
-for key, value in trial.params.items():
-    print(f"    {key}: {value}")
+    print("  R2: ", trial.values)
+    print("  Params: ")
+
+    parms = []
+    for key, value in trial.params.items():
+        print(f"    {key}: {value}")
+        parms.append([key, value])
+    res.append(parms)
+
+    return res
+
+if __name__ == '__main__':
+    main('/root/projects/ml-selection/data/processed_data/poly/0_features.csv', 2)
