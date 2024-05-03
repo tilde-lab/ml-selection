@@ -119,7 +119,7 @@ def main():
         handler,
         is_uniq_structure_for_phase,
         raw_seebeck_path=raw_path + "seebeck.json",
-        raw_str_path=raw_path + "large_structure.json",
+        raw_str_path=raw_path + "rep_structures.json",
         path_to_save=raw_path,
     )
     run_processing_polyhedra.main()

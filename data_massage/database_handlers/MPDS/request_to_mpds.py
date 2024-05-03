@@ -15,9 +15,6 @@ class RequestMPDS:
         self.client.chillouttime = 1
         self.dtype = dtype
         self.api_key = api_key
-        with open("/root/projects/ml-selection/configs/config.yaml", "r") as yamlfile:
-            self.sid = yaml.load(yamlfile, Loader=yaml.FullLoader)["sid"]
-            print("Sid is read successful")
 
     def make_request(
         self, is_seebeck: bool = False, is_structure: bool = False, phases: list = None
