@@ -35,14 +35,14 @@ def run_net_models():
 
         print(f"\n\n---------GCN---------")
         try:
-            gcn_res = gcn_hyperparameters_search.main(path, len(features[idx]))
+            gcn_res = gcn_hyperparameters_search.main(path, len(features[idx]), idx)
             total_res_gcn.append(gcn_res)
         except:
             print(f"Failed to start GCN on Dataset: {idx}")
 
         print(f"\n\n---------GAT---------")
         try:
-            gat_res = gat_hyperparameters_search.main(path, len(features[idx]))
+            gat_res = gat_hyperparameters_search.main(path, len(features[idx]), idx)
             total_res_gat.append(gat_res)
         except:
             print(f"Failed to start GAT on Dataset: {idx}")
@@ -51,7 +51,7 @@ def run_net_models():
 
         try:
             transf_res = transformer_hyperparameters_search.main(
-                path, len(features[idx])
+                path, len(features[idx]), idx
             )
             total_res_transf.append(transf_res)
         except:
@@ -60,9 +60,9 @@ def run_net_models():
     print(f"---------START TRAIN on data {len(poly_path) + 1}---------")
 
     print(f"\n\n---------GCN---------")
-    gcn_res = gcn_hyperparameters_search.main(poly_just_graph_models, 2)
+    gcn_res = gcn_hyperparameters_search.main(poly_just_graph_models, 2, len(poly_path) + 1)
     print(f"\n\n---------GAT---------")
-    gat_res = gat_hyperparameters_search.main(poly_just_graph_models, 2)
+    gat_res = gat_hyperparameters_search.main(poly_just_graph_models, 2, len(poly_path) + 1)
 
     total_res_gcn.append(gcn_res), total_res_gat.append(gat_res)
 

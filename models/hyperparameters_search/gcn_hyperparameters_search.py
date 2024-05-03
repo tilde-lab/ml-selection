@@ -2,7 +2,6 @@
 Selection of hyperparameters for GCN.
 """
 
-import numpy as np
 import torch
 from torch_geometric.loader import DataLoader
 import optuna
@@ -10,11 +9,16 @@ import optuna
 from datasets.poly_graph_dataset import PolyGraphDataset
 from models.neural_network_models.GCN.gcn_regression_model import GCN
 
+BEST_WEIGHTS = None
+BEST_R2 = -100
 
-def main(path, features):
+
+def main(path, features, ds):
     features = features
+
     def objective(trial) -> int:
         """Search of hyperparameters"""
+        global BEST_WEIGHTS, BEST_R2
         dataset = PolyGraphDataset(path, features)
 
         train_size = int(0.9 * len(dataset))
@@ -35,7 +39,7 @@ def main(path, features):
         hidden = trial.suggest_categorical("hidden", [8, 16, 32])
         hidden2 = trial.suggest_categorical("hidden2", [8, 16, 32, 64])
         lr = trial.suggest_float("lr", 0.0001, 0.01)
-        ep = trial.suggest_int("ep", 1, 2)
+        ep = trial.suggest_int("ep", 4, 10)
         activ = trial.suggest_categorical("activ", ["leaky_relu", "relu", "elu", "tanh"])
 
         model = GCN(features, hidden, hidden2, activation=activ).to(device)
@@ -44,10 +48,14 @@ def main(path, features):
         model.fit(model, ep, train_dataloader, device, lr=lr)
         r2, mae = model.val(model, test_dataloader, device)
 
+        if r2 > BEST_R2:
+            BEST_R2 = r2
+            BEST_WEIGHTS = model.state_dict()
+
         return r2
 
     study = optuna.create_study(sampler=optuna.samplers.TPESampler(), direction="maximize")
-    study.optimize(objective, n_trials=1)
+    study.optimize(objective, n_trials=5)
 
     res = [study.best_trial]
 
@@ -64,10 +72,13 @@ def main(path, features):
         parms.append([key, value])
     res.append(parms)
 
+    if BEST_WEIGHTS is not None:
+        torch.save(BEST_WEIGHTS, f'best_gcn_weights{ds}.pth')
+
     return res
 
 
 if __name__ == "__main__":
     path = '/root/projects/ml-selection/data/processed_data/poly/0_features.csv'
     features = 2
-    main(path, features)
+    main(path, features, 1)

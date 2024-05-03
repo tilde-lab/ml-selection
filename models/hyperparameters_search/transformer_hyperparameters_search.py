@@ -8,8 +8,11 @@ import pandas as pd
 
 from models.neural_network_models.transformer.transformer_reg import TransformerModel
 
+BEST_WEIGHTS = None
+BEST_R2 = -100
 
-def main(poly_path, features):
+
+def main(poly_path, features, ds):
     poly = pd.read_csv(poly_path)
     seebeck = pd.read_json(
         "/root/projects/ml-selection/data/raw_data/median_seebeck.json", orient='split',
@@ -24,12 +27,14 @@ def main(poly_path, features):
     test_data = torch.utils.data.Subset(
         dataset, range(train_size, train_size + test_size)
     )
+
     def objective(trial) -> int:
         """Search of hyperparameters"""
+        global BEST_WEIGHTS, BEST_R2
 
-        hidd = trial.suggest_categorical("hidden", [8, 16, 32])
+        hidd = trial.suggest_categorical("hidden", [8, 16, 32, 64])
         lr = trial.suggest_float("lr", 0.0001, 0.01)
-        ep = trial.suggest_int("ep", 1, 2)
+        ep = trial.suggest_int("ep", 4, 10)
         heads = trial.suggest_categorical("heads", [1, features])
         activ = trial.suggest_categorical("activ", ["leaky_relu", "relu", "elu", "tanh"])
 
@@ -40,10 +45,14 @@ def main(poly_path, features):
         model.fit(model, optimizer, ep, train_data)
         r2, mae = model.val(model, test_data)
 
+        if r2 > BEST_R2:
+            BEST_R2 = r2
+            BEST_WEIGHTS = model.state_dict()
+
         return r2
 
     study = optuna.create_study(sampler=optuna.samplers.TPESampler(), direction="maximize")
-    study.optimize(objective, n_trials=1)
+    study.optimize(objective, n_trials=5)
 
     res = [study.best_trial]
 
@@ -60,10 +69,13 @@ def main(poly_path, features):
         parms.append([key, value])
     res.append(parms)
 
+    if BEST_WEIGHTS is not None:
+        torch.save(BEST_WEIGHTS, f'best_transformer_weights{ds}.pth')
+
     return res
 
 
 if __name__ == "__main__":
     path = '/root/projects/ml-selection/data/processed_data/poly/2_features.csv'
     features = 2
-    main(path, features)
+    main(path, features, 1)
