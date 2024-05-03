@@ -2,11 +2,12 @@
 Main file that starts collecting data for training models. Get median value for Seebeck and structures.
 1 phase_id <-> 1 Seebeck <-> many structures.
 """
+
 import pandas as pd
+import run_processing_polyhedra
 import yaml
 from pandas import DataFrame
 
-from data_massage.balancing_data.undersampling import make_undersampling
 from data_massage.calculate_median_value import seebeck_median_value
 from data_massage.data_handler import DataHandler
 
@@ -88,43 +89,41 @@ def convert_structure_to_vectors(
     return dfrm_str, dfrm_seeb
 
 
-if __name__ == "__main__":
-    with open("/root/projects/ml-selection/configs/config.yaml", "r") as yamlfile:
-        api_key = yaml.load(yamlfile, Loader=yaml.FullLoader)['api_key']
-        print("Key is read successful")
-
-    raw_path = "/root/projects/ml-selection/data/raw_data/"
-    processed_path = "/root/projects/ml-selection/data/processed_data/"
-
-    is_uniq_structure_for_phase = False
-    handler = DataHandler(True, api_key)
-
-    str_seeb_dfrm = get_structures_and_seebeck(
-        handler,
-        is_uniq_structure_for_phase,
-        raw_seebeck_path=raw_path+'seebeck.json',
-        # raw_str_path=raw_path+'structure.json',
-        path_to_save=raw_path
-    )
-    dfrm_str, dfrm_seeb = convert_structure_to_vectors(
+def get_data_for_vectors_dataset(
+    handler: DataHandler, str_seeb_dfrm: DataFrame, processed_path: str
+):
+    """
+    Get data in format for VectorsGraphDataset
+    """
+    convert_structure_to_vectors(
         handler,
         str_seeb_dfrm,
         path_to_save=processed_path,
     )
 
-    df_structs, df_seebeck = make_undersampling(
-        str_dfrm=dfrm_str, seebeck_dfrm=dfrm_seeb
+
+def main():
+    """
+    Launch data collection step by step
+    """
+    with open("/root/projects/ml-selection/configs/config.yaml", "r") as yamlfile:
+        api_key = yaml.load(yamlfile, Loader=yaml.FullLoader)["api_key"]
+        print("Key is read successful")
+
+    raw_path = "/root/projects/ml-selection/data/raw_data/"
+
+    is_uniq_structure_for_phase = False
+    handler = DataHandler(True, api_key)
+
+    get_structures_and_seebeck(
+        handler,
+        is_uniq_structure_for_phase,
+        raw_seebeck_path=raw_path + "seebeck.json",
+        raw_str_path=raw_path + "large_structure.json",
+        path_to_save=raw_path,
     )
-    df_structs.to_csv(
-        "/root/projects/ml-selection/data/processed_data/under_str.csv",
-        index=False,
-    )
-
-    df_seebeck.to_csv(
-        "/root/projects/ml-selection/data/processed_data/under_seeb.csv",
-        index=False,
-    )
+    run_processing_polyhedra.main()
 
 
-
-
+if __name__ == "__main__":
+    main()
