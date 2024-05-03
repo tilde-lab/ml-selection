@@ -16,9 +16,9 @@ mae = MeanAbsoluteError()
 class GAT(torch.nn.Module):
     """Graph Attention Network"""
 
-    def __init__(self, in_ch, hidden=8, hidden2=16, activation="relu"):
+    def __init__(self, features, hidden=8, hidden2=16, activation="relu"):
         super().__init__()
-        self.conv1 = GATv2Conv(in_ch, hidden, 1, edge_dim=1)
+        self.conv1 = GATv2Conv(features, hidden, 1, edge_dim=1)
         self.conv2 = GATv2Conv(hidden, hidden2, 1, edge_dim=1)
         self.layer3 = Linear(hidden2, 1)
         if activation == "elu":
@@ -48,7 +48,7 @@ class GAT(torch.nn.Module):
                 data.edge_attr,
             )
         except:
-            # is CrystalVectorsGraphDataset
+            # is CrystalVectorsGraphDataset or PolyGraphDataset
             x, edge_index = data.x, data.edge_index.type(torch.int64)
 
         x = self.conv1(x.float(), edge_index=edge_index, edge_attr=edge_attr)
@@ -105,7 +105,7 @@ class GAT(torch.nn.Module):
             )
             torch.save(
                 model.state_dict(),
-                r"/root/projects/ml-selection/models/neural_network_models/GAT/weights/20_02.pth",
+                r"/root/projects/ml-selection/models/neural_network_models/GAT/weights/30_01.pth",
             )
 
     def val(
@@ -139,10 +139,13 @@ class GAT(torch.nn.Module):
 
 
 if __name__ == "__main__":
-    # dataset with atoms and distance info
-    dataset = PolyGraphDataset()
+    n_features = 3
+    dataset = PolyGraphDataset(
+        '/root/projects/ml-selection/data/processed_data/poly/3_features.csv',
+        n_features
+    )
 
-    train_size = int(0.9 * len(dataset))
+    train_size = int(0.6 * len(dataset))
     test_size = len(dataset) - train_size
     train_data = torch.utils.data.Subset(dataset, range(train_size))
     test_data = torch.utils.data.Subset(
@@ -156,19 +159,14 @@ if __name__ == "__main__":
     )
 
     device = torch.device("cpu")
-    model = GAT(in_ch=3).to(device)
+    model = GAT(n_features).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.005919, weight_decay=5e-4)
 
     model.fit(
         model,
-        80,
+        1,
         train_dataloader,
         optimizer,
         device,
     )
     model.val(model, test_dataloader, device)
-
-    torch.save(
-        model.state_dict(),
-        r"/root/projects/ml-selection/models/neural_network_models/GAT/weights/20_02.pth",
-    )
