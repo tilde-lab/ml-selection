@@ -22,25 +22,33 @@ mean_absolute_error = MeanAbsoluteError()
 class TransformerModel(nn.Module):
     """A transformer model. Contains an encoder (without decoder)"""
 
-    def __init__(self, n_feature, heads):
+    def __init__(self, n_feature, heads, hidd, activation):
         super().__init__()
 
         encoder_layer = nn.TransformerEncoderLayer(
             d_model=n_feature,
             nhead=heads,
             batch_first=True,
-            activation="gelu",
+            activation='gelu',
             dropout=0,
             norm_first=True,
         )
+        self.n_feature = n_feature
         self.agg_token = torch.rand((1, 1, n_feature))
         self.transformer_encoder = nn.TransformerEncoder(
             encoder_layer, num_layers=1, norm=None
         )
-        self.layer1 = nn.Linear(n_feature, 4 * n_feature * heads)
-        self.layer2 = nn.Linear(4 * n_feature * heads, 1 * n_feature)
-        self.layer3 = nn.Linear(1 * n_feature, 1)
-        self.activ = nn.ELU()
+        self.layer1 = nn.Linear(n_feature, n_feature * hidd * heads)
+        self.layer2 = nn.Linear(hidd * n_feature * heads, 1 * hidd)
+        self.layer3 = nn.Linear(hidd, 1)
+        if activation == "elu":
+            self.activ = F.elu
+        elif activation == "relu":
+            self.activ = F.relu
+        elif activation == "leaky_relu":
+            self.activ = F.leaky_relu
+        elif activation == "tanh":
+            self.activ = F.tanh
 
     def forward(self, batch: list) -> torch.Tensor:
         """
@@ -70,23 +78,37 @@ class TransformerModel(nn.Module):
         x = self.layer3(x)
         return x
 
-    def fit(self, model, optimizer, train_data: Subset) -> None:
+    def fit(self, model, optimizer, ep, train_data: Subset) -> None:
         """Train model"""
         model.train()
-        for epoch in tqdm(range(50)):
+        for epoch in tqdm(range(ep)):
             mean_loss = 0
             cnt = 0
-            for y, poly, p_vert, p_type in train_data:
-                data = [eval(poly), eval(p_vert), eval(p_type)]
-                if len(data[0]) == 0:
-                    continue
-                cnt += 1
-                optimizer.zero_grad()
-                out = model([torch.tensor(data).permute(1, 0).unsqueeze(0)])
-                loss = F.mse_loss(out, torch.tensor(y))
-                loss.backward()
-                optimizer.step()
-                mean_loss += loss
+
+            if self.n_feature == 3:
+                for y, poly, p_vert, p_type in train_data:
+                    data = [eval(poly), eval(p_vert), eval(p_type)]
+                    if len(data[0]) == 0:
+                        continue
+                    cnt += 1
+                    optimizer.zero_grad()
+                    out = model([torch.tensor(data).permute(1, 0).unsqueeze(0)])
+                    loss = F.mse_loss(out, torch.tensor(y))
+                    loss.backward()
+                    optimizer.step()
+                    mean_loss += loss
+            else:
+                for y, els, p_type in train_data:
+                    data = [eval(els), eval(p_type)]
+                    if len(data[0]) == 0:
+                        continue
+                    cnt += 1
+                    optimizer.zero_grad()
+                    out = model([torch.tensor(data).permute(1, 0).unsqueeze(0)])
+                    loss = F.mse_loss(out, torch.tensor(y))
+                    loss.backward()
+                    optimizer.step()
+                    mean_loss += loss
 
             print(f"--------Mean loss for epoch {epoch} is {mean_loss / cnt}--------")
 
@@ -105,13 +127,22 @@ class TransformerModel(nn.Module):
         y_s = []
 
         with torch.no_grad():
-            for y, poly, p_vertex, p_type in test_data:
-                data = [eval(poly), eval(p_vertex), eval(p_type)]
-                if len(data[0]) == 0:
-                    continue
-                pred = model([torch.tensor(data).permute(1, 0).unsqueeze(0)])
-                preds.append(pred)
-                y_s.append(y)
+            if self.n_feature == 3:
+                for y, poly, p_vertex, p_type in test_data:
+                    data = [eval(poly), eval(p_vertex), eval(p_type)]
+                    if len(data[0]) == 0:
+                        continue
+                    pred = model([torch.tensor(data).permute(1, 0).unsqueeze(0)])
+                    preds.append(pred)
+                    y_s.append(y)
+            else:
+                for y, els, p_type in test_data:
+                    data = [eval(els), eval(p_type)]
+                    if len(data[0]) == 0:
+                        continue
+                    pred = model([torch.tensor(data).permute(1, 0).unsqueeze(0)])
+                    preds.append(pred)
+                    y_s.append(y)
 
         mean_absolute_error.update(torch.tensor(preds).reshape(-1), torch.tensor(y_s))
         mae_result = mean_absolute_error.compute()
@@ -125,6 +156,8 @@ class TransformerModel(nn.Module):
         )
 
         print("R2: ", r2_res, " MAE: ", mae_result)
+
+        return [r2_res, mae_result]
 
 
 if __name__ == "__main__":
@@ -143,8 +176,8 @@ if __name__ == "__main__":
     test_data = torch.utils.data.Subset(
         dataset, range(train_size, train_size + test_size)
     )
-    model = TransformerModel(n_feature=3, heads=3)
+    model = TransformerModel(3, 3, 8, 'elu')
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=5e-4)
 
-    model.fit(model, optimizer, train_data)
+    model.fit(model, optimizer, 20, train_data)
     model.val(model, test_data)
