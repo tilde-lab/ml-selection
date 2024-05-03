@@ -461,10 +461,12 @@ class DataHandler:
                 elements = cls.vectors_count_elements(elements)
 
             vertex, p_type = get_int_poly_type(poly)
+
             # features: elements, poly (number of vertex + number of type poly)
             if features == 2 and not(is_one_hot):
                 poly_type = vertex + p_type
                 poly_type_large = [poly_type] * 100
+
             # features: elements, number of vertex in poly, type of poly
             elif features == 3 and not(is_one_hot):
                 vertex_large, p_type_large = [vertex] * 100, [p_type] * 100

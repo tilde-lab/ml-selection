@@ -23,11 +23,11 @@ class PolyGraphDataset(Dataset):
         self.data = pd.merge(self.seebeck, self.poly, on="phase_id", how="inner").values.tolist()
 
     def __len__(self):
-        "Return num of samples"
+        """Return num of samples"""
         return len(self.data)
 
     def __getitem__(self, idx: int) -> list:
-        "Return 1 graph and 1 seebeck"
+        """Return 1 graph and 1 seebeck"""
         seebeck = self.data[idx][2]
         elements = self.data[idx][3]
 
@@ -54,11 +54,12 @@ class PolyGraphDataset(Dataset):
             # create list with features for every node
             x_vector = []
 
-            for i, d in enumerate(eval(poly_type)):
+            for i, d in enumerate(eval(poly_el)):
                 x_vector.append([])
-                x_vector[i].append(eval(poly_el)[i])
-                x_vector[i].append(eval(poly_vertex)[i])
                 x_vector[i].append(d)
+                x_vector[i].append(eval(poly_type)[i])
+                x_vector[i].append(eval(poly_vertex)[i])
+
 
             node_features = torch.tensor(x_vector)
 
@@ -68,17 +69,17 @@ class PolyGraphDataset(Dataset):
             # create list with features for every node
             x_vector = []
 
-            for i, d in enumerate(eval(poly_type)):
+            for i, d in enumerate(eval(poly_el)):
                 x_vector.append([])
-                x_vector[i].append(eval(poly_el)[i])
                 x_vector[i].append(d)
+                x_vector[i].append(eval(poly_type)[0])
 
             node_features = torch.tensor(x_vector)
 
         edge_index = []
 
-        for i in range(len(eval(poly_type))):
-            for j in range(i + 1, len(eval(poly_type))):
+        for i in range(len(eval(poly_el))):
+            for j in range(i + 1, len(eval(poly_el))):
                 # graph is undirected, so we duplicate edge
                 if i != j:
                     edge_index.append([i, j])
