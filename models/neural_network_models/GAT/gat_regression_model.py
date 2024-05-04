@@ -16,7 +16,7 @@ mae = MeanAbsoluteError()
 class GAT(torch.nn.Module):
     """Graph Attention Network"""
 
-    def __init__(self, features, hidden=8, hidden2=16, activation="relu"):
+    def __init__(self, features, hidden=32, hidden2=16, activation="relu"):
         super().__init__()
         self.conv1 = GATv2Conv(features, hidden, 1, edge_dim=1)
         self.conv2 = GATv2Conv(hidden, hidden2, 1, edge_dim=1)
@@ -164,7 +164,7 @@ if __name__ == "__main__":
 
     model.fit(
         model,
-        1,
+        8,
         train_dataloader,
         optimizer,
         device,

@@ -13,11 +13,12 @@ import torch.utils.data as data
 from torch.utils.data import Subset
 from torcheval.metrics import R2Score
 from torchmetrics import MeanAbsoluteError
+from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
 r2 = R2Score()
 mean_absolute_error = MeanAbsoluteError()
-
+writer = SummaryWriter()
 
 class TransformerModel(nn.Module):
     """A transformer model. Contains an encoder (without decoder)"""
@@ -107,17 +108,21 @@ class TransformerModel(nn.Module):
                     optimizer.zero_grad()
                     out = model([torch.tensor(data).permute(1, 0).unsqueeze(0)])
                     loss = F.mse_loss(out, torch.tensor(y))
+                    writer.add_scalar("Loss/train", loss, epoch)
                     loss.backward()
                     optimizer.step()
                     mean_loss += loss
 
             print(f"--------Mean loss for epoch {epoch} is {mean_loss / cnt}--------")
 
-            if epoch % 1 == 0:
-                torch.save(
-                    model.state_dict(),
-                    r"/root/projects/ml-selection/models/neural_network_models/transformer/weights/20_02.pth",
-                )
+
+            # if epoch % 5 == 0:
+            #     torch.save(
+            #         model.state_dict(),
+            #         r"/root/projects/ml-selection/models/neural_network_models/transformer/weights/20_02.pth",
+            #     )
+        writer.flush()
+        writer.close()
 
     def val(self, model, test_data: Subset) -> None:
         """Test model"""
@@ -154,7 +159,7 @@ class TransformerModel(nn.Module):
 
         torch.save(
             model.state_dict(),
-            r"/root/projects/ml-selection/models/neural_network_models/transformer/weights/20_02.pth",
+            r"/root/projects/ml-selection/models/neural_network_models/transformer/weights/0300.pth",
         )
 
         print("R2: ", r2_res, " MAE: ", mae_result)
@@ -164,7 +169,7 @@ class TransformerModel(nn.Module):
 
 if __name__ == "__main__":
     poly = pd.read_csv(
-        f"/root/projects/ml-selection/data/processed_data/3_features_poly_descriptor.csv",
+        f"/root/projects/ml-selection/data/processed_data/poly/2_features.csv",
     )
     seebeck = pd.read_json(
         "/root/projects/ml-selection/data/raw_data/median_seebeck.json", orient='split',
@@ -179,7 +184,10 @@ if __name__ == "__main__":
         dataset, range(train_size, train_size + test_size)
     )
     model = TransformerModel(3, 3, 8, 'elu')
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=5e-4)
+    # model.load_state_dict(
+    #     torch.load('/root/projects/ml-selection/models/neural_network_models/transformer/weights/0300.pth')
+    # )
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.0006479739574204421, weight_decay=5e-4)
 
-    model.fit(model, optimizer, 20, train_data)
+    model.fit(model, optimizer, 8, train_data)
     model.val(model, test_data)

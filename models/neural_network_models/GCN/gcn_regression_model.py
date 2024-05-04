@@ -16,7 +16,7 @@ mae = MeanAbsoluteError()
 class GCN(torch.nn.Module):
     """Graph Convolutional Network"""
 
-    def __init__(self, features, n_hidden, n_hidden2=4, activation="elu"):
+    def __init__(self, features, n_hidden=16, n_hidden2=32, activation="elu"):
         super().__init__()
         self.conv1 = GCNConv(features, n_hidden)
         self.conv2 = GCNConv(n_hidden, n_hidden2)
@@ -137,7 +137,7 @@ if __name__ == "__main__":
     )
 
     device = torch.device("cpu")
-    model = GCN(n_features, 13, 16, "relu").to(device)
+    model = GCN(n_features, 16, 32, "relu").to(device)
 
     model.fit(model, 1, train_dataloader, device, lr=0.008598391737229157)
     model.val(model, test_dataloader, device)
