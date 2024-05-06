@@ -7,8 +7,8 @@ on all types of polyhedra dataset.
 The best configurations for each model with a specific type of polyhedra dataset are printed.
 """
 
-from run_all_models import main as run_models
-from run_total_data_collection import main as run_collection
+from scripts.hyp_search.run_all_models import main as run_models
+from scripts.launch.run_total_data_collection import main as run_collection
 
 if __name__ == "__main__":
     run_collection()
