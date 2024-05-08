@@ -81,8 +81,8 @@ def train(model, ep, train_loader, optimizer):
     model.train()
     criterion = torch.nn.MSELoss()
 
-    total_loss = 0
     for e in range(ep):
+        total_loss = 0
         for d in train_loader:
             data, y = d
             optimizer.zero_grad()
@@ -92,10 +92,10 @@ def train(model, ep, train_loader, optimizer):
             optimizer.step()
             total_loss += float(loss) * data.num_graphs
         print(f"Train loss for epoch {e} is: ", total_loss / len(train_loader.dataset))
-        # torch.save(
-        #     model.state_dict(),
-        #     r"/root/projects/ml-selection/models/neural_network_models/30_01.pth",
-        # )
+        torch.save(
+            model.state_dict(),
+            r"/root/projects/ml-selection/models/neural_network_models/weights/30_01.pth",
+        )
     return total_loss / len(train_loader.dataset)
 
 
@@ -125,7 +125,7 @@ def val(model, test_loader):
             " to ",
             max([i.max() for i in preds]),
         )
-    return r2, mae
+    return r2_res, mae_result
 
 
 if __name__ == "__main__":
@@ -143,7 +143,7 @@ if __name__ == "__main__":
     model = PointNet(4)
     model.load_state_dict(
         torch.load(
-            r"/models/neural_network_models/30_01.pth"
+            r"/models/neural_network_models/weights/30_01.pth"
         )
     )
     optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
