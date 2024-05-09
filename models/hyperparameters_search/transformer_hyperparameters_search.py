@@ -12,14 +12,17 @@ BEST_WEIGHTS = None
 BEST_R2 = -100
 
 
-def main(poly_path, features, ds):
+def main(poly_path: str, features: int, ds: int, temperature: bool):
     poly = pd.read_csv(poly_path)
     seebeck = pd.read_json(
         "/root/projects/ml-selection/data/raw_data/median_seebeck.json", orient='split',
     )
     dataset = pd.merge(
         seebeck, poly, on="phase_id", how="inner"
-    ).drop(columns=['phase_id', 'Formula']).values.tolist()
+    ).drop(columns=['phase_id', 'Formula'])
+    if not(temperature):
+        dataset = dataset.drop(columns=['temperature'])
+    dataset = dataset.values.tolist()
     train_size = int(0.9 * len(dataset))
     test_size = len(dataset) - train_size
 
@@ -27,6 +30,9 @@ def main(poly_path, features, ds):
     test_data = torch.utils.data.Subset(
         dataset, range(train_size, train_size + test_size)
     )
+
+    if temperature:
+        features += 1
 
     def objective(trial) -> int:
         """Search of hyperparameters"""
@@ -78,4 +84,5 @@ def main(poly_path, features, ds):
 if __name__ == "__main__":
     path = '/root/projects/ml-selection/data/processed_data/poly/2_features.csv'
     features = 2
-    main(path, features, 1)
+    temperature = False
+    main(path, features, 1, temperature)

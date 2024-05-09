@@ -12,13 +12,14 @@ BEST_WEIGHTS = None
 BEST_R2 = -100
 
 
-def main(path, features, ds):
-    features = features
+def main(path: str, features: int, ds: int, temperature: bool):
+    if temperature:
+        features += 1
 
     def objective(trial) -> int:
         """Search of hyperparameters"""
         global BEST_WEIGHTS, BEST_R2
-        dataset = PolyGraphDataset(path, features)
+        dataset = PolyGraphDataset(path, features, temperature)
 
         train_size = int(0.9 * len(dataset))
         test_size = len(dataset) - train_size
@@ -78,4 +79,7 @@ def main(path, features, ds):
     return res
 
 if __name__ == '__main__':
-    main('/root/projects/ml-selection/data/processed_data/poly/0_features.csv', 2, 1)
+    path = '/root/projects/ml-selection/data/processed_data/poly/0_features.csv'
+    features = 2
+    temperature = False
+    main(path, features, 1, temperature)

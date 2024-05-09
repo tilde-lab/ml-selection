@@ -26,7 +26,15 @@ poly_features = [
     ["poly_elements", "poly_vertex", "poly_type"],
     ["poly_elements", "poly_type"],
 ]
+poly_temperature_features = [
+    ["poly_elements", "poly_type", "temperature"],
+    ["poly_elements", "poly_vertex", "poly_type", "temperature"],
+    ["poly_elements", "poly_type", "temperature"],
+]
 point_features = [3, 4]
+
+total_features = []
+total_features.append(poly_features), total_features.append(poly_temperature_features)
 
 
 def run_net_models() -> list:
@@ -35,45 +43,57 @@ def run_net_models() -> list:
     """
     total_res_gcn, total_res_gat, total_res_transf, total_res_point_n = [], [], [], []
 
-    for idx, path in enumerate(poly_path):
-        print(f"---------START TRAIN NET on descriptor {idx}---------")
+    # without temperature and without
+    for k, features in enumerate(total_features):
+        if k == 1:
+            temperature = True
+        else:
+            temperature = False
+        for idx, path in enumerate(poly_path):
+            print(f"---------START TRAIN NET on descriptor {idx}---------")
 
+            print(f"\n\n---------GCN---------")
+            try:
+                gcn_res = gcn_hyperparameters_search.main(path, len(features[idx]), idx, temperature)
+                total_res_gcn.append(gcn_res)
+            except:
+                print(f"Failed to start GCN on descriptor: {idx}")
+
+            print(f"\n\n---------GAT---------")
+            try:
+                gat_res = gat_hyperparameters_search.main(path, len(features[idx]), idx, temperature)
+                total_res_gat.append(gat_res)
+            except:
+                print(f"Failed to start GAT on descriptor: {idx}")
+
+            print(f"\n\n---------Transformer---------")
+
+            try:
+                transf_res = transformer_hyperparameters_search.main(
+                    path, len(features[idx]), idx, temperature
+                )
+                total_res_transf.append(transf_res)
+            except:
+                print(f"Failed to start Transformer on descriptor: {idx}")
+
+    # data consist of structures without size customization
+    for k, features in enumerate(total_features):
+        if k == 1:
+            temperature = True
+        else:
+            temperature = False
+        print(f"---------START TRAIN on descriptor {len(poly_path) * 2 + 1 + k}---------")
         print(f"\n\n---------GCN---------")
-        try:
-            gcn_res = gcn_hyperparameters_search.main(path, len(poly_features[idx]), idx)
-            total_res_gcn.append(gcn_res)
-        except:
-            print(f"Failed to start GCN on descriptor: {idx}")
+        gcn_res = gcn_hyperparameters_search.main(poly_just_graph_models, 2, len(poly_path) + 1, temperature)
+        total_res_gcn.append(gcn_res)
 
         print(f"\n\n---------GAT---------")
-        try:
-            gat_res = gat_hyperparameters_search.main(path, len(poly_features[idx]), idx)
-            total_res_gat.append(gat_res)
-        except:
-            print(f"Failed to start GAT on descriptor: {idx}")
-
-        print(f"\n\n---------Transformer---------")
-
-        try:
-            transf_res = transformer_hyperparameters_search.main(
-                path, len(poly_features[idx]), idx
-            )
-            total_res_transf.append(transf_res)
-        except:
-            print(f"Failed to start Transformer on descriptor: {idx}")
-
-    print(f"---------START TRAIN on descriptor {len(poly_path) + 1}---------")
-
-    print(f"\n\n---------GCN---------")
-    gcn_res = gcn_hyperparameters_search.main(poly_just_graph_models, 2, len(poly_path) + 1)
-    total_res_gcn.append(gcn_res)
-
-    print(f"\n\n---------GAT---------")
-    gat_res = gat_hyperparameters_search.main(poly_just_graph_models, 2, len(poly_path) + 1)
-    total_res_gat.append(gat_res)
+        gat_res = gat_hyperparameters_search.main(poly_just_graph_models, 2, len(poly_path) + 1, temperature)
+        total_res_gat.append(gat_res)
 
     print(f"\n\n---------PointNet---------")
     for idx, p_feature in enumerate(point_features):
+        print(f"---------START TRAIN on descriptor {idx}---------")
         pointnet_res = point_net_hyperparameters_search.main(p_feature, idx)
         total_res_point_n.append(pointnet_res)
 

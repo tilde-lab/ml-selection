@@ -3,7 +3,7 @@ import torch
 from torch.nn import Sequential, Linear, ReLU
 from torch_geometric.loader import DataLoader
 from torcheval.metrics import R2Score
-from torchmetrics import MeanAbsoluteError
+from torchmetrics import MeanAbsoluteError, MeanAbsolutePercentageError
 
 from torch_geometric.nn import MessagePassing
 from torch_geometric.nn import global_max_pool
@@ -13,6 +13,7 @@ from tqdm import tqdm
 
 r2 = R2Score()
 mae = MeanAbsoluteError()
+mape = MeanAbsolutePercentageError()
 
 
 class PointNetLayer(MessagePassing):
@@ -91,7 +92,8 @@ def train(model, ep, train_loader, optimizer):
             loss.backward()
             optimizer.step()
             total_loss += float(loss) * data.num_graphs
-        print(f"Train loss for epoch {e} is: ", total_loss / len(train_loader.dataset))
+            mape.update(logits.reshape(-1), y)
+        f"--------Mean loss for epoch {epoch} is {total_loss / len(train_loader.dataset)}--------R2 is {r2.compute()}--------MAPE is {mape.compute()}"
         torch.save(
             model.state_dict(),
             r"/root/projects/ml-selection/models/neural_network_models/weights/30_01.pth",
@@ -112,14 +114,19 @@ def val(model, test_loader):
             preds.append(pred)
             mae.update(pred.reshape(-1), y)
             r2.update(pred.reshape(-1), y)
+            mape.update(pred.reshape(-1), y)
 
         mae_result = mae.compute()
         r2_res = r2.compute()
+        mape_res = mape.compute()
+
         print(
             "R2: ",
             r2_res,
             " MAE: ",
             mae_result,
+            " MAPE: ",
+            mape_res,
             "Pred from",
             min([i.min() for i in preds]),
             " to ",
