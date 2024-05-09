@@ -93,11 +93,7 @@ def train(model, ep, train_loader, optimizer):
             optimizer.step()
             total_loss += float(loss) * data.num_graphs
             mape.update(logits.reshape(-1), y)
-        f"--------Mean loss for epoch {epoch} is {total_loss / len(train_loader.dataset)}--------R2 is {r2.compute()}--------MAPE is {mape.compute()}"
-        torch.save(
-            model.state_dict(),
-            r"/root/projects/ml-selection/models/neural_network_models/weights/30_01.pth",
-        )
+        f"--------Mean loss for epoch {e} is {total_loss / len(train_loader.dataset)}--------"
     return total_loss / len(train_loader.dataset)
 
 

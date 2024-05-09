@@ -22,8 +22,6 @@ def main(features, ds):
 
         train_size = int(0.9 * len(dataset))
         test_size = len(dataset) - train_size
-        train_size = 100
-        test_size = 20
 
         train_data = torch.utils.data.Subset(dataset, range(train_size))
         test_data = torch.utils.data.Subset(

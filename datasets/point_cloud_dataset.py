@@ -22,7 +22,7 @@ class PointCloudDataset(Dataset):
         """Return sample by idx """
         coordinates = self.data[idx][3]
         elements = self.data[idx][4]
-        seebeck = self.data[idx][7]
+        seebeck = self.data[idx][8]
 
         points_cloud = self.create_cloud(coordinates.copy(), elements.copy())
         return [points_cloud, seebeck]
