@@ -119,6 +119,7 @@ class DataHandler:
                 "basis_noneq",
                 "els_noneq",
                 "entry",
+                "temperature"
             ],
         )
 
@@ -159,6 +160,7 @@ class DataHandler:
                         obj.get_positions().tolist(),
                         list(obj.symbols),
                         disordered_df["entry"].tolist()[i],
+                        disordered_df["temperature"].tolist()[i]
                     ]
                 )
             else:
@@ -173,12 +175,14 @@ class DataHandler:
                 "basis_noneq",
                 "els_noneq",
                 "entry",
+                "temperature"
             ],
         )
 
-        result_df = self.change_disord_on_ord(
+        new_ordered_df = self.change_disord_on_ord(
             all_data_df.values.tolist(), new_ordered_df.values.tolist()
         )
+        result_df = self.choose_temperature(new_ordered_df)
 
         return result_df
 
@@ -227,6 +231,7 @@ class DataHandler:
                 "basis_noneq",
                 "els_noneq",
                 "entry",
+                "temperature"
             ],
         )
         return data
@@ -245,10 +250,10 @@ class DataHandler:
         ----------
         data_disord : list
             Made of 'phase_id', 'occs_noneq', 'cell_abc',
-            'sg_n', 'basis_noneq', 'els_noneq', 'entry'
+            'sg_n', 'basis_noneq', 'els_noneq', 'entry', 'temperature'
         ordered : list
             Made of next columns: 'phase_id', 'cell_abc',
-            'sg_n', 'basis_noneq', 'els_noneq', 'entry'
+            'sg_n', 'basis_noneq', 'els_noneq', 'entry', 'temperature'
         """
         update_data = []
         loss_str = 0
@@ -287,6 +292,7 @@ class DataHandler:
                 "basis_noneq",
                 "els_noneq",
                 "entry",
+                "temperature"
             ],
         )
         return dfrm
@@ -400,7 +406,7 @@ class DataHandler:
 
         Returns
         -------
-        dfrm : pd.DataFrame
+        dfrm : DataFrame
            Table with next columns:
            'phase_id', 'cell_abc', 'sg_n', 'basis_noneq',
            'els_noneq', 'entry', 'Site', 'Type', 'Composition'
@@ -438,7 +444,7 @@ class DataHandler:
 
         Returns
         -------
-        dfrm : pd.DataFrame
+        dfrm : DataFrame
            Table with next columns:
            'phase_id', 'cell_abc', 'sg_n', 'basis_noneq',
            'els_noneq', 'entry', 'Site', 'Type', 'Composition'
@@ -491,4 +497,44 @@ class DataHandler:
                     poly_store.append([poly[0], elements_large, vertex_large, p_type_large])
 
         return pd.DataFrame(poly_store, columns=columns)
+
+    def choose_temperature(self, dfrm: DataFrame) -> DataFrame:
+        """
+        Choose needed temperature from available. If there is no data, it assigns room temperature
+
+        Parameters
+        ----------
+        dfrm : DataFrame
+            Consist of: "phase_id", "cell_abc", "sg_n", "basis_noneq",
+            "els_noneq", "entry", "temperature"
+
+        Returns
+        -------
+        dfrm : DataFrame
+        """
+        columns = dfrm.columns.tolist()
+        data_list = dfrm.values.tolist()
+
+        for row in data_list:
+            # if not available t in data, set room t
+            if row[6] == None:
+                row[6] = 298
+            elif type(row[6]) == list:
+                # get first temperature from available
+                if row[6][0] != None:
+                    row[6] = row[7][0]
+                # get third temperature from available
+                elif row[6][2] != None:
+                    row[6] = row[6][2]
+                # if not available t in data, set room t
+                else:
+                    row[6] = 298
+            # if not available t in data, set room t
+            else:
+                row[6] = 298
+
+        result_dfrm = pd.DataFrame(data_list, columns=columns)
+
+        return result_dfrm
+
 

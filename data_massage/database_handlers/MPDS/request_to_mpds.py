@@ -17,7 +17,7 @@ class RequestMPDS:
         self.api_key = api_key
 
     def make_request(
-        self, is_seebeck: bool = False, is_structure: bool = False, phases: list = None
+        self, is_seebeck: bool = False, is_structure: bool = False, phases: list = None, is_temperature: bool = False
     ) -> DataFrame:
         """
         Requests data from the MPDS according to the input parameters
@@ -59,6 +59,7 @@ class RequestMPDS:
                             "basis_noneq",
                             "els_noneq",
                             "entry",
+                            "temperature"
                         ]
                     },
                 ),
@@ -70,7 +71,7 @@ class RequestMPDS:
                     "basis_noneq",
                     "els_noneq",
                     "entry",
+                    "temperature"
                 ],
             )
-
             return answer_df
