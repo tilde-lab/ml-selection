@@ -59,7 +59,7 @@ class RequestMPDS:
                             "basis_noneq",
                             "els_noneq",
                             "entry",
-                            "temperature"
+                            "condition"
                         ]
                     },
                 ),

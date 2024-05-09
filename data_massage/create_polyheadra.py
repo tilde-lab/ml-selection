@@ -16,9 +16,9 @@ def get_poly_elements(poly: list) -> list:
     elements  : list
          Periodic numbers of elements
     """
-    if poly[8] == None:
+    if poly[9] == None:
         return [None]
-    formula = re.sub(r"(?<=\w)([A-Z])", r" \1", poly[8])
+    formula = re.sub(r"(?<=\w)([A-Z])", r" \1", poly[9])
     composition = formula.replace('<sub>', ' ').replace('</sub>', ' ').split(' ')
     elements = []
 
@@ -46,7 +46,7 @@ def get_int_poly_type(poly: list) -> int:
     poly  : list
         Data consist of name polyhedra and number of vertex
     """
-    values = poly[7].replace('-', ' ').replace('#', ' ').split(' ')
+    values = poly[8].replace('-', ' ').replace('#', ' ').split(' ')
     vertex = int(values[0])
     type = ord(values[1]) - ord('a') + 1
 

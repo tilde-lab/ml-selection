@@ -106,11 +106,11 @@ def main():
     """
     Launch data collection step by step
     """
-    with open("/configs/config.yaml", "r") as yamlfile:
+    with open("/root/projects/ml-selection/configs/config.yaml", "r") as yamlfile:
         api_key = yaml.load(yamlfile, Loader=yaml.FullLoader)["api_key"]
         print("Key is read successful")
 
-    raw_path = "/data/raw_data/"
+    raw_path = "/root/projects/ml-selection/data/raw_data/"
 
     is_uniq_structure_for_phase = False
     handler = DataHandler(True, api_key)

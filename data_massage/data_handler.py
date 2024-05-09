@@ -427,7 +427,9 @@ class DataHandler:
 
 
     @classmethod
-    def process_polyhedra(cls, crystals_json_path: str, features: int = 2, is_one_hot: bool = False) -> DataFrame:
+    def process_polyhedra(
+            cls, crystals_json_path: str, features: int = 2, is_one_hot: bool = False
+    ) -> DataFrame:
         """
         Create descriptor from polyhedra
 
@@ -439,24 +441,24 @@ class DataHandler:
             If 2 -> features: elements, poly (number of vertex + number of type poly)
             If 3 -> features: elements, number of vertex in poly, type of poly
             If 0 -> features: elements without size customization (data just for graph models), type of poly
-        is_one_hot : bool
+        is_one_hot : bool, optional
             Present elements in vectors of count, where periodic number of element is index in vector
 
         Returns
         -------
         dfrm : DataFrame
            Table with next columns:
-           'phase_id', 'cell_abc', 'sg_n', 'basis_noneq',
-           'els_noneq', 'entry', 'Site', 'Type', 'Composition'
+           'phase_id', 'poly_elements', 'poly_vertex', 'poly_type', 'temperature'
+           or 'phase_id', 'poly_elements', 'poly_type', 'temperature'
         """
         crystals = pd.read_json(crystals_json_path, orient='split').values.tolist()
         poly_store = []
         descriptor_store = []
 
         if features == 3 and not(is_one_hot):
-            columns = ['phase_id', 'poly_elements', 'poly_vertex', 'poly_type']
+            columns = ['phase_id', 'poly_elements', 'poly_vertex', 'poly_type', 'temperature']
         else:
-            columns = ['phase_id', 'poly_elements', 'poly_type']
+            columns = ['phase_id', 'poly_elements', 'poly_type', 'temperature']
 
         for poly in crystals:
             elements = get_poly_elements(poly)
@@ -473,10 +475,11 @@ class DataHandler:
                 poly_type = vertex + p_type
                 poly_type_large = [poly_type] * 100
 
-            # features: elements, number of vertex in poly, type of poly
+            # features: elements, number of vertex in poly, type of poly (+t if is_temperature==True)
             elif features == 3 and not(is_one_hot):
                 vertex_large, p_type_large = [vertex] * 100, [p_type] * 100
                 poly_type_large = [vertex_large, p_type_large]
+
             elif features == 0 or is_one_hot:
                 poly_type_large = [p_type] * 100
             else:
@@ -484,6 +487,7 @@ class DataHandler:
 
             if features != 0 and not(is_one_hot):
                 elements_large = size_customization(elements)
+
             # elements without size customization (just for graph models)
             else:
                 elements_large = elements
@@ -491,10 +495,11 @@ class DataHandler:
             # replay protection
             if [elements_large, poly_type_large] not in descriptor_store:
                 descriptor_store.append([elements_large, poly_type_large])
+                temperature = poly[6]
                 if features == 2 or features == 0 or is_one_hot:
-                    poly_store.append([poly[0], elements_large, poly_type_large])
+                    poly_store.append([poly[0], elements_large, poly_type_large, temperature])
                 elif features == 3:
-                    poly_store.append([poly[0], elements_large, vertex_large, p_type_large])
+                    poly_store.append([poly[0], elements_large, vertex_large, p_type_large, temperature])
 
         return pd.DataFrame(poly_store, columns=columns)
 
@@ -522,10 +527,13 @@ class DataHandler:
             elif type(row[6]) == list:
                 # get first temperature from available
                 if row[6][0] != None:
-                    row[6] = row[7][0]
+                    row[6] = row[6][0]
                 # get third temperature from available
-                elif row[6][2] != None:
-                    row[6] = row[6][2]
+                elif len(row[6]) > 2:
+                    if row[6][2] != None:
+                        row[6] = row[6][2]
+                    else:
+                        row[6] = 298
                 # if not available t in data, set room t
                 else:
                     row[6] = 298
