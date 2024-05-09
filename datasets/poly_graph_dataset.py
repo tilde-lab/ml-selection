@@ -8,15 +8,23 @@ class PolyGraphDataset(Dataset):
     """
     Graph from polyhedra of crystal
     """
-    def __init__(self, poly_path, features_type=3):
+    def __init__(self, poly_path, features_type: int = 3, add_temperature: bool = False):
         """
-        features_type == 3 -> features: elements, vertex, types
-        features_type == 2 -> features: elements, types
+        Parameters
+        ----------
+        poly_path: str
+            Path to poly data
+        features_type: int, optional
+            features_type == 2 -> features: elements, types
+            features_type == 3 -> features: elements, vertex, types
+        add_temperature : bool, optional
+            Add temperature to features
         """
         super().__init__()
         self.features_type = features_type
         # now is 3 features
         self.poly = pd.read_csv(poly_path)
+        self.temperature = add_temperature
         self.seebeck = pd.read_json(
             "/root/projects/ml-selection/data/raw_data/median_seebeck.json", orient='split'
         ).rename(columns={"Phase": "phase_id"})
@@ -34,11 +42,19 @@ class PolyGraphDataset(Dataset):
         if self.features_type == 3:
             vertex = self.data[idx][4]
             types = self.data[idx][5]
-            graph = self.build_graph([elements, vertex, types])
+            if self.temperature:
+                t = self.data[idx][6]
+                graph = self.build_graph([elements, vertex, types, t])
+            else:
+                graph = self.build_graph([elements, vertex, types])
 
         if self.features_type == 2:
             types = self.data[idx][4]
-            graph = self.build_graph([elements, types])
+            if self.temperature:
+                t = self.data[idx][5]
+                graph = self.build_graph([elements, types, t])
+            else:
+                graph = self.build_graph([elements, types])
 
         return [graph, seebeck]
 
@@ -49,7 +65,10 @@ class PolyGraphDataset(Dataset):
         Graph is fully connected
         """
         if len(poly) == 3:
-            poly_el, poly_vertex, poly_type = poly
+            if self.temperature:
+                poly_el, poly_vertex, poly_type, t = poly
+            else:
+                poly_el, poly_vertex, poly_type = poly
 
             # create list with features for every node
             x_vector = []
@@ -59,12 +78,16 @@ class PolyGraphDataset(Dataset):
                 x_vector[i].append(d)
                 x_vector[i].append(eval(poly_type)[i])
                 x_vector[i].append(eval(poly_vertex)[i])
-
+                if self.temperature:
+                    x_vector[i].append(t)
 
             node_features = torch.tensor(x_vector)
 
         elif len(poly) == 2:
-            poly_el, poly_type = poly
+            if self.temperature:
+                poly_el, poly_type, t = poly
+            else:
+                poly_el, poly_type = poly
 
             # create list with features for every node
             x_vector = []
@@ -73,6 +96,8 @@ class PolyGraphDataset(Dataset):
                 x_vector.append([])
                 x_vector[i].append(d)
                 x_vector[i].append(eval(poly_type)[0])
+                if self.temperature:
+                    x_vector[i].append(t)
 
             node_features = torch.tensor(x_vector)
 
