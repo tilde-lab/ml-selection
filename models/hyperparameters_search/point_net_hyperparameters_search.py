@@ -22,6 +22,8 @@ def main(features, ds):
 
         train_size = int(0.9 * len(dataset))
         test_size = len(dataset) - train_size
+        train_size = 100
+        test_size = 20
 
         train_data = torch.utils.data.Subset(dataset, range(train_size))
         test_data = torch.utils.data.Subset(
@@ -36,7 +38,7 @@ def main(features, ds):
 
         hidden = trial.suggest_categorical("hidden", [8, 16, 32, 64, 128, 256])
         lr = trial.suggest_float("lr", 0.0001, 0.01)
-        ep = trial.suggest_int("ep", 4, 10)
+        ep = trial.suggest_int("ep", 1, 1)
 
         model = PointNet(features, hidden)
         optimizer = torch.optim.Adam(model.parameters(), lr=lr)
@@ -52,7 +54,7 @@ def main(features, ds):
         return r2
 
     study = optuna.create_study(sampler=optuna.samplers.TPESampler(), direction="maximize")
-    study.optimize(objective, n_trials=5)
+    study.optimize(objective, n_trials=1)
 
     res = [study.best_trial]
 

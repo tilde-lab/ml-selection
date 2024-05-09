@@ -4,13 +4,14 @@ from torch_geometric.loader import DataLoader
 from torch_geometric.nn import GCNConv, Linear
 from torch_geometric.utils import scatter
 from torcheval.metrics import R2Score
-from torchmetrics import MeanAbsoluteError
+from torchmetrics import MeanAbsoluteError, MeanAbsolutePercentageError
 from tqdm import tqdm
 
 from datasets.poly_graph_dataset import PolyGraphDataset
 
 r2 = R2Score()
 mae = MeanAbsoluteError()
+mape = MeanAbsolutePercentageError()
 
 
 class GCN(torch.nn.Module):
@@ -77,13 +78,14 @@ class GCN(torch.nn.Module):
                 optimizer.step()
                 mean_loss += loss
                 r2.update(out.reshape(-1), y)
+                mape.update(out.reshape(-1), y)
             print(
-                f"--------Mean loss for epoch {epoch} is {mean_loss / cnt}--------R2 is {r2.compute()}"
+                f"--------Mean loss for epoch {epoch} is {mean_loss / cnt}--------R2 is {r2.compute()}--------MAPE is {mape.compute()}"
             )
             if epoch % 1 == 0:
                 torch.save(
                     model.state_dict(),
-                    r"/root/projects/ml-selection/models/neural_network_models/GCN/weights/30_01.pth",
+                    r"/root/projects/ml-selection/models/neural_network_models/GCN/weights/0001.pth",
                 )
 
     def val(
@@ -92,6 +94,8 @@ class GCN(torch.nn.Module):
         """Test model"""
 
         model.eval()
+        r2.reset()
+        mae.reset()
         with torch.no_grad():
             cnt = 0
             for data, y in test_dataloader:
@@ -102,12 +106,17 @@ class GCN(torch.nn.Module):
 
                 r2.update(pred.reshape(-1), y)
                 r2_res = r2.compute()
+
+                mape.update(pred.reshape(-1), y)
+                mape_res = mape.compute()
         print(
             "R2: ",
             r2_res,
             " MAE: ",
             mae_result,
-            "Pred from",
+            " MAPE: ",
+            mape_res,
+            " Pred from",
             pred.min(),
             " to ",
             pred.max(),
@@ -117,14 +126,14 @@ class GCN(torch.nn.Module):
 
 
 if __name__ == "__main__":
+    path = '/root/projects/ml-selection/data/processed_data/poly/0_features.csv'
     n_features = 2
-    dataset = PolyGraphDataset(
-        '/root/projects/ml-selection/data/processed_data/poly/poly_vector_of_count.csv',
-        n_features
-    )
+    temperature = False
+    dataset = PolyGraphDataset(path, n_features, temperature)
 
     train_size = int(0.9 * len(dataset))
     test_size = len(dataset) - train_size
+
     train_data = torch.utils.data.Subset(dataset, range(train_size))
     test_data = torch.utils.data.Subset(
         dataset, range(train_size, train_size + test_size)
@@ -133,13 +142,16 @@ if __name__ == "__main__":
         train_data, batch_size=64, shuffle=False, num_workers=0
     )
     test_dataloader = DataLoader(
-        test_data, batch_size=1000, shuffle=False, num_workers=0
+        test_data, batch_size=10000, shuffle=False, num_workers=0
     )
 
     device = torch.device("cpu")
     model = GCN(n_features, 16, 32, "relu").to(device)
+    model.load_state_dict(
+        torch.load('/root/projects/ml-selection/models/neural_network_models/GCN/weights/30_01.pth')
+    )
 
-    model.fit(model, 1, train_dataloader, device, lr=0.008598391737229157)
+    model.fit(model, 5, train_dataloader, device, lr=0.008598391737229157)
     model.val(model, test_dataloader, device)
 
 

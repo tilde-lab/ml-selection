@@ -14,8 +14,6 @@ BEST_R2 = -100
 
 
 def main(path: str, features: int, ds: int, temperature: bool):
-    if temperature:
-        features += 1
 
     def objective(trial) -> int:
         """Search of hyperparameters"""
@@ -24,6 +22,9 @@ def main(path: str, features: int, ds: int, temperature: bool):
 
         train_size = int(0.9 * len(dataset))
         test_size = len(dataset) - train_size
+        train_size = 100
+        test_size = 20
+
         train_data = torch.utils.data.Subset(dataset, range(train_size))
         test_data = torch.utils.data.Subset(
             dataset, range(train_size, train_size + test_size)
@@ -41,7 +42,7 @@ def main(path: str, features: int, ds: int, temperature: bool):
         hidden = trial.suggest_categorical("hidden", [8, 16, 32])
         hidden2 = trial.suggest_categorical("hidden2", [8, 16, 32, 64])
         lr = trial.suggest_float("lr", 0.0001, 0.01)
-        ep = trial.suggest_int("ep", 4, 10)
+        ep = trial.suggest_int("ep", 1, 1)
         activ = trial.suggest_categorical("activ", ["leaky_relu", "relu", "elu", "tanh"])
 
         model = GCN(features, hidden, hidden2, activation=activ).to(device)
@@ -57,7 +58,7 @@ def main(path: str, features: int, ds: int, temperature: bool):
         return r2
 
     study = optuna.create_study(sampler=optuna.samplers.TPESampler(), direction="maximize")
-    study.optimize(objective, n_trials=5)
+    study.optimize(objective, n_trials=1)
 
     res = [study.best_trial]
 

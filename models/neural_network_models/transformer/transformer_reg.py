@@ -12,13 +12,12 @@ import torch.nn.functional as F
 import torch.utils.data as data
 from torch.utils.data import Subset
 from torcheval.metrics import R2Score
-from torchmetrics import MeanAbsoluteError
-from torch.utils.tensorboard import SummaryWriter
+from torchmetrics import MeanAbsoluteError, MeanAbsolutePercentageError
 from tqdm import tqdm
 
 r2 = R2Score()
-mean_absolute_error = MeanAbsoluteError()
-writer = SummaryWriter()
+mae = MeanAbsoluteError()
+mape = MeanAbsolutePercentageError()
 
 class TransformerModel(nn.Module):
     """A transformer model. Contains an encoder (without decoder)"""
@@ -85,12 +84,9 @@ class TransformerModel(nn.Module):
         for epoch in tqdm(range(ep)):
             mean_loss = 0
             cnt = 0
-
-            if self.n_feature == 3:
-                for y, poly, p_vert, p_type in train_data:
-                    data = [eval(poly), eval(p_vert), eval(p_type)]
-                    if len(data[0]) == 0:
-                        continue
+            if self.n_feature == 4:
+                for y, poly, p_vert, p_type, temp in train_data:
+                    data = [eval(poly), eval(p_vert), eval(p_type), [temp]*len(eval(poly))]
                     cnt += 1
                     optimizer.zero_grad()
                     out = model([torch.tensor(data).permute(1, 0).unsqueeze(0)])
@@ -98,7 +94,24 @@ class TransformerModel(nn.Module):
                     loss.backward()
                     optimizer.step()
                     mean_loss += loss
-            else:
+            if self.n_feature == 3:
+                for y, poly, p_vert, p_type in train_data:
+                    try:
+                        data = [eval(poly), eval(p_vert), eval(p_type)]
+                        if len(data[0]) == 118:
+                            data[1] = [data[1][0]]*118
+                    except:
+                        data = [eval(poly), eval(p_vert), [p_type]*len(eval(poly))]
+                        if len(data[0]) == 118:
+                            data[1] = [data[1][0]]*118
+                    cnt += 1
+                    optimizer.zero_grad()
+                    out = model([torch.tensor(data).permute(1, 0).unsqueeze(0)])
+                    loss = F.mse_loss(out, torch.tensor(y))
+                    loss.backward()
+                    optimizer.step()
+                    mean_loss += loss
+            if self.n_feature == 2:
                 for y, els, p_type in train_data:
                     data = [eval(els), eval(p_type)]
                     if len(data[0]) != len(data[1]):
@@ -108,40 +121,25 @@ class TransformerModel(nn.Module):
                     optimizer.zero_grad()
                     out = model([torch.tensor(data).permute(1, 0).unsqueeze(0)])
                     loss = F.mse_loss(out, torch.tensor(y))
-                    writer.add_scalar("Loss/train", loss, epoch)
                     loss.backward()
                     optimizer.step()
                     mean_loss += loss
 
-            print(f"--------Mean loss for epoch {epoch} is {mean_loss / cnt}--------")
-
-
-            # if epoch % 5 == 0:
-            #     torch.save(
-            #         model.state_dict(),
-            #         r"/root/projects/ml-selection/models/neural_network_models/transformer/weights/20_02.pth",
-            #     )
-        writer.flush()
-        writer.close()
+        print(f"--------Mean loss for epoch {epoch} is {mean_loss / cnt}--------")
 
     def val(self, model, test_data: Subset) -> None:
         """Test model"""
 
         model.eval()
 
+        r2.reset()
+        mae.reset()
+
         preds = []
         y_s = []
 
         with torch.no_grad():
-            if self.n_feature == 3:
-                for y, poly, p_vertex, p_type in test_data:
-                    data = [eval(poly), eval(p_vertex), eval(p_type)]
-                    if len(data[0]) == 0:
-                        continue
-                    pred = model([torch.tensor(data).permute(1, 0).unsqueeze(0)])
-                    preds.append(pred)
-                    y_s.append(y)
-            else:
+            if self.n_feature == 2:
                 for y, els, p_type in test_data:
                     data = [eval(els), eval(p_type)]
                     if len(data[0]) != len(data[1]):
@@ -150,26 +148,62 @@ class TransformerModel(nn.Module):
                     pred = model([torch.tensor(data).permute(1, 0).unsqueeze(0)])
                     preds.append(pred)
                     y_s.append(y)
+            if self.n_feature == 3:
+                for y, poly, p_vertex, p_type in test_data:
+                    try:
+                        data = [eval(poly), eval(p_vertex), eval(p_type)]
+                        if len(data[0]) == 118:
+                            data[1] = [data[1][0]] * 118
+                    except:
+                        data = [eval(poly), eval(p_vertex), [p_type] * len(eval(poly))]
+                        if len(data[0]) == 118:
+                            data[1] = [data[1][0]] * 118
+                    pred = model([torch.tensor(data).permute(1, 0).unsqueeze(0)])
+                    preds.append(pred)
+                    y_s.append(y)
+            if self.n_feature == 4:
+                for y, poly, p_vert, p_type, temp in test_data:
+                    data = [eval(poly), eval(p_vert), eval(p_type), [temp]*len(eval(poly))]
+                    if len(data[0]) != len(data[1]):
+                        while len(data[0]) != len(data[1]):
+                            data[1].append(data[1][0])
+                    pred = model([torch.tensor(data).permute(1, 0).unsqueeze(0)])
+                    preds.append(pred)
+                    y_s.append(y)
 
-        mean_absolute_error.update(torch.tensor(preds).reshape(-1), torch.tensor(y_s))
-        mae_result = mean_absolute_error.compute()
+        mae.update(torch.tensor(preds).reshape(-1), torch.tensor(y_s))
+        mae_result = mae.compute()
 
         r2.update(torch.tensor(preds).reshape(-1), torch.tensor(y_s))
         r2_res = r2.compute()
 
-        torch.save(
-            model.state_dict(),
-            r"/root/projects/ml-selection/models/neural_network_models/transformer/weights/0300.pth",
+        mape.update(torch.tensor(preds).reshape(-1), torch.tensor(y_s))
+        mape_res = mape.compute()
+
+        print(
+            "R2: ",
+            r2_res,
+            " MAE: ",
+            mae_result,
+            " MAPE: ",
+            mape_res,
+            " Pred from",
+            min(preds),
+            " to ",
+            max(preds),
         )
 
-        print("R2: ", r2_res, " MAE: ", mae_result)
+        torch.save(
+            model.state_dict(),
+            r"/root/projects/ml-selection/models/neural_network_models/transformer/weights/0001.pth",
+        )
 
         return [r2_res, mae_result]
 
 
 if __name__ == "__main__":
     poly = pd.read_csv(
-        f"/root/projects/ml-selection/data/processed_data/poly/2_features.csv",
+        f"/root/projects/ml-selection/data/processed_data/poly/3_features.csv",
     )
     seebeck = pd.read_json(
         "/root/projects/ml-selection/data/raw_data/median_seebeck.json", orient='split',
@@ -183,11 +217,9 @@ if __name__ == "__main__":
     test_data = torch.utils.data.Subset(
         dataset, range(train_size, train_size + test_size)
     )
-    model = TransformerModel(3, 3, 8, 'elu')
-    # model.load_state_dict(
-    #     torch.load('/root/projects/ml-selection/models/neural_network_models/transformer/weights/0300.pth')
-    # )
+    model = TransformerModel(4, 4, 16, 'elu')
+
     optimizer = torch.optim.Adam(model.parameters(), lr=0.0006479739574204421, weight_decay=5e-4)
 
-    model.fit(model, optimizer, 8, train_data)
+    model.fit(model, optimizer, 5, train_data)
     model.val(model, test_data)

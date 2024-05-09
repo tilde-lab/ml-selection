@@ -4,13 +4,14 @@ from torch_geometric.loader import DataLoader
 from torch_geometric.nn import GATv2Conv, Linear
 from torch_geometric.utils import scatter
 from torcheval.metrics import R2Score
-from torchmetrics import MeanAbsoluteError
+from torchmetrics import MeanAbsoluteError, MeanAbsolutePercentageError
 from tqdm import tqdm
 
 from datasets.poly_graph_dataset import PolyGraphDataset
 
 r2 = R2Score()
 mae = MeanAbsoluteError()
+mape = MeanAbsolutePercentageError()
 
 
 class GAT(torch.nn.Module):
@@ -100,19 +101,17 @@ class GAT(torch.nn.Module):
                 optimizer.step()
                 mean_loss += loss
                 r2.update(out.reshape(-1), y)
+                mape.update(out.reshape(-1), y)
             print(
-                f"--------Mean loss for epoch {epoch} is {mean_loss / cnt}--------R2 is {r2.compute()}"
-            )
-            torch.save(
-                model.state_dict(),
-                r"/root/projects/ml-selection/models/neural_network_models/GAT/weights/30_01.pth",
+                f"--------Mean loss for epoch {epoch} is {mean_loss / cnt}--------R2 is {r2.compute()}--------MAPE is {mape.compute()}"
             )
 
     def val(
         self, model, test_dataloader: DataLoader, device: torch.device
     ) -> torch.Tensor:
         """Test model"""
-
+        r2.reset()
+        mae.reset()
         model.eval()
         with torch.no_grad():
             cnt = 0
@@ -124,28 +123,36 @@ class GAT(torch.nn.Module):
 
                 r2.update(pred.reshape(-1), y)
                 r2_res = r2.compute()
+
+                mape.update(pred.reshape(-1), y)
+                mape_res = mape.compute()
         print(
             "R2: ",
             r2_res,
             " MAE: ",
             mae_result,
-            "Pred from",
+            " MAPE: ",
+            mape_res,
+            " Pred from",
             pred.min(),
             " to ",
             pred.max(),
+        )
+        torch.save(
+            model.state_dict(),
+            r"/root/projects/ml-selection/models/neural_network_models/GAT/weights/0001.pth",
         )
 
         return r2_res, mae_result
 
 
 if __name__ == "__main__":
-    n_features = 3
-    dataset = PolyGraphDataset(
-        '/root/projects/ml-selection/data/processed_data/poly/3_features.csv',
-        n_features
-    )
+    path = '/root/projects/ml-selection/data/processed_data/poly/0_features.csv'
+    n_features = 2
+    temperature = False
+    dataset = PolyGraphDataset(path, n_features, temperature)
 
-    train_size = int(0.6 * len(dataset))
+    train_size = int(0.9 * len(dataset))
     test_size = len(dataset) - train_size
     train_data = torch.utils.data.Subset(dataset, range(train_size))
     test_data = torch.utils.data.Subset(
@@ -164,7 +171,7 @@ if __name__ == "__main__":
 
     model.fit(
         model,
-        8,
+        5,
         train_dataloader,
         optimizer,
         device,
