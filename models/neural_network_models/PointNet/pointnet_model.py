@@ -132,7 +132,7 @@ def val(model, test_loader):
 
 
 if __name__ == "__main__":
-    dataset = PointCloudDataset()
+    dataset = PointCloudDataset(features=4)
     train_size = int(0.9 * len(dataset))
     test_size = len(dataset) - train_size
 
@@ -146,12 +146,12 @@ if __name__ == "__main__":
     model = PointNet(4)
     model.load_state_dict(
         torch.load(
-            r"/models/neural_network_models/weights/30_01.pth"
+            r"/root/projects/ml-selection/models/neural_network_models/PointNet/weights/30_01.pth"
         )
     )
     optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
     criterion = torch.nn.MSELoss()
 
     for epoch in tqdm(range(1)):
-        loss = train(model, 5, train_loader, optimizer)
+        loss = train(model, 7, train_loader, optimizer)
         test_acc = val(model, test_loader)

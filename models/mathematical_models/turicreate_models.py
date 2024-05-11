@@ -6,11 +6,13 @@ import pandas as pd
 import torch
 import turicreate as tc
 from torcheval.metrics import R2Score
-from torchmetrics import MeanAbsoluteError
+from torchmetrics import MeanAbsoluteError, MeanAbsolutePercentageError
 from turicreate import SFrame
 
 mae = MeanAbsoluteError()
 metric = R2Score()
+mape = MeanAbsolutePercentageError()
+
 models = {
     '0': 'LINEAR REGRESSION', '1': 'DECISION TREE MODEL',
     '2': 'BOOSTED TREES MODEL', '3': 'RANDOM FOREST MODEL'
@@ -32,6 +34,7 @@ def split_data_for_turi_models(poly_path, seebeck_path):
 
     return train, test
 
+
 def run_linear_regression(train, test, features):
     # LINEAR REGRESSION MODEL
     train_r, test_r = SFrame(train), SFrame(test)
@@ -47,9 +50,13 @@ def run_linear_regression(train, test, features):
     mae.update(
         torch.tensor(predictions_linear), torch.tensor(test_r["Seebeck coefficient"])
     )
+    mape.update(
+        torch.tensor(predictions_linear), torch.tensor(test_r["Seebeck coefficient"])
+    )
+    mape_res = mape.compute()
     mae_result_r = mae.compute()
     print(
-        f"LINEAR REGRESSION MODEL:\nR2: {r2_res_r}, MAE: {mae_result_r}, min pred: {predictions_linear.min()}, max pred: {predictions_linear.max()}\n\n"
+        f"LINEAR REGRESSION MODEL:\nR2: {r2_res_r}, MAE: {mae_result_r}, MAPE: {mape_res}, min pred: {predictions_linear.min()}, max pred: {predictions_linear.max()}\n\n"
     )
     return [r2_res_r, mae_result_r]
 
@@ -70,8 +77,12 @@ def run_decision_tree(train, test, features):
         torch.tensor(predictions_decision), torch.tensor(test_d["Seebeck coefficient"])
     )
     mae_result_d = mae.compute()
+    mape.update(
+        torch.tensor(predictions_decision), torch.tensor(test_d["Seebeck coefficient"])
+    )
+    mape_res = mape.compute()
     print(
-        f"DECISION TREE MODEL\nR2: {r2_res_d}, MAE: {mae_result_d}, min pred: {predictions_decision.min()}, max pred: {predictions_decision.max()}\n\n"
+        f"DECISION TREE MODEL\nR2: {r2_res_d}, MAE: {mae_result_d}, MAPE: {mape_res}, min pred: {predictions_decision.min()}, max pred: {predictions_decision.max()}\n\n"
     )
     return [r2_res_d, mae_result_d]
 
@@ -91,8 +102,13 @@ def run_boosted_trees(train, test, features):
         torch.tensor(predictions_boosted), torch.tensor(test_b["Seebeck coefficient"])
     )
     mae_result_b = mae.compute()
+    mape.update(
+        torch.tensor(predictions_boosted), torch.tensor(test_b["Seebeck coefficient"])
+    )
+    mape_res = mape.compute()
+
     print(
-        f"BOOSTED TREES MODEL\nR2: {r2_res_b}, MAE: {mae_result_b}, min pred: {predictions_boosted.min()}, max pred: {predictions_boosted.max()}\n\n"
+        f"BOOSTED TREES MODEL\nR2: {r2_res_b}, MAE: {mae_result_b}, MAPE: {mape_res}, min pred: {predictions_boosted.min()}, max pred: {predictions_boosted.max()}\n\n"
     )
     return [r2_res_b, mae_result_b]
 
@@ -112,8 +128,12 @@ def run_random_forest(train, test, features):
         torch.tensor(predictions_random), torch.tensor(test_r["Seebeck coefficient"])
     )
     mae_result_rf = mae.compute()
+    mape.update(
+        torch.tensor(predictions_random), torch.tensor(test_r["Seebeck coefficient"])
+    )
+    mape_res = mape.compute()
     print(
-        f"RANDOM FOREST MODEL\nR2: {r2_res_rf}, MAE: {mae_result_rf}, min pred: {predictions_random.min()}, max pred: {predictions_random.max()}\n\n"
+        f"RANDOM FOREST MODEL\nR2: {r2_res_rf}, MAE: {mae_result_rf}, MAPE: {mape_res} min pred: {predictions_random.min()}, max pred: {predictions_random.max()}\n\n"
     )
     return [r2_res_rf, mae_result_rf]
 
@@ -162,6 +182,11 @@ if __name__ == '__main__':
         ["poly_elements", "poly_type"],
         ['poly_elements', 'poly_vertex', 'poly_type'],
         ["poly_elements", "poly_type"]
+    ]
+    poly_temperature_features = [
+        ["poly_elements", "poly_type", "temperature"],
+        ["poly_elements", "poly_vertex", "poly_type", "temperature"],
+        ["poly_elements", "poly_type", "temperature"],
     ]
 
     run_math_models(poly_path, seebeck_path, features)
