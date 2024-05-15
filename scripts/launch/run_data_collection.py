@@ -3,10 +3,10 @@ Main file that starts collecting data for training models. Get median value for 
 1 phase_id <-> 1 Seebeck <-> many structures.
 """
 
-import pandas as pd
+import polars as pd
 from scripts.launch import run_processing_polyhedra
 import yaml
-from pandas import DataFrame
+from polars import DataFrame
 
 from data_massage.calculate_median_value import seebeck_median_value
 from data_massage.data_handler import DataHandler

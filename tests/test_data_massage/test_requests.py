@@ -3,7 +3,7 @@ Test cases to test request to MPDS database
 """
 import unittest
 
-import pandas as pd
+import polars as pd
 import yaml
 
 from data_massage.database_handlers.MPDS.request_to_mpds import RequestMPDS

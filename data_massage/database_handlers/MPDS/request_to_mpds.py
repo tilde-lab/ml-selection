@@ -1,8 +1,8 @@
 import numpy as np
-import pandas as pd
+import polars as pd
 import yaml
 from mpds_client import MPDSDataRetrieval, MPDSDataTypes
-from pandas import DataFrame
+from polars import DataFrame
 
 
 class RequestMPDS:

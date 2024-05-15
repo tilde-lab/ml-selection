@@ -1,4 +1,4 @@
-import pandas as pd
+import polars as pd
 import torch
 from torch.utils.data import Dataset
 from torch_geometric.data import Data

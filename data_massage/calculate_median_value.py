@@ -1,7 +1,7 @@
 import statistics
 
-import pandas as pd
-from pandas import DataFrame
+import polars as pd
+from polars import DataFrame
 
 
 def seebeck_median_value(data: pd.DataFrame, phases: list) -> DataFrame:
@@ -10,7 +10,7 @@ def seebeck_median_value(data: pd.DataFrame, phases: list) -> DataFrame:
 
     Parameters
     ----------
-    data : pandas DataFrame
+    data : polars DataFrame
         DataFrame with next columns: 'Phase', 'Formula', 'Seebeck coefficient'
     phases : list
         List with set of phases

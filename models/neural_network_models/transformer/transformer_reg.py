@@ -5,7 +5,7 @@ Transformer made from encoder (without decoder). Uses token-vector to represent 
 Tensor of tokens is fed to fully connected layer. Next, loss is calculated as in standard models.
 """
 
-import pandas as pd
+import polars as pd
 import torch
 import torch.nn as nn
 import torch.nn.functional as F

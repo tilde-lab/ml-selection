@@ -1,5 +1,5 @@
-import pandas as pd
-from pandas import DataFrame
+import polars as pd
+from polars import DataFrame
 
 
 def make_undersampling(

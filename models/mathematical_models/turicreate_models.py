@@ -2,7 +2,7 @@
 Any of the below regression models can be used for predicting Seebeck Coefficient values of binary compounds.
 """
 
-import pandas as pd
+import polars as pd
 import torch
 import turicreate as tc
 from torcheval.metrics import R2Score

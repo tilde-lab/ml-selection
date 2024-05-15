@@ -4,7 +4,7 @@ Test for build graph by CrystalGraphVectorsDataset
 
 import unittest
 
-import pandas as pd
+import polars as pd
 from torch_geometric.data import Data
 
 from datasets.vectors_graph_dataset import CrystalGraphVectorsDataset

@@ -1,6 +1,6 @@
 import pickle
 
-from pandas import DataFrame
+from polars import DataFrame
 from sklearn.preprocessing import MinMaxScaler
 
 

@@ -4,7 +4,7 @@ Selection of hyperparameters for GCN.
 
 import torch
 import optuna
-import pandas as pd
+import polars as pd
 
 from models.neural_network_models.transformer.transformer_reg import TransformerModel
 

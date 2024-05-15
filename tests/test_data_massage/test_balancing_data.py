@@ -3,7 +3,7 @@ Test cases to test oversampling (SMOTER) and undersampling
 """
 import unittest
 
-import pandas as pd
+import polars as pd
 import yaml
 
 from data_massage.balancing_data.oversampling import make_oversampling

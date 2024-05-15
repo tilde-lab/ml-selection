@@ -1,6 +1,6 @@
-import pandas as pd
+import polars as pd
 import smogn
-from pandas import DataFrame
+from polars import DataFrame
 
 
 def make_oversampling(

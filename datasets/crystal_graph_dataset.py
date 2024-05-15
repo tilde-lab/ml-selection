@@ -1,4 +1,4 @@
-import pandas as pd
+import polars as pd
 import torch
 from ase.data import chemical_symbols
 from torch.utils.data import Dataset

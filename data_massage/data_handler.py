@@ -1,9 +1,9 @@
 import numpy as np
-import pandas as pd
+import polars as pd
 import yaml
 from ase import Atoms
 from ase.data import chemical_symbols
-from pandas import DataFrame
+from polars import DataFrame
 
 from data.mendeleev_table import periodic_numbers
 from data_massage.database_handlers.MPDS.request_to_mpds import RequestMPDS
@@ -94,7 +94,7 @@ class DataHandler:
     ) -> DataFrame:
         """
         Make order in disordered structures.
-        Return pandas Dataframe with ordered structures
+        Return polars Dataframe with ordered structures
         """
         # get disordered structures from db, save random structure for specific 'phase_id'
         all_data_df = self.cleaning_trash_data(

@@ -132,7 +132,7 @@ def val(model, test_loader):
 
 
 if __name__ == "__main__":
-    dataset = PointCloudDataset(features=4)
+    dataset = PointCloudDataset(features=3)
     train_size = int(0.9 * len(dataset))
     test_size = len(dataset) - train_size
 
@@ -143,12 +143,12 @@ if __name__ == "__main__":
     train_loader = DataLoader(train_data, batch_size=64, shuffle=True, num_workers=0)
     test_loader = DataLoader(test_data, batch_size=64, shuffle=False, num_workers=0)
 
-    model = PointNet(4)
-    model.load_state_dict(
-        torch.load(
-            r"/root/projects/ml-selection/models/neural_network_models/PointNet/weights/30_01.pth"
-        )
-    )
+    model = PointNet(3)
+    # model.load_state_dict(
+    #     torch.load(
+    #         r"/root/projects/ml-selection/models/neural_network_models/PointNet/weights/30_01.pth"
+    #     )
+    # )
     optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
     criterion = torch.nn.MSELoss()
 

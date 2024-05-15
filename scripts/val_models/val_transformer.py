@@ -1,7 +1,7 @@
 """
 Test Transformer model
 """
-import pandas as pd
+import polars as pd
 import torch
 import torch.utils.data as data
 

@@ -4,7 +4,7 @@ Test for build graph by CrystalGraphDataset
 
 import unittest
 
-import pandas as pd
+import polars as pd
 from torch import Tensor
 from torch_geometric.data import Data
 from torch_geometric.loader import DataLoader
