@@ -1,4 +1,4 @@
-import polars as pd
+import polars as pl
 import smogn
 from polars import DataFrame
 
@@ -32,24 +32,24 @@ def make_oversampling(
        A tuple of 2 DataFrames, first consist of atoms and distance, second - Seebeck value
     """
     if str_path and seeb_path:
-        X = pd.read_csv(str_path)
-        y = pd.read_csv(seeb_path)
+        X = pl.read_csv(str_path)
+        y = pl.read_csv(seeb_path)
     else:
         X, y = str_dfrm, seebeck_dfrm
 
     if seeb_path != None:
-        atoms = [eval(i) for i in X["atom"].values.tolist()]
-        distance = [eval(i) for i in X["distance"].values.tolist()]
+        atoms = [eval(i) for i in list(X["atom"])]
+        distance = [eval(i) for i in list(X["distance"])]
     else:
-        atoms = [i for i in X["atom"].values.tolist()]
-        distance = [i for i in X["distance"].values.tolist()]
+        atoms = [i for i in list(X["atom"])]
+        distance = [i for i in list(X["distance"])]
 
     total = []
 
     for i in range(len(atoms)):
-        total.append(atoms[i] + distance[i] + y.values.tolist()[i])
+        total.append(atoms[i] + distance[i] + [list(y.row(i)) for i in range(len(y))][i])
 
-    total_df = pd.DataFrame(total)
+    total_df = pl.DataFrame(total)
     total_df.rename(columns={total_df.columns[-1]: "Seebeck coefficient"}, inplace=True)
 
     new_data = smogn.smoter(data=total_df, y="Seebeck coefficient", rel_method="auto")
@@ -57,15 +57,15 @@ def make_oversampling(
     new_l = []
     seebeck_l = []
 
-    for row in new_data.values.tolist():
+    for row in [list(new_data) for i in range(new_data)]:
         atoms = row[:100]
         distance = row[100:200]
         seeb = row[-1]
         new_l.append([atoms, distance])
         seebeck_l.append(seeb)
 
-    df_str = pd.DataFrame(new_l, columns=["atom", "distance"])
-    df_seeb = pd.DataFrame(seebeck_l, columns=["Seebeck coefficient"])
+    df_str = pl.DataFrame(new_l, columns=["atom", "distance"])
+    df_seeb = pl.DataFrame(seebeck_l, columns=["Seebeck coefficient"])
 
     if path_to_save:
         df_str.to_csv(
@@ -80,13 +80,13 @@ def make_oversampling(
 
 
 if __name__ == "__main__":
-    total = pd.read_csv(
+    total = pl.read_csv(
         "/Users/alina/PycharmProjects/ml-selection/data/processed_data/cut_str.csv",
     )
-    seebeck = pd.read_csv(
+    seebeck = pl.read_csv(
         "/Users/alina/PycharmProjects/ml-selection/data/processed_data/cut_seeb.csv",
     )
-    total = pd.concat([seebeck["Seebeck coefficient"], total], axis=1)
+    total = pl.concat([seebeck["Seebeck coefficient"], total], axis=1)
     features = ["atom", "distance"]
 
     train_size = int(0.9 * len(total))

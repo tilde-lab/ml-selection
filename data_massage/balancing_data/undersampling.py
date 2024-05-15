@@ -1,4 +1,4 @@
-import polars as pd
+import polars as pl
 from polars import DataFrame
 
 
@@ -30,10 +30,10 @@ def make_undersampling(
        A tuple of 2 DataFrames, first consist of atoms and distance, second - Seebeck value
     """
     if str_path and seeb_path:
-        str_dfrm = pd.read_csv(str_path)
-        seebeck_dfrm = pd.read_csv(seeb_path)
+        str_dfrm = pl.read_csv(str_path)
+        seebeck_dfrm = pl.read_csv(seeb_path)
 
-    data = pd.concat(
+    data = pl.concat(
         [seebeck_dfrm["Seebeck coefficient"], str_dfrm], axis=1
     ).values.tolist()
 
@@ -59,10 +59,10 @@ def make_undersampling(
                 new_list_str.append([row[1], row[2]])
                 cnt += 1
 
-    seeb_df = pd.DataFrame(new_list_seeb, columns=["Seebeck coefficient"])
-    str_df = pd.DataFrame(new_list_str, columns=["atom", "distance"])
+    seeb_df = pl.DataFrame(new_list_seeb, columns=["Seebeck coefficient"])
+    str_df = pl.DataFrame(new_list_str, columns=["atom", "distance"])
     shuffle_df = (
-        pd.concat([seeb_df, str_df], axis=1).sample(frac=1).reset_index(drop=True)
+        pl.concat([seeb_df, str_df], axis=1).sample(frac=1).reset_index(drop=True)
     )
 
     df_seebeck = shuffle_df.iloc[:, :1]

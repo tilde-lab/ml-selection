@@ -1,4 +1,4 @@
-import polars as pd
+import polars as pl
 import torch
 from torch.utils.data import Dataset
 from torch_geometric.data import Data
@@ -12,7 +12,7 @@ class CrystalGraphVectorsDataset(Dataset):
 
     def __init__(self):
         super().__init__()
-        self.data = pd.read_csv(
+        self.data = pl.read_csv(
             "/root/projects/ml-selection/data/processed_data/rep_vect_str_clear.csv",
         ).values.tolist()
 

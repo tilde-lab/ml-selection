@@ -1,9 +1,10 @@
 import numpy as np
-import polars as pd
+import polars as pl
 import yaml
 from ase import Atoms
 from ase.data import chemical_symbols
 from polars import DataFrame
+import pandas as pd
 
 from data.mendeleev_table import periodic_numbers
 from data_massage.database_handlers.MPDS.request_to_mpds import RequestMPDS
@@ -65,7 +66,11 @@ class DataHandler:
         res_dfrm : DataFrame
             Seebeck coefficients in DataFrame format
         """
-        res_dfrm = pd.DataFrame(columns=["Phase", "Formula", "Seebeck coefficient"])
+        res_dfrm = pl.DataFrame({
+            "Phase": [],
+            "Formula": [],
+            "Seebeck coefficient": []
+        })
 
         for data_type in self.available_dtypes:
             self.client_handler = RequestMPDS(dtype=data_type, api_key=self.api_key)
@@ -73,15 +78,15 @@ class DataHandler:
             dfrm = self.client_handler.make_request(is_seebeck=True)
 
             # remove outliers in value of Seebeck coefficient
-            if max_value != None:
-                for index, row in dfrm.iterrows():
-                    if (
-                        max_value < row["Seebeck coefficient"]
-                        or row["Seebeck coefficient"] < min_value
-                    ):
-                        dfrm.drop(index, inplace=True)
-
-            res_dfrm = self.combine_data(dfrm, res_dfrm)
+            if max_value:
+                dfrm = dfrm.filter(
+                    (pl.col("Seebeck coefficient") >= min_value) &
+                    (pl.col("Seebeck coefficient") <= max_value)
+                )
+            if len(res_dfrm) == 0:
+                res_dfrm = dfrm
+            else:
+                res_dfrm = self.combine_data(dfrm, res_dfrm)
 
         # leave only one phase_id value
         if is_uniq_phase_id:
@@ -105,13 +110,13 @@ class DataHandler:
             all_data_df = self.just_uniq_phase_id(all_data_df)
 
         disordered_str = []
-        for atomic_str in all_data_df.values.tolist():
-            if atomic_str and any([occ != 1 for occ in atomic_str[1]]):
-                disordered_str.append(atomic_str)
+        for atomic_str in all_data_df.rows():
+            if list(atomic_str) and any([occ != 1 for occ in atomic_str[1]]):
+                disordered_str.append(list(atomic_str))
 
-        disordered_df = pd.DataFrame(
+        disordered_df = pl.DataFrame(
             disordered_str,
-            columns=[
+            schema=[
                 "phase_id",
                 "occs_noneq",
                 "cell_abc",
@@ -120,20 +125,22 @@ class DataHandler:
                 "els_noneq",
                 "entry",
                 "temperature"
-            ],
+            ]
         )
 
         result_list = []
         atoms_list = []
 
         # create Atoms objects
-        for index, row in disordered_df.iterrows():
+        for index in range(len(disordered_df)):
             # info for Atoms obj
             disordered = {"disordered": {}}
 
-            basis_noneq = row["basis_noneq"]
-            els_noneq = row["els_noneq"]
-            occs_noneq = row["occs_noneq"]
+            row = disordered_df.row(index)
+            basis_noneq = row[4]
+            els_noneq = row[5]
+            occs_noneq = row[1]
+            cell_abc = row[2]
 
             for idx, (position, element, occupancy) in enumerate(
                 zip(basis_noneq, els_noneq, occs_noneq)
@@ -141,9 +148,9 @@ class DataHandler:
                 # Add information about disorder to dict
                 disordered["disordered"][idx] = {element: occupancy}
             crystal = Atoms(
-                symbols=row["els_noneq"],
-                positions=row["basis_noneq"],
-                cell=row["cell_abc"],
+                symbols=els_noneq,
+                positions=basis_noneq,
+                cell=cell_abc,
                 info=disordered,
             )
             atoms_list.append(crystal)
@@ -153,22 +160,24 @@ class DataHandler:
             obj, error = order_disordered(crystal)
             if not error:
                 result_list.append(
+                    # disordered_df consist of next columns:
+                    # phase_id, occs_noneq, cell_abc, sg_n, basis_non, els_noneq, entry, temperature
                     [
-                        disordered_df["phase_id"].tolist()[i],
+                        disordered_df.row(i)[0],
                         obj.get_cell_lengths_and_angles().tolist(),
-                        disordered_df["sg_n"].tolist()[i],
+                        disordered_df.row(i)[3],
                         obj.get_positions().tolist(),
                         list(obj.symbols),
-                        disordered_df["entry"].tolist()[i],
-                        disordered_df["temperature"].tolist()[i]
+                        disordered_df.row(i)[6],
+                        disordered_df.row(i)[7]
                     ]
                 )
             else:
                 print(error)
 
-        new_ordered_df = pd.DataFrame(
+        new_ordered_df = pl.DataFrame(
             result_list,
-            columns=[
+            schema=[
                 "phase_id",
                 "cell_abc",
                 "sg_n",
@@ -180,7 +189,8 @@ class DataHandler:
         )
 
         new_ordered_df = self.change_disord_on_ord(
-            all_data_df.values.tolist(), new_ordered_df.values.tolist()
+            [list(all_data_df.row(i)) for i in range(len(all_data_df))],
+            [list(new_ordered_df.row(i)) for i in range(len(new_ordered_df))],
         )
         result_df = self.choose_temperature(new_ordered_df)
 
@@ -190,11 +200,11 @@ class DataHandler:
         self, seebeck_df: DataFrame, structures_df: DataFrame
     ) -> DataFrame:
         try:
-            seebeck_df = seebeck_df.rename(columns={"Phase": "phase_id"})
+            seebeck_df = seebeck_df.rename({"Phase": "phase_id"})
         except:
             pass
-        dfrm = pd.merge(seebeck_df, structures_df, on="phase_id", how="inner")
-        return dfrm
+        dfrm = pd.merge(seebeck_df.to_pandas(), structures_df.to_pandas(), on="phase_id", how="inner")
+        return pl.from_pandas(dfrm)
 
     def just_uniq_phase_id(self, df: DataFrame) -> DataFrame:
         """
@@ -213,7 +223,7 @@ class DataHandler:
         """
         Delete data with wrong information or empty data
         """
-        data = df.values.tolist()
+        data = [list(df.row(i)) for i in range(len(df))]
         data_res = []
 
         for row in data:
@@ -221,9 +231,9 @@ class DataHandler:
                 data_res.append(row)
             else:
                 print("Removed garbage data:", row)
-        data = pd.DataFrame(
+        data = pl.DataFrame(
             data_res,
-            columns=[
+            schema=[
                 "phase_id",
                 "occs_noneq",
                 "cell_abc",
@@ -238,7 +248,7 @@ class DataHandler:
 
     def combine_data(self, data_f: DataFrame, data_s: DataFrame) -> DataFrame:
         """Simply connects 2 dataframes"""
-        combined_df = pd.concat([data_f, data_s])
+        combined_df = pl.concat([data_f, data_s])
         return combined_df
 
     def change_disord_on_ord(self, data_disord: list, ordered: list) -> DataFrame:
@@ -274,6 +284,7 @@ class DataHandler:
                                 dis_sample[4],
                                 dis_sample[5],
                                 dis_sample[6],
+                                dis_sample[7],
                             ]
                         )
                     else:
@@ -283,9 +294,9 @@ class DataHandler:
                             f"Missing {loss_str} structures that could not pass ordering"
                         )
 
-        dfrm = pd.DataFrame(
+        dfrm = pl.DataFrame(
             update_data,
-            columns=[
+            schema=[
                 "phase_id",
                 "cell_abc",
                 "sg_n",
@@ -293,7 +304,7 @@ class DataHandler:
                 "els_noneq",
                 "entry",
                 "temperature"
-            ],
+            ]
         )
         return dfrm
 
@@ -365,10 +376,10 @@ class DataHandler:
            2 DataFrames, first consist of atoms and distance, second - Seebeck value
         """
         if file_path:
-            dfrm = pd.read_csv(file_path)
+            dfrm = pl.read_csv(file_path)
 
         try:
-            d_list = dfrm.values.tolist()
+            d_list = [list(dfrm.row(i)) for i in range(len(dfrm))]
         except NameError:
             print("Variable dfrm is not defined")
             return None
@@ -388,10 +399,10 @@ class DataHandler:
                 objs.append(vectors[:, :100])
                 seebeck.append(item[2])
 
-        dfrm_str = pd.DataFrame(
-            [i.tolist() for i in objs], columns=["atom", "distance"]
+        dfrm_str = pl.DataFrame(
+            [i.tolist() for i in objs], schema=["atom", "distance"]
         )
-        dfrm_seeb = pd.DataFrame(seebeck, columns=["Seebeck coefficient"])
+        dfrm_seeb = pl.DataFrame(seebeck, schema=["Seebeck coefficient"])
 
         return [dfrm_str, dfrm_seeb]
 
@@ -411,10 +422,12 @@ class DataHandler:
            'phase_id', 'cell_abc', 'sg_n', 'basis_noneq',
            'els_noneq', 'entry', 'Site', 'Type', 'Composition'
         """
-        poly = pd.read_csv(self.polyheadra_path).rename(columns={"Entry": "entry"})
-        structs = pd.read_json(structure_path, orient="split")
+        poly = pl.read_csv(self.polyheadra_path).rename({"Entry": "entry"})
+        structs = pl.read_json(structure_path)
 
-        dfrm = pd.merge(structs, poly, on="entry", how="inner")
+        dfrm = structs.join(
+            poly, on="entry", how="inner"
+        )
         return dfrm
 
 
@@ -451,7 +464,8 @@ class DataHandler:
            'phase_id', 'poly_elements', 'poly_vertex', 'poly_type', 'temperature'
            or 'phase_id', 'poly_elements', 'poly_type', 'temperature'
         """
-        crystals = pd.read_json(crystals_json_path, orient='split').values.tolist()
+        crystals = pl.read_json(crystals_json_path)
+        crystals = [list(crystals.row(i)) for i in range(len(crystals))]
         poly_store = []
         descriptor_store = []
 
@@ -501,7 +515,7 @@ class DataHandler:
                 elif features == 3:
                     poly_store.append([poly[0], elements_large, vertex_large, p_type_large, temperature])
 
-        return pd.DataFrame(poly_store, columns=columns)
+        return pl.DataFrame(poly_store, schema=columns)
 
     def choose_temperature(self, dfrm: DataFrame) -> DataFrame:
         """
@@ -517,8 +531,8 @@ class DataHandler:
         -------
         dfrm : DataFrame
         """
-        columns = dfrm.columns.tolist()
-        data_list = dfrm.values.tolist()
+        columns = dfrm.columns
+        data_list = [list(dfrm.row(i)) for i in range(len(dfrm))]
 
         for row in data_list:
             # if not available t in data, set room t
@@ -541,7 +555,7 @@ class DataHandler:
             else:
                 row[6] = 298
 
-        result_dfrm = pd.DataFrame(data_list, columns=columns)
+        result_dfrm = pl.DataFrame(data_list, schema=columns)
 
         return result_dfrm
 

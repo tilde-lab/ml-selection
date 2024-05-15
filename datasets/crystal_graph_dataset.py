@@ -1,4 +1,4 @@
-import polars as pd
+import polars as pl
 import torch
 from ase.data import chemical_symbols
 from torch.utils.data import Dataset
@@ -18,8 +18,8 @@ class CrystalGraphDataset(Dataset):
         super().__init__()
         self.transform = self.build_graph
         self.file_path = "/root/projects/ml-selection/data/processed_data/total.csv"
-        self.data_csv = pd.read_csv(self.file_path)
-        self.data = self.data_csv.values.tolist()
+        self.data_csv = pl.read_csv(self.file_path)
+        self.data = [list(self.data_csv.row(i)) for i in range(len(self.data_csv))]
 
     def __len__(self):
         """Return number of samples"""
@@ -45,7 +45,7 @@ class CrystalGraphDataset(Dataset):
         Parameters
         ----------
         mol_data : list
-            Data with next values:
+            Data with next item:
             ['phase_id', 'Formula', 'Seebeck coefficient', 'cell_abc', 'sg_n', 'basis_noneq', 'els_noneq']
         """
         ph, formula, seebeck, cell_abc_str, sg_n, basis_noneq, els_noneq = mol_data

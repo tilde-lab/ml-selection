@@ -4,7 +4,7 @@ Selection of hyperparameters for GCN.
 
 import torch
 import optuna
-import polars as pd
+import polars as pl
 
 from models.neural_network_models.transformer.transformer_reg import TransformerModel
 
@@ -13,11 +13,11 @@ BEST_R2 = -100
 
 
 def main(poly_path: str, features: int, ds: int, temperature: bool):
-    poly = pd.read_csv(poly_path)
-    seebeck = pd.read_json(
+    poly = pl.read_csv(poly_path)
+    seebeck = pl.read_json(
         "/root/projects/ml-selection/data/raw_data/median_seebeck.json", orient='split',
     )
-    dataset = pd.merge(
+    dataset = pl.merge(
         seebeck, poly, on="phase_id", how="inner"
     ).drop(columns=['phase_id', 'Formula'])
     if not(temperature):

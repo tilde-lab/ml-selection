@@ -23,12 +23,12 @@ class PolyGraphDataset(Dataset):
         super().__init__()
         self.features_type = features_type
         # now is 3 features
-        self.poly = pd.read_csv(poly_path)
+        self.poly = pl.read_csv(poly_path)
         self.temperature = add_temperature
-        self.seebeck = pd.read_json(
+        self.seebeck = pl.read_json(
             "/root/projects/ml-selection/data/raw_data/median_seebeck.json", orient='split'
         ).rename(columns={"Phase": "phase_id"})
-        self.data = pd.merge(self.seebeck, self.poly, on="phase_id", how="inner").values.tolist()
+        self.data = pl.merge(self.seebeck, self.poly, on="phase_id", how="inner").values.tolist()
 
     def __len__(self):
         """Return num of samples"""

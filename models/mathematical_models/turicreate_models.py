@@ -21,11 +21,11 @@ models = {
 
 def split_data_for_turi_models(poly_path, seebeck_path):
     # Crystal in vectors format
-    poly = pd.read_csv(poly_path)
-    seebeck = pd.read_json(
+    poly = pl.read_csv(poly_path)
+    seebeck = pl.read_json(
        seebeck_path, orient='split'
     ).rename(columns={"Phase": "phase_id"})
-    data = pd.merge(seebeck, poly, on="phase_id", how="inner")
+    data = pl.merge(seebeck, poly, on="phase_id", how="inner")
 
     train_size = int(0.9 * len(data))
 

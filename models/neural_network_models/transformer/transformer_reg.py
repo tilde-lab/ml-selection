@@ -202,13 +202,13 @@ class TransformerModel(nn.Module):
 
 
 if __name__ == "__main__":
-    poly = pd.read_csv(
+    poly = pl.read_csv(
         f"/root/projects/ml-selection/data/processed_data/poly/3_features.csv",
     )
-    seebeck = pd.read_json(
+    seebeck = pl.read_json(
         "/root/projects/ml-selection/data/raw_data/median_seebeck.json", orient='split',
     )
-    dataset = pd.merge(seebeck, poly, on="phase_id", how="inner").drop(columns=['phase_id', 'Formula']).values.tolist()
+    dataset = pl.merge(seebeck, poly, on="phase_id", how="inner").drop(columns=['phase_id', 'Formula']).values.tolist()
 
     train_size = int(0.9 * len(dataset))
     test_size = len(dataset) - train_size

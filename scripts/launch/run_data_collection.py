@@ -3,7 +3,7 @@ Main file that starts collecting data for training models. Get median value for 
 1 phase_id <-> 1 Seebeck <-> many structures.
 """
 
-import polars as pd
+import polars as pl
 from scripts.launch import run_processing_polyhedra
 import yaml
 from polars import DataFrame
@@ -41,33 +41,33 @@ def get_structures_and_seebeck(
         seebeck_dfrm = handler.just_seebeck(
             max_value=200, min_value=-150, is_uniq_phase_id=False
         )
-        file_path = path_to_save + "seebeck.json"
-        seebeck_dfrm.to_json(file_path, orient="split")
+        file_path = path_to_save + "seebeck_test.json"
+        seebeck_dfrm.write_json(file_path)
     else:
-        seebeck_dfrm = pd.read_json(raw_seebeck_path, orient="split")
+        seebeck_dfrm = pl.read_json(raw_seebeck_path)
 
-    phases = set(seebeck_dfrm["Phase"].tolist())
+    phases = list(set(seebeck_dfrm["Phase"]))
 
     # make median Seebeck value
     median_seebeck = seebeck_median_value(seebeck_dfrm, phases)
-    file_path = path_to_save + "median_seebeck.json"
-    median_seebeck.to_json(file_path, orient="split")
+    file_path = path_to_save + "median_seebeck_test.json"
+    median_seebeck.write_json(file_path)
 
     if not raw_str_path:
         # get structure and make it ordered
         structures_dfrm = handler.to_order_disordered_str(
             phases=phases, is_uniq_phase_id=is_uniq_structure_for_phase
         )
-        file_path = path_to_save + "rep_structures.json"
-        structures_dfrm.to_json(file_path, orient="split")
+        file_path = path_to_save + "rep_structures_test.json"
+        structures_dfrm.write_json(file_path)
     else:
-        structures_dfrm = pd.read_json(raw_str_path, orient="split")
+        structures_dfrm = pl.read_json(raw_str_path)
 
     result_dfrm = handler.add_seebeck_by_phase_id(median_seebeck, structures_dfrm)
 
     if path_to_save:
-        csv_file_path = path_to_save + "total.csv"
-        result_dfrm.to_csv(csv_file_path, index=False)
+        csv_file_path = path_to_save + "total_test.json"
+        result_dfrm.write_json(csv_file_path)
 
     return result_dfrm
 
@@ -118,9 +118,9 @@ def main():
     get_structures_and_seebeck(
         handler,
         is_uniq_structure_for_phase,
-        raw_seebeck_path=raw_path + "seebeck.json",
-        raw_str_path=raw_path + "rep_structures.json",
-        path_to_save=raw_path,
+        raw_seebeck_path=raw_path + "seebeck_test.json",
+        raw_str_path=raw_path + "rep_structures_test.json",
+        path_to_save=raw_path
     )
     run_processing_polyhedra.main()
 

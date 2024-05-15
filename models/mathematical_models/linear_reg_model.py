@@ -2,7 +2,7 @@
 Linear regression model predicts the value of Seebeck coefficient.
 """
 import numpy as np
-import polars as pd
+import polars as pl
 import torch
 from sklearn import linear_model
 from torcheval.metrics import R2Score
@@ -12,10 +12,10 @@ mae = MeanAbsoluteError()
 r2 = R2Score()
 
 # Crystal in vectors format
-total = pd.read_csv(
+total = pl.read_csv(
     "/root/projects/ml-selection/data/processed_data/cut_str.csv",
 )
-seebeck = pd.read_csv(
+seebeck = pl.read_csv(
     "/root/projects/ml-selection/data/processed_data/cut_seeb.csv",
 )
 total_transformed = []
