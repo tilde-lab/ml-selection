@@ -86,6 +86,9 @@ def convert_structure_to_vectors(
         dfrm_str.write_json(path_to_save + "rep_vect_str.json")
         dfrm_seeb.write_json(path_to_save + "rep_vect_seebeck.json")
 
+    total = pl.concat((dfrm_str, dfrm_seeb), how='horizontal')
+    total.write_json(path_to_save + "rep_vect_str_clear.json")
+
     return dfrm_str, dfrm_seeb
 
 

@@ -13,8 +13,9 @@ class CrystalGraphVectorsDataset(Dataset):
     def __init__(self):
         super().__init__()
         self.data = pl.read_csv(
-            "/root/projects/ml-selection/data/processed_data/rep_vect_str_clear.csv",
-        ).values.tolist()
+            "/root/projects/ml-selection/data/processed_data/rep_vect_str_clear.json",
+        )
+        self.data = [list(self.data.row(i)) for i in range(len(self.data))]
 
     def __len__(self):
         "Return num of samples"

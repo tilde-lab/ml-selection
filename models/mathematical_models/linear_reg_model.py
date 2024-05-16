@@ -12,17 +12,17 @@ mae = MeanAbsoluteError()
 r2 = R2Score()
 
 # Crystal in vectors format
-total = pl.read_csv(
-    "/root/projects/ml-selection/data/processed_data/cut_str.csv",
+total = pl.read_json(
+    "/root/projects/ml-selection/data/processed_data/cut_str.json",
 )
-seebeck = pl.read_csv(
-    "/root/projects/ml-selection/data/processed_data/cut_seeb.csv",
+seebeck = pl.read_json(
+    "/root/projects/ml-selection/data/processed_data/cut_seeb.json",
 )
 total_transformed = []
-seebeck_transformed = [i[0] for i in seebeck.values.tolist()]
+seebeck_transformed = [list(seebeck.row(i))[0] for i in range(len(seebeck))]
 
 # Data preparing
-for i, row in enumerate(total.values.tolist()):
+for i, row in enumerate([list(total.row(i))[0] for i in range(len(total))]):
     atoms = eval(row[0])
     distance = eval(row[1])
     total_transformed.append([l for l in atoms])

@@ -78,7 +78,7 @@ def main(path: str, features: int, ds: int, temperature: bool):
     return res
 
 if __name__ == '__main__':
-    path = '/root/projects/ml-selection/data/processed_data/poly/0_features.csv'
+    path = '/root/projects/ml-selection/data/processed_data/poly/0_features.json'
     features = 2
     temperature = False
     main(path, features, 1, temperature)

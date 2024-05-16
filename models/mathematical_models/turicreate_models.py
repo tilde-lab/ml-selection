@@ -2,7 +2,7 @@
 Any of the below regression models can be used for predicting Seebeck Coefficient values of binary compounds.
 """
 
-import polars as pd
+import polars as pl
 import torch
 import turicreate as tc
 from torcheval.metrics import R2Score
@@ -23,14 +23,14 @@ def split_data_for_turi_models(poly_path, seebeck_path):
     # Crystal in vectors format
     poly = pl.read_csv(poly_path)
     seebeck = pl.read_json(
-       seebeck_path, orient='split'
-    ).rename(columns={"Phase": "phase_id"})
-    data = pl.merge(seebeck, poly, on="phase_id", how="inner")
+       seebeck_path
+    ).rename({"Phase": "phase_id"})
+    data = seebeck.join(poly, on="phase_id", how="inner")
 
     train_size = int(0.9 * len(data))
 
-    train = data.iloc[:train_size]
-    test = data.iloc[train_size:]
+    train = data[:train_size]
+    test = data[train_size:]
 
     return train, test
 

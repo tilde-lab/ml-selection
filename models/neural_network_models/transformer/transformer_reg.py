@@ -5,7 +5,7 @@ Transformer made from encoder (without decoder). Uses token-vector to represent 
 Tensor of tokens is fed to fully connected layer. Next, loss is calculated as in standard models.
 """
 
-import polars as pd
+import polars as pl
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -202,13 +202,14 @@ class TransformerModel(nn.Module):
 
 
 if __name__ == "__main__":
-    poly = pl.read_csv(
-        f"/root/projects/ml-selection/data/processed_data/poly/3_features.csv",
+    poly = pl.read_json(
+        f"/root/projects/ml-selection/data/processed_data/poly/3_features.json",
     )
     seebeck = pl.read_json(
-        "/root/projects/ml-selection/data/raw_data/median_seebeck.json", orient='split',
+        "/root/projects/ml-selection/data/raw_data/median_seebeck.json"
     )
-    dataset = pl.merge(seebeck, poly, on="phase_id", how="inner").drop(columns=['phase_id', 'Formula']).values.tolist()
+    dataset = seebeck.join(poly, on="phase_id", how="inner").drop(['phase_id', 'Formula'])
+    dataset = [list(dataset.row(i)) for i in range(len(dataset))]
 
     train_size = int(0.9 * len(dataset))
     test_size = len(dataset) - train_size

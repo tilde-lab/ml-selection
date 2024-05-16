@@ -4,7 +4,7 @@ Test for build graph by CrystalGraphVectorsDataset
 
 import unittest
 
-import polars as pd
+import polars as pl
 from torch_geometric.data import Data
 
 from datasets.vectors_graph_dataset import CrystalGraphVectorsDataset
@@ -12,19 +12,17 @@ from datasets.vectors_graph_dataset import CrystalGraphVectorsDataset
 
 class TestRequestMPDS(unittest.TestCase):
     def setUp(self):
-        self.total = pd.read_csv(
-            "/root/projects/ml-selection/data/processed_data/under_str.csv",
+        self.total = pl.read_csv(
+            "/root/projects/ml-selection/data/processed_data/rep_vect_str.csv",
         )
-        self.seebeck = pd.read_csv(
-            "/root/projects/ml-selection/data/processed_data/under_seeb.csv",
+        self.seebeck = pl.read_csv(
+            "/root/projects/ml-selection/data/processed_data/rep_vect_seebeck.csv",
         )
-        self.data = pd.concat(
-            [self.seebeck["Seebeck coefficient"], self.total], axis=1
-        ).values.tolist()
+
         self.dataset = CrystalGraphVectorsDataset()
 
     def test_build_graph(self):
-        graph = self.dataset.build_graph(self.total.values.tolist()[0])
+        graph = self.dataset.build_graph(self.total.row(0))
 
         self.assertEqual(type(graph), Data, "incorrect type of graph")
         self.assertEqual(

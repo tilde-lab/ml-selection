@@ -15,14 +15,14 @@ BEST_R2 = -100
 def main(poly_path: str, features: int, ds: int, temperature: bool):
     poly = pl.read_csv(poly_path)
     seebeck = pl.read_json(
-        "/root/projects/ml-selection/data/raw_data/median_seebeck.json", orient='split',
+        "/root/projects/ml-selection/data/raw_data/median_seebeck.json"
     )
-    dataset = pl.merge(
-        seebeck, poly, on="phase_id", how="inner"
-    ).drop(columns=['phase_id', 'Formula'])
+    dataset = seebeck.join(
+        poly, on="phase_id", how="inner"
+    ).drop(['phase_id', 'Formula'])
     if not(temperature):
         dataset = dataset.drop(columns=['temperature'])
-    dataset = dataset.values.tolist()
+    dataset = [list(dataset.row(i)) for i in range(len(dataset))]
     train_size = int(0.9 * len(dataset))
     test_size = len(dataset) - train_size
 

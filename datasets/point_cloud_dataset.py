@@ -1,4 +1,4 @@
-import polars as pd
+import polars as pl
 import torch
 from torch.utils.data import Dataset
 from torch_geometric.data import Data
@@ -9,9 +9,10 @@ class PointCloudDataset(Dataset):
     """Dataset for PointNetwork"""
     def __init__(self, features: int):
         super().__init__()
-        self.struct = pl.read_json('/root/projects/ml-selection/data/raw_data/rep_structures.json', orient='split')
-        self.seeb = pl.read_json('/root/projects/ml-selection/data/raw_data/median_seebeck.json', orient='split')
-        self.data = pl.merge(self.struct, self.seeb, on="phase_id", how="inner").values.tolist()
+        self.struct = pl.read_json('/root/projects/ml-selection/data/raw_data/rep_structures.json')
+        self.seeb = pl.read_json('/root/projects/ml-selection/data/raw_data/median_seebeck.json')
+        data = self.struct.join(self.seeb, on="phase_id", how="inner")
+        self.data = [list(data.row(i)) for i in range(len(data))]
         self.features = features
 
     def __len__(self):

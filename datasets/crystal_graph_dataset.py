@@ -17,9 +17,9 @@ class CrystalGraphDataset(Dataset):
     def __init__(self):
         super().__init__()
         self.transform = self.build_graph
-        self.file_path = "/root/projects/ml-selection/data/processed_data/total.csv"
-        self.data_csv = pl.read_csv(self.file_path)
-        self.data = [list(self.data_csv.row(i)) for i in range(len(self.data_csv))]
+        self.file_path = "/root/projects/ml-selection/data/processed_data/total.json"
+        self.data_json = pl.read_json(self.file_path)
+        self.data = [list(self.data_json.row(i)) for i in range(len(self.data_json))]
 
     def __len__(self):
         """Return number of samples"""

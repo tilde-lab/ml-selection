@@ -15,11 +15,11 @@ models_in_num = {"0": "GCN", "1": "GAT", "2": "Transformer", "3": "PointNet"}
 seebeck_path = "/root/projects/ml-selection/data/raw_data/median_seebeck.json"
 poly_dir_path = "/root/projects/ml-selection/data/processed_data/poly/"
 poly_path = [
-    f"{poly_dir_path}2_features.csv",
-    f"{poly_dir_path}3_features.csv",
-    f"{poly_dir_path}poly_vector_of_count.csv",
+    f"{poly_dir_path}2_features.json",
+    f"{poly_dir_path}3_features.json",
+    f"{poly_dir_path}poly_vector_of_count.json",
 ]
-poly_just_graph_models = f"{poly_dir_path}0_features.csv"
+poly_just_graph_models = f"{poly_dir_path}0_features.json"
 
 poly_features = [
     ["poly_elements", "poly_type"],

@@ -1,4 +1,4 @@
-import polars as pd
+import polars as pl
 import torch
 from torch.utils.data import Dataset
 from torch_geometric.data import Data
@@ -26,9 +26,13 @@ class PolyGraphDataset(Dataset):
         self.poly = pl.read_csv(poly_path)
         self.temperature = add_temperature
         self.seebeck = pl.read_json(
-            "/root/projects/ml-selection/data/raw_data/median_seebeck.json", orient='split'
-        ).rename(columns={"Phase": "phase_id"})
-        self.data = pl.merge(self.seebeck, self.poly, on="phase_id", how="inner").values.tolist()
+            "/root/projects/ml-selection/data/raw_data/median_seebeck.json"
+        ).rename({"Phase": "phase_id"})
+        data = self.seebeck.join(
+            self.poly, on="phase_id", how="inner"
+        )
+        self.data = [list(data.row(i)) for i in range(len(data))]
+
 
     def __len__(self):
         """Return num of samples"""
