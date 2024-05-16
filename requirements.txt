@@ -5,6 +5,7 @@ metis-backend
 mpds_client
 numpy
 pandas
+polars
 smogn
 turicreate
 torch

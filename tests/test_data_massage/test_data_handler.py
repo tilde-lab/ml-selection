@@ -3,7 +3,7 @@ Test cases to test DataHandler class
 """
 import unittest
 
-import pandas as pd
+import polars as pl
 import yaml
 
 from data_massage.calculate_median_value import seebeck_median_value
@@ -12,7 +12,7 @@ from data_massage.data_handler import DataHandler
 
 class TestDataHandler(unittest.TestCase):
     def setUp(self):
-        with open("/configs/config.yaml", "r") as yamlfile:
+        with open("/root/projects/ml-selection/configs/config.yaml", "r") as yamlfile:
             self.api_key = yaml.load(yamlfile, Loader=yaml.FullLoader)["api_key"]
 
         self.raw_path = "/root/projects/ml-selection/data/raw_data/"
@@ -55,29 +55,35 @@ class TestDataHandler(unittest.TestCase):
         columns = ["Phase", "Formula", "Seebeck coefficient"]
         answer = self.handler.just_seebeck(200, -150)
 
-        self.assertEqual(type(answer), type(pd.DataFrame()), "incorrect type")
+        self.assertEqual(type(answer), type(pl.DataFrame()), "incorrect type")
         self.assertEqual(
-            answer.columns.tolist(), columns, "incorrect columns in DataFrame"
+            answer.columns, columns, "incorrect columns in DataFrame"
         )
-        self.assertNotEqual(len(answer.values.tolist()), 0, "empty answer")
+        self.assertNotEqual(len(answer), 0, "empty answer")
         self.assertGreater(
-            len(answer.values.tolist()), 7000, "suspiciously little data"
+            len(answer), 7000, "suspiciously little data"
         )
 
     def test_to_order_disordered_str(self):
-        columns = ["phase_id", "cell_abc", "sg_n", "basis_noneq", "els_noneq"]
+        columns = [
+            'phase_id',
+            'cell_abc',
+            'sg_n',
+            'basis_noneq',
+            'els_noneq',
+            'entry',
+            'temperature'
+        ]
         answer = self.handler.to_order_disordered_str(self.phases, False)
 
         self.assertEqual(
-            answer.columns.tolist(), columns, "incorrect columns in DataFrame"
+            answer.columns, columns, "incorrect columns in DataFrame"
         )
         self.assertEqual(len(answer), 423, "incorrect number of samples in DataFrame")
 
     def test_seebeck_median_value(self):
         seebeck = self.handler.just_seebeck(200, -150)
-        answer = seebeck_median_value(seebeck, seebeck["Phase"].tolist())[
-            "Seebeck coefficient"
-        ].tolist()
+        answer = list(seebeck_median_value(seebeck, list(seebeck["Phase"]))["Seebeck coefficient"])
         self.assertGreater(
             len(answer),
             len(set(answer)),
@@ -89,29 +95,29 @@ class TestDataHandler(unittest.TestCase):
             max_value=200, min_value=-150, is_uniq_phase_id=False
         )
         self.assertEqual(
-            len(seebeck_dfrm.values.tolist()),
+            len(seebeck_dfrm),
             7112,
             "expected another number of Seebeck values",
         )
 
         median_seebeck = seebeck_median_value(
-            seebeck_dfrm, set(seebeck_dfrm["Phase"].tolist())
+            seebeck_dfrm, set(list(seebeck_dfrm["Phase"]))
         )
-        self.assertGreater(
+        self.assertEqual(
             len(median_seebeck),
-            len(set(median_seebeck)),
-            "size of set of Seebeck median value >= size of list with repetitive Seebeck value",
+            len(set(list(median_seebeck['phase_id']))),
+            "size of set of Seebeck median value >= size of list with repetitive Seebeck value"
         )
 
         structures_dfrm = self.handler.to_order_disordered_str(
-            phases=set(seebeck_dfrm["Phase"].tolist()), is_uniq_phase_id=True
+            phases=set(list(seebeck_dfrm["Phase"])), is_uniq_phase_id=True
         )
         result_dfrm = self.handler.add_seebeck_by_phase_id(
             median_seebeck, structures_dfrm
         )
         self.assertEqual(
-            len(result_dfrm.values.tolist()),
-            len(structures_dfrm.values.tolist()),
+            len(result_dfrm),
+            len(structures_dfrm),
             "different size of ordered structures after adding Seebeck value",
         )
 

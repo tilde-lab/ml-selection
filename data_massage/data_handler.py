@@ -210,12 +210,13 @@ class DataHandler:
         """
         Save one example for a specific 'phase_id', deletes subsequent ones
         """
+        df = df.to_pandas()
         try:
             mask = ~df["Phase"].duplicated()
         except:
             mask = ~df["phase_id"].duplicated()
         result_df = df[mask]
-        return result_df
+        return pl.from_pandas(result_df)
 
     def cleaning_trash_data(
         self, df: DataFrame, idx_check: int = 5, type_of_trash=[]
