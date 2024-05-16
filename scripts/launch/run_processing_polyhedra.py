@@ -13,8 +13,8 @@ def combine_structure_and_poly():
     """
     Combine structures and polyhedra by entry
     """
-    dfrm = hand.add_polyhedra(raw_data + "rep_structures.json")
-    dfrm.to_json(raw_data + "large_poly.json", orient="split")
+    dfrm = hand.add_polyhedra(raw_data + "rep_structures_test.json")
+    dfrm.write_json(raw_data + "large_poly.json")
 
 
 def make_poly_descriptor(
@@ -38,7 +38,7 @@ def make_poly_descriptor(
     descriptor = hand.process_polyhedra(
         raw_data + "large_poly.json", features=features, is_one_hot=is_one_hot
     )
-    descriptor.to_csv(processed_data + file_name + ".csv", index=False)
+    descriptor.write_json(processed_data + file_name + ".json")
 
 
 def get_different_descriptors(features: list = [2, 3, 0]) -> None:

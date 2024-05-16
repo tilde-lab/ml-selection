@@ -41,7 +41,7 @@ def get_structures_and_seebeck(
         seebeck_dfrm = handler.just_seebeck(
             max_value=200, min_value=-150, is_uniq_phase_id=False
         )
-        file_path = path_to_save + "seebeck_test.json"
+        file_path = path_to_save + "seebeck.json"
         seebeck_dfrm.write_json(file_path)
     else:
         seebeck_dfrm = pl.read_json(raw_seebeck_path)
@@ -50,7 +50,7 @@ def get_structures_and_seebeck(
 
     # make median Seebeck value
     median_seebeck = seebeck_median_value(seebeck_dfrm, phases)
-    file_path = path_to_save + "median_seebeck_test.json"
+    file_path = path_to_save + "median_seebeck.json"
     median_seebeck.write_json(file_path)
 
     if not raw_str_path:
@@ -58,7 +58,7 @@ def get_structures_and_seebeck(
         structures_dfrm = handler.to_order_disordered_str(
             phases=phases, is_uniq_phase_id=is_uniq_structure_for_phase
         )
-        file_path = path_to_save + "rep_structures_test.json"
+        file_path = path_to_save + "rep_structures.json"
         structures_dfrm.write_json(file_path)
     else:
         structures_dfrm = pl.read_json(raw_str_path)
@@ -66,7 +66,7 @@ def get_structures_and_seebeck(
     result_dfrm = handler.add_seebeck_by_phase_id(median_seebeck, structures_dfrm)
 
     if path_to_save:
-        csv_file_path = path_to_save + "total_test.json"
+        csv_file_path = path_to_save + "total.json"
         result_dfrm.write_json(csv_file_path)
 
     return result_dfrm
@@ -83,8 +83,8 @@ def convert_structure_to_vectors(
     dfrm_str, dfrm_seeb = handler.to_cut_vectors_struct(dfrm=dfrm)
 
     if path_to_save:
-        dfrm_str.to_csv(path_to_save + "rep_vect_str.csv", index=False)
-        dfrm_seeb.to_csv(path_to_save + "rep_vect_seebeck.csv", index=False)
+        dfrm_str.write_json(path_to_save + "rep_vect_str.json")
+        dfrm_seeb.write_json(path_to_save + "rep_vect_seebeck.json")
 
     return dfrm_str, dfrm_seeb
 
@@ -111,17 +111,18 @@ def main():
         print("Key is read successful")
 
     raw_path = "/root/projects/ml-selection/data/raw_data/"
-
+    proc_path = '/root/projects/ml-selection/data/processed_data/'
     is_uniq_structure_for_phase = False
     handler = DataHandler(True, api_key)
 
-    get_structures_and_seebeck(
+    result_dfrm = get_structures_and_seebeck(
         handler,
         is_uniq_structure_for_phase,
-        raw_seebeck_path=raw_path + "seebeck_test.json",
-        raw_str_path=raw_path + "rep_structures_test.json",
+        raw_seebeck_path=raw_path + "seebeck.json",
+        raw_str_path=raw_path + "rep_structures.json",
         path_to_save=raw_path
     )
+    get_data_for_vectors_dataset(handler, result_dfrm, proc_path)
     run_processing_polyhedra.main()
 
 

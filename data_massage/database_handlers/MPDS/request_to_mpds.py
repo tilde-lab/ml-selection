@@ -48,33 +48,32 @@ class RequestMPDS:
             self.client = MPDSDataRetrieval(
                 dtype=MPDSDataTypes.PEER_REVIEWED, api_key=self.api_key
             )
-            # answer_df = pl.from_pandas(pd.DataFrame(
-            #     self.client.get_data(
-            #         {"props": "atomic structure"},
-            #         phases=phases,
-            #         fields={
-            #             "S": [
-            #                 "phase_id",
-            #                 "occs_noneq",
-            #                 "cell_abc",
-            #                 "sg_n",
-            #                 "basis_noneq",
-            #                 "els_noneq",
-            #                 "entry",
-            #                 "condition"
-            #             ]
-            #         },
-            #     ),
-            #     columns=[
-            #         "phase_id",
-            #         "occs_noneq",
-            #         "cell_abc",
-            #         "sg_n",
-            #         "basis_noneq",
-            #         "els_noneq",
-            #         "entry",
-            #         "temperature"
-            #     ]
-            # ))
-            answer_df = pl.read_json('/root/projects/ml-selection/data/test_struct.json')
+            answer_df = pl.from_pandas(pd.DataFrame(
+                self.client.get_data(
+                    {"props": "atomic structure"},
+                    phases=phases,
+                    fields={
+                        "S": [
+                            "phase_id",
+                            "occs_noneq",
+                            "cell_abc",
+                            "sg_n",
+                            "basis_noneq",
+                            "els_noneq",
+                            "entry",
+                            "condition"
+                        ]
+                    },
+                ),
+                columns=[
+                    "phase_id",
+                    "occs_noneq",
+                    "cell_abc",
+                    "sg_n",
+                    "basis_noneq",
+                    "els_noneq",
+                    "entry",
+                    "temperature"
+                ]
+            ))
             return answer_df
