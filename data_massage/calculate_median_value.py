@@ -13,7 +13,7 @@ def seebeck_median_value(data: pl.DataFrame, phases: list) -> DataFrame:
     data : polars DataFrame
         DataFrame with next columns: 'Phase', 'Formula', 'Seebeck coefficient'
     phases : list
-        List with set of phases
+        Set of phases
 
     Returns
     -------
@@ -24,7 +24,9 @@ def seebeck_median_value(data: pl.DataFrame, phases: list) -> DataFrame:
     for phase in phases:
         seebeck = []
         data_for_phase = data.filter(pl.col("Phase") == phase)
-        data_for_phase_list = [list(data_for_phase.row(i)) for i in range(len(data_for_phase))]
+        data_for_phase_list = [
+            list(data_for_phase.row(i)) for i in range(len(data_for_phase))
+        ]
 
         if len(data_for_phase_list) == 1:
             new_data_list.append(data_for_phase_list[0])
@@ -41,8 +43,7 @@ def seebeck_median_value(data: pl.DataFrame, phases: list) -> DataFrame:
         new_data_list.append(new_data_for_phase)
 
     dfrm = pl.DataFrame(
-        new_data_list,
-        schema=["phase_id", "Formula", "Seebeck coefficient"]
+        new_data_list, schema=["phase_id", "Formula", "Seebeck coefficient"]
     )
 
     return dfrm

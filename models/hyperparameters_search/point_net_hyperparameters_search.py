@@ -2,19 +2,19 @@
 Selection of hyperparameters for PointNetwork
 """
 
+import optuna
 import torch
 from torch_geometric.loader import DataLoader
-import optuna
 
 from datasets.point_cloud_dataset import PointCloudDataset
-from models.neural_network_models.PointNet.pointnet_model import PointNet, train, val
+from models.neural_network_models.PointNet.pointnet_model import (PointNet,
+                                                                  train, val)
 
 BEST_WEIGHTS = None
 BEST_R2 = -100
 
 
 def main(features, ds):
-
     def objective(trial) -> int:
         """Search of hyperparameters"""
         global BEST_WEIGHTS, BEST_R2
@@ -51,7 +51,9 @@ def main(features, ds):
 
         return r2
 
-    study = optuna.create_study(sampler=optuna.samplers.TPESampler(), direction="maximize")
+    study = optuna.create_study(
+        sampler=optuna.samplers.TPESampler(), direction="maximize"
+    )
     study.optimize(objective, n_trials=1)
 
     res = [study.best_trial]
@@ -70,7 +72,7 @@ def main(features, ds):
     res.append(parms)
 
     if BEST_WEIGHTS is not None:
-        torch.save(BEST_WEIGHTS, f'best_pointnet_weights{ds}.pth')
+        torch.save(BEST_WEIGHTS, f"best_pointnet_weights{ds}.pth")
 
     return res
 

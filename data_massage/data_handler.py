@@ -1,17 +1,19 @@
 import numpy as np
+import pandas as pd
 import polars as pl
 import yaml
 from ase import Atoms
 from ase.data import chemical_symbols
 from polars import DataFrame
-import pandas as pd
 
 from data.mendeleev_table import periodic_numbers
+from data_massage.create_polyheadra import (get_int_poly_type,
+                                            get_poly_elements,
+                                            size_customization)
 from data_massage.database_handlers.MPDS.request_to_mpds import RequestMPDS
 # change path if another
 from metis_backend.metis_backend.structures.struct_utils import \
     order_disordered
-from data_massage.create_polyheadra import get_poly_elements, get_int_poly_type, size_customization
 
 
 class DataHandler:
@@ -66,11 +68,7 @@ class DataHandler:
         res_dfrm : DataFrame
             Seebeck coefficients in DataFrame format
         """
-        res_dfrm = pl.DataFrame({
-            "Phase": [],
-            "Formula": [],
-            "Seebeck coefficient": []
-        })
+        res_dfrm = pl.DataFrame({"Phase": [], "Formula": [], "Seebeck coefficient": []})
 
         for data_type in self.available_dtypes:
             self.client_handler = RequestMPDS(dtype=data_type, api_key=self.api_key)
@@ -80,8 +78,8 @@ class DataHandler:
             # remove outliers in value of Seebeck coefficient
             if max_value:
                 dfrm = dfrm.filter(
-                    (pl.col("Seebeck coefficient") >= min_value) &
-                    (pl.col("Seebeck coefficient") <= max_value)
+                    (pl.col("Seebeck coefficient") >= min_value)
+                    & (pl.col("Seebeck coefficient") <= max_value)
                 )
             if len(res_dfrm) == 0:
                 res_dfrm = dfrm
@@ -124,8 +122,8 @@ class DataHandler:
                 "basis_noneq",
                 "els_noneq",
                 "entry",
-                "temperature"
-            ]
+                "temperature",
+            ],
         )
 
         result_list = []
@@ -169,7 +167,7 @@ class DataHandler:
                         obj.get_positions().tolist(),
                         list(obj.symbols),
                         disordered_df.row(i)[6],
-                        disordered_df.row(i)[7]
+                        disordered_df.row(i)[7],
                     ]
                 )
             else:
@@ -184,7 +182,7 @@ class DataHandler:
                 "basis_noneq",
                 "els_noneq",
                 "entry",
-                "temperature"
+                "temperature",
             ],
         )
 
@@ -203,7 +201,12 @@ class DataHandler:
             seebeck_df = seebeck_df.rename({"Phase": "phase_id"})
         except:
             pass
-        dfrm = pd.merge(seebeck_df.to_pandas(), structures_df.to_pandas(), on="phase_id", how="inner")
+        dfrm = pd.merge(
+            seebeck_df.to_pandas(),
+            structures_df.to_pandas(),
+            on="phase_id",
+            how="inner",
+        )
         return pl.from_pandas(dfrm)
 
     def just_uniq_phase_id(self, df: DataFrame) -> DataFrame:
@@ -242,7 +245,7 @@ class DataHandler:
                 "basis_noneq",
                 "els_noneq",
                 "entry",
-                "temperature"
+                "temperature",
             ],
         )
         return data
@@ -304,8 +307,8 @@ class DataHandler:
                 "basis_noneq",
                 "els_noneq",
                 "entry",
-                "temperature"
-            ]
+                "temperature",
+            ],
         )
         return dfrm
 
@@ -400,9 +403,7 @@ class DataHandler:
                 objs.append(vectors[:, :100])
                 seebeck.append(item[2])
 
-        dfrm_str = pl.DataFrame(
-            [i.tolist() for i in objs], schema=["atom", "distance"]
-        )
+        dfrm_str = pl.DataFrame([i.tolist() for i in objs], schema=["atom", "distance"])
         dfrm_seeb = pl.DataFrame(seebeck, schema=["Seebeck coefficient"])
 
         return [dfrm_str, dfrm_seeb]
@@ -426,23 +427,32 @@ class DataHandler:
         poly = pl.read_csv(self.polyheadra_path).rename({"Entry": "entry"})
         structs = pl.read_json(structure_path)
 
-        dfrm = structs.join(
-            poly, on="entry", how="inner"
-        )
+        dfrm = structs.join(poly, on="entry", how="inner")
         return dfrm
 
-
     @classmethod
-    def vectors_count_elements(cls, elements):
+    def vectors_count_elements(cls, elements: list) -> list:
+        """
+        Create vector with count of element by index from Mendeleev table
+
+        Parameters
+        ----------
+        elements : list
+            Periodic numbers of elements from Mendeleev table
+
+        Returns
+        -------
+        count_el : list
+            Number of count for each element
+        """
         count_el = [0 for i in range(118)]
         for el in elements:
-            count_el[el-1] += 10
+            count_el[el - 1] += 10
         return count_el
-
 
     @classmethod
     def process_polyhedra(
-            cls, crystals_json_path: str, features: int = 2, is_one_hot: bool = False
+        cls, crystals_json_path: str, features: int = 2, is_one_hot: bool = False
     ) -> DataFrame:
         """
         Create descriptor from polyhedra
@@ -470,10 +480,16 @@ class DataHandler:
         poly_store = []
         descriptor_store = []
 
-        if features == 3 and not(is_one_hot):
-            columns = ['phase_id', 'poly_elements', 'poly_vertex', 'poly_type', 'temperature']
+        if features == 3 and not (is_one_hot):
+            columns = [
+                "phase_id",
+                "poly_elements",
+                "poly_vertex",
+                "poly_type",
+                "temperature",
+            ]
         else:
-            columns = ['phase_id', 'poly_elements', 'poly_type', 'temperature']
+            columns = ["phase_id", "poly_elements", "poly_type", "temperature"]
 
         for poly in crystals:
             elements = get_poly_elements(poly)
@@ -486,12 +502,12 @@ class DataHandler:
             vertex, p_type = get_int_poly_type(poly)
 
             # features: elements, poly (number of vertex + number of type poly)
-            if features == 2 and not(is_one_hot):
+            if features == 2 and not (is_one_hot):
                 poly_type = vertex + p_type
                 poly_type_large = [poly_type] * 100
 
             # features: elements, number of vertex in poly, type of poly (+t if is_temperature==True)
-            elif features == 3 and not(is_one_hot):
+            elif features == 3 and not (is_one_hot):
                 vertex_large, p_type_large = [vertex] * 100, [p_type] * 100
                 poly_type_large = [vertex_large, p_type_large]
 
@@ -500,7 +516,7 @@ class DataHandler:
             else:
                 return None
 
-            if features != 0 and not(is_one_hot):
+            if features != 0 and not (is_one_hot):
                 elements_large = size_customization(elements)
 
             # elements without size customization (just for graph models)
@@ -512,9 +528,19 @@ class DataHandler:
                 descriptor_store.append([elements_large, poly_type_large])
                 temperature = poly[6]
                 if features == 2 or features == 0 or is_one_hot:
-                    poly_store.append([poly[0], elements_large, poly_type_large, temperature])
+                    poly_store.append(
+                        [poly[0], elements_large, poly_type_large, temperature]
+                    )
                 elif features == 3:
-                    poly_store.append([poly[0], elements_large, vertex_large, p_type_large, temperature])
+                    poly_store.append(
+                        [
+                            poly[0],
+                            elements_large,
+                            vertex_large,
+                            p_type_large,
+                            temperature,
+                        ]
+                    )
 
         return pl.DataFrame(poly_store, schema=columns)
 
@@ -531,6 +557,7 @@ class DataHandler:
         Returns
         -------
         dfrm : DataFrame
+            Dataframe with the same columns
         """
         columns = dfrm.columns
         data_list = [list(dfrm.row(i)) for i in range(len(dfrm))]
@@ -559,5 +586,3 @@ class DataHandler:
         result_dfrm = pl.DataFrame(data_list, schema=columns)
 
         return result_dfrm
-
-

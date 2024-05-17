@@ -126,7 +126,7 @@ class GCN(torch.nn.Module):
 
 
 if __name__ == "__main__":
-    path = '/root/projects/ml-selection/data/processed_data/poly/0_features.json'
+    path = "/root/projects/ml-selection/data/processed_data/poly/0_features.json"
     n_features = 2
     temperature = False
     dataset = PolyGraphDataset(path, n_features, temperature)
@@ -148,10 +148,10 @@ if __name__ == "__main__":
     device = torch.device("cpu")
     model = GCN(n_features, 16, 32, "relu").to(device)
     model.load_state_dict(
-        torch.load('/root/projects/ml-selection/models/neural_network_models/GCN/weights/30_01.pth')
+        torch.load(
+            "/root/projects/ml-selection/models/neural_network_models/GCN/weights/30_01.pth"
+        )
     )
 
     model.fit(model, 5, train_dataloader, device, lr=0.008598391737229157)
     model.val(model, test_dataloader, device)
-
-

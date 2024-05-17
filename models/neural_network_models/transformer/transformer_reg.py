@@ -19,6 +19,7 @@ r2 = R2Score()
 mae = MeanAbsoluteError()
 mape = MeanAbsolutePercentageError()
 
+
 class TransformerModel(nn.Module):
     """A transformer model. Contains an encoder (without decoder)"""
 
@@ -29,7 +30,7 @@ class TransformerModel(nn.Module):
             d_model=n_feature,
             nhead=heads,
             batch_first=True,
-            activation='gelu',
+            activation="gelu",
             dropout=0,
             norm_first=True,
         )
@@ -86,7 +87,7 @@ class TransformerModel(nn.Module):
             cnt = 0
             if self.n_feature == 4:
                 for y, poly, p_vert, p_type, temp in train_data:
-                    data = [poly, p_vert, p_type, [temp]*len(poly)]
+                    data = [poly, p_vert, p_type, [temp] * len(poly)]
                     cnt += 1
                     optimizer.zero_grad()
                     out = model([torch.tensor(data).permute(1, 0).unsqueeze(0)])
@@ -99,11 +100,11 @@ class TransformerModel(nn.Module):
                     try:
                         data = [poly, p_vert, p_type]
                         if len(data[0]) == 118:
-                            data[1] = [data[1][0]]*118
+                            data[1] = [data[1][0]] * 118
                     except:
-                        data = [poly, p_vert, [p_type]*len(poly)]
+                        data = [poly, p_vert, [p_type] * len(poly)]
                         if len(data[0]) == 118:
-                            data[1] = [data[1][0]]*118
+                            data[1] = [data[1][0]] * 118
                     cnt += 1
                     optimizer.zero_grad()
                     out = model([torch.tensor(data).permute(1, 0).unsqueeze(0)])
@@ -163,7 +164,7 @@ class TransformerModel(nn.Module):
                     y_s.append(y)
             if self.n_feature == 4:
                 for y, poly, p_vert, p_type, temp in test_data:
-                    data = [poly, p_vert, p_type, [temp]*len(poly)]
+                    data = [poly, p_vert, p_type, [temp] * len(poly)]
                     if len(data[0]) != len(data[1]):
                         while len(data[0]) != len(data[1]):
                             data[1].append(data[1][0])
@@ -208,7 +209,9 @@ if __name__ == "__main__":
     seebeck = pl.read_json(
         "/root/projects/ml-selection/data/raw_data/median_seebeck.json"
     )
-    dataset = seebeck.join(poly, on="phase_id", how="inner").drop(['phase_id', 'Formula'])
+    dataset = seebeck.join(poly, on="phase_id", how="inner").drop(
+        ["phase_id", "Formula"]
+    )
     dataset = [list(dataset.row(i)) for i in range(len(dataset))]
 
     train_size = int(0.9 * len(dataset))
@@ -218,9 +221,11 @@ if __name__ == "__main__":
     test_data = torch.utils.data.Subset(
         dataset, range(train_size, train_size + test_size)
     )
-    model = TransformerModel(4, 4, 16, 'elu')
+    model = TransformerModel(4, 4, 16, "elu")
 
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.0006479739574204421, weight_decay=5e-4)
+    optimizer = torch.optim.Adam(
+        model.parameters(), lr=0.0006479739574204421, weight_decay=5e-4
+    )
 
     model.fit(model, optimizer, 5, train_data)
     model.val(model, test_data)

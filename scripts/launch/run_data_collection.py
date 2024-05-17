@@ -4,12 +4,12 @@ Main file that starts collecting data for training models. Get median value for 
 """
 
 import polars as pl
-from scripts.launch import run_processing_polyhedra
 import yaml
 from polars import DataFrame
 
 from data_massage.calculate_median_value import seebeck_median_value
 from data_massage.data_handler import DataHandler
+from scripts.launch import run_processing_polyhedra
 
 
 def get_structures_and_seebeck(
@@ -86,7 +86,7 @@ def convert_structure_to_vectors(
         dfrm_str.write_json(path_to_save + "rep_vect_str.json")
         dfrm_seeb.write_json(path_to_save + "rep_vect_seebeck.json")
 
-    total = pl.concat((dfrm_str, dfrm_seeb), how='horizontal')
+    total = pl.concat((dfrm_str, dfrm_seeb), how="horizontal")
     total.write_json(path_to_save + "rep_vect_str_clear.json")
 
     return dfrm_str, dfrm_seeb
@@ -114,7 +114,7 @@ def main():
         print("Key is read successful")
 
     raw_path = "/root/projects/ml-selection/data/raw_data/"
-    proc_path = '/root/projects/ml-selection/data/processed_data/'
+    proc_path = "/root/projects/ml-selection/data/processed_data/"
     is_uniq_structure_for_phase = False
     handler = DataHandler(True, api_key)
 
@@ -123,7 +123,7 @@ def main():
         is_uniq_structure_for_phase,
         raw_seebeck_path=raw_path + "seebeck.json",
         raw_str_path=raw_path + "rep_structures.json",
-        path_to_save=raw_path
+        path_to_save=raw_path,
     )
     get_data_for_vectors_dataset(handler, result_dfrm, proc_path)
     run_processing_polyhedra.main()

@@ -8,7 +8,10 @@ class PolyGraphDataset(Dataset):
     """
     Graph from polyhedra of crystal
     """
-    def __init__(self, poly_path, features_type: int = 3, add_temperature: bool = False):
+
+    def __init__(
+        self, poly_path, features_type: int = 3, add_temperature: bool = False
+    ):
         """
         Parameters
         ----------
@@ -29,11 +32,8 @@ class PolyGraphDataset(Dataset):
         self.seebeck = pl.read_json(
             "/root/projects/ml-selection/data/raw_data/median_seebeck.json"
         )
-        data = self.seebeck.join(
-            self.poly, on="phase_id", how="inner"
-        )
+        data = self.seebeck.join(self.poly, on="phase_id", how="inner")
         self.data = [list(data.row(i)) for i in range(len(data))]
-
 
     def __len__(self):
         """Return num of samples"""

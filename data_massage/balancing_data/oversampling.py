@@ -47,7 +47,9 @@ def make_oversampling(
     total = []
 
     for i in range(len(atoms)):
-        total.append(atoms[i] + distance[i] + [list(y.row(i)) for i in range(len(y))][i])
+        total.append(
+            atoms[i] + distance[i] + [list(y.row(i)) for i in range(len(y))][i]
+        )
 
     total_df = pl.DataFrame(total)
     total_df.rename(columns={total_df.columns[-1]: "Seebeck coefficient"}, inplace=True)

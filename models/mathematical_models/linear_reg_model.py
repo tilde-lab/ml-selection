@@ -1,6 +1,7 @@
 """
 Linear regression model predicts the value of Seebeck coefficient.
 """
+
 import numpy as np
 import polars as pl
 import torch

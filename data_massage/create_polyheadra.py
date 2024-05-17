@@ -1,5 +1,6 @@
-from data.mendeleev_table import get_periodic_number
 import re
+
+from data.mendeleev_table import get_periodic_number
 
 
 def get_poly_elements(poly: list) -> list:
@@ -8,7 +9,7 @@ def get_poly_elements(poly: list) -> list:
 
     Parameters
     ----------
-    poly  : list
+    poly : list
         Data with atoms name
 
     Returns
@@ -19,19 +20,19 @@ def get_poly_elements(poly: list) -> list:
     if poly[9] == None:
         return [None]
     formula = re.sub(r"(?<=\w)([A-Z])", r" \1", poly[9])
-    composition = formula.replace('<sub>', ' ').replace('</sub>', ' ').split(' ')
+    composition = formula.replace("<sub>", " ").replace("</sub>", " ").split(" ")
     elements = []
 
     for el in composition:
-        if el == '':
+        if el == "":
             continue
-        if not(el.isdigit()):
+        if not (el.isdigit()):
             try:
-               elements.append(get_periodic_number(el))
+                elements.append(get_periodic_number(el))
             except:
                 return [None]
         else:
-            for i in range(int(el)-1):
+            for i in range(int(el) - 1):
                 elements.append(elements[-1])
 
     return elements
@@ -46,9 +47,9 @@ def get_int_poly_type(poly: list) -> int:
     poly  : list
         Data consist of name polyhedra and number of vertex
     """
-    values = poly[8].replace('-', ' ').replace('#', ' ').split(' ')
+    values = poly[8].replace("-", " ").replace("#", " ").split(" ")
     vertex = int(values[0])
-    type = ord(values[1]) - ord('a') + 1
+    type = ord(values[1]) - ord("a") + 1
 
     return [vertex * 10, type]
 

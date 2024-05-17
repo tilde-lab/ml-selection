@@ -147,7 +147,7 @@ class GAT(torch.nn.Module):
 
 
 if __name__ == "__main__":
-    path = '/root/projects/ml-selection/data/processed_data/poly/0_features.json'
+    path = "/root/projects/ml-selection/data/processed_data/poly/0_features.json"
     n_features = 2
     temperature = False
     dataset = PolyGraphDataset(path, n_features, temperature)

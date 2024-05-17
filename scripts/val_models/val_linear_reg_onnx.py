@@ -1,6 +1,7 @@
 """
 Run Linear Regression model in ONNX format
 """
+
 import polars as pd
 import torch
 from torcheval.metrics import R2Score

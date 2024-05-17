@@ -1,6 +1,7 @@
 """
 Test cases to test oversampling (SMOTER) and undersampling
 """
+
 import unittest
 
 import polars as pl

@@ -1,6 +1,7 @@
 """
 Test GCN on CrystalGraphVectorsDataset
 """
+
 import torch
 from torch_geometric.loader import DataLoader
 

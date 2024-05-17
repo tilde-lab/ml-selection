@@ -2,8 +2,8 @@
 Any of the below regression models can be used for predicting Seebeck Coefficient values of binary compounds.
 """
 
-import polars as pl
 import pandas as pd
+import polars as pl
 import torch
 import turicreate as tc
 from torcheval.metrics import R2Score
@@ -15,8 +15,10 @@ metric = R2Score()
 mape = MeanAbsolutePercentageError()
 
 models = {
-    '0': 'LINEAR REGRESSION', '1': 'DECISION TREE MODEL',
-    '2': 'BOOSTED TREES MODEL', '3': 'RANDOM FOREST MODEL'
+    "0": "LINEAR REGRESSION",
+    "1": "DECISION TREE MODEL",
+    "2": "BOOSTED TREES MODEL",
+    "3": "RANDOM FOREST MODEL",
 }
 
 
@@ -139,6 +141,7 @@ def run_random_forest(train, test, features):
     )
     return [r2_res_rf, mae_result_rf]
 
+
 def run_math_models(poly_paths: list, seebeck_path: str, features: list) -> None:
     result = []
 
@@ -160,7 +163,9 @@ def run_math_models(poly_paths: list, seebeck_path: str, features: list) -> None
         r2 = [i[0] for i in data]
         mae = [i[1] for i in data]
         best_for_that_data = max(r2)
-        print(f'Best result in DATASET {idx + 1}: {max(r2)}, model: {models[str(r2.index(max(r2)))]}')
+        print(
+            f"Best result in DATASET {idx + 1}: {max(r2)}, model: {models[str(r2.index(max(r2)))]}"
+        )
 
         if best_for_that_data > best_result_r2:
             best_result_r2 = best_for_that_data
@@ -168,22 +173,24 @@ def run_math_models(poly_paths: list, seebeck_path: str, features: list) -> None
             dataset = idx + 1
             mae_for_best_r2 = mae[r2.index(max(r2))]
 
-    print(f'\n\nBest result from all experiments: {best_result_r2}, model: {best_model}, dataset: {dataset}')
+    print(
+        f"\n\nBest result from all experiments: {best_result_r2}, model: {best_model}, dataset: {dataset}"
+    )
     return (best_result_r2, mae_for_best_r2, best_model, dataset)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     seebeck_path = "/root/projects/ml-selection/data/raw_data/median_seebeck.json"
     poly_path = [
         "/root/projects/ml-selection/data/processed_data/poly/2_features.json",
         "/root/projects/ml-selection/data/processed_data/poly/3_features.json",
-        "/root/projects/ml-selection/data/processed_data/poly/poly_vector_of_count.json"
+        "/root/projects/ml-selection/data/processed_data/poly/poly_vector_of_count.json",
     ]
 
     features = [
         ["poly_elements", "poly_type"],
-        ['poly_elements', 'poly_vertex', 'poly_type'],
-        ["poly_elements", "poly_type"]
+        ["poly_elements", "poly_vertex", "poly_type"],
+        ["poly_elements", "poly_type"],
     ]
     poly_temperature_features = [
         ["poly_elements", "poly_type", "temperature"],

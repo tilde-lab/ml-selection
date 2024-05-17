@@ -1,15 +1,13 @@
-from torch import Tensor
 import torch
-from torch.nn import Sequential, Linear, ReLU
+from torch import Tensor
+from torch.nn import Linear, ReLU, Sequential
 from torch_geometric.loader import DataLoader
+from torch_geometric.nn import MessagePassing, global_max_pool
 from torcheval.metrics import R2Score
 from torchmetrics import MeanAbsoluteError, MeanAbsolutePercentageError
-
-from torch_geometric.nn import MessagePassing
-from torch_geometric.nn import global_max_pool
-from datasets.point_cloud_dataset import PointCloudDataset
 from tqdm import tqdm
 
+from datasets.point_cloud_dataset import PointCloudDataset
 
 r2 = R2Score()
 mae = MeanAbsoluteError()

@@ -2,15 +2,21 @@ import polars as pl
 import torch
 from torch.utils.data import Dataset
 from torch_geometric.data import Data
+
 from data.mendeleev_table import get_periodic_number
 
 
 class PointCloudDataset(Dataset):
     """Dataset for PointNetwork"""
+
     def __init__(self, features: int):
         super().__init__()
-        self.struct = pl.read_json('/root/projects/ml-selection/data/raw_data/rep_structures.json')
-        self.seeb = pl.read_json('/root/projects/ml-selection/data/raw_data/median_seebeck.json')
+        self.struct = pl.read_json(
+            "/root/projects/ml-selection/data/raw_data/rep_structures.json"
+        )
+        self.seeb = pl.read_json(
+            "/root/projects/ml-selection/data/raw_data/median_seebeck.json"
+        )
         data = self.struct.join(self.seeb, on="phase_id", how="inner")
         self.data = [list(data.row(i)) for i in range(len(data))]
         self.features = features
@@ -20,7 +26,7 @@ class PointCloudDataset(Dataset):
         return len(self.data)
 
     def __getitem__(self, idx: int) -> list:
-        """Return sample by idx """
+        """Return sample by idx"""
         coordinates = self.data[idx][3]
         elements = self.data[idx][4]
         seebeck = self.data[idx][8]

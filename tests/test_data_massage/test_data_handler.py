@@ -1,6 +1,7 @@
 """
 Test cases to test DataHandler class
 """
+
 import unittest
 
 import polars as pl
@@ -56,34 +57,30 @@ class TestDataHandler(unittest.TestCase):
         answer = self.handler.just_seebeck(200, -150)
 
         self.assertEqual(type(answer), type(pl.DataFrame()), "incorrect type")
-        self.assertEqual(
-            answer.columns, columns, "incorrect columns in DataFrame"
-        )
+        self.assertEqual(answer.columns, columns, "incorrect columns in DataFrame")
         self.assertNotEqual(len(answer), 0, "empty answer")
-        self.assertGreater(
-            len(answer), 7000, "suspiciously little data"
-        )
+        self.assertGreater(len(answer), 7000, "suspiciously little data")
 
     def test_to_order_disordered_str(self):
         columns = [
-            'phase_id',
-            'cell_abc',
-            'sg_n',
-            'basis_noneq',
-            'els_noneq',
-            'entry',
-            'temperature'
+            "phase_id",
+            "cell_abc",
+            "sg_n",
+            "basis_noneq",
+            "els_noneq",
+            "entry",
+            "temperature",
         ]
         answer = self.handler.to_order_disordered_str(self.phases, False)
 
-        self.assertEqual(
-            answer.columns, columns, "incorrect columns in DataFrame"
-        )
+        self.assertEqual(answer.columns, columns, "incorrect columns in DataFrame")
         self.assertEqual(len(answer), 423, "incorrect number of samples in DataFrame")
 
     def test_seebeck_median_value(self):
         seebeck = self.handler.just_seebeck(200, -150)
-        answer = list(seebeck_median_value(seebeck, list(seebeck["Phase"]))["Seebeck coefficient"])
+        answer = list(
+            seebeck_median_value(seebeck, list(seebeck["Phase"]))["Seebeck coefficient"]
+        )
         self.assertGreater(
             len(answer),
             len(set(answer)),
@@ -105,8 +102,8 @@ class TestDataHandler(unittest.TestCase):
         )
         self.assertEqual(
             len(median_seebeck),
-            len(set(list(median_seebeck['phase_id']))),
-            "size of set of Seebeck median value >= size of list with repetitive Seebeck value"
+            len(set(list(median_seebeck["phase_id"]))),
+            "size of set of Seebeck median value >= size of list with repetitive Seebeck value",
         )
 
         structures_dfrm = self.handler.to_order_disordered_str(

@@ -2,9 +2,9 @@
 Selection of hyperparameters for GCN.
 """
 
+import optuna
 import torch
 from torch_geometric.loader import DataLoader
-import optuna
 
 from datasets.poly_graph_dataset import PolyGraphDataset
 from models.neural_network_models.GCN.gcn_regression_model import GCN
@@ -14,7 +14,6 @@ BEST_R2 = -100
 
 
 def main(path: str, features: int, ds: int, temperature: bool):
-
     def objective(trial) -> int:
         """Search of hyperparameters"""
         global BEST_WEIGHTS, BEST_R2
@@ -34,14 +33,15 @@ def main(path: str, features: int, ds: int, temperature: bool):
             test_data, batch_size=5240, shuffle=False, num_workers=0
         )
 
-
         device = torch.device("cpu")
 
         hidden = trial.suggest_categorical("hidden", [8, 16, 32])
         hidden2 = trial.suggest_categorical("hidden2", [8, 16, 32, 64])
         lr = trial.suggest_float("lr", 0.0001, 0.01)
         ep = trial.suggest_int("ep", 1, 1)
-        activ = trial.suggest_categorical("activ", ["leaky_relu", "relu", "elu", "tanh"])
+        activ = trial.suggest_categorical(
+            "activ", ["leaky_relu", "relu", "elu", "tanh"]
+        )
 
         model = GCN(features, hidden, hidden2, activation=activ).to(device)
 
@@ -55,7 +55,9 @@ def main(path: str, features: int, ds: int, temperature: bool):
 
         return r2
 
-    study = optuna.create_study(sampler=optuna.samplers.TPESampler(), direction="maximize")
+    study = optuna.create_study(
+        sampler=optuna.samplers.TPESampler(), direction="maximize"
+    )
     study.optimize(objective, n_trials=1)
 
     res = [study.best_trial]
@@ -74,13 +76,13 @@ def main(path: str, features: int, ds: int, temperature: bool):
     res.append(parms)
 
     if BEST_WEIGHTS is not None:
-        torch.save(BEST_WEIGHTS, f'best_gcn_weights{ds}.pth')
+        torch.save(BEST_WEIGHTS, f"best_gcn_weights{ds}.pth")
 
     return res
 
 
 if __name__ == "__main__":
-    path = '/root/projects/ml-selection/data/processed_data/poly/0_features.json'
+    path = "/root/projects/ml-selection/data/processed_data/poly/0_features.json"
     features = 2
     temperature = False
     main(path, features, 1, temperature)

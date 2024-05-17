@@ -1,6 +1,5 @@
-import numpy as np
-import polars as pl
 import pandas as pd
+import polars as pl
 from mpds_client import MPDSDataRetrieval, MPDSDataTypes
 
 
@@ -32,11 +31,16 @@ class RequestMPDS:
 
         Returns
         -------
-            Answer from MPDS
+            Answer from MPDS:
+            If is_structure -> columns: "phase_id", "occs_noneq", "cell_abc", "sg_n", "basis_noneq",
+            "els_noneq", "entry", "temperature"
+            If is_seebeck -> "Phase", "Formula", "Seebeck coefficient"
         """
         if is_seebeck:
             # because .get_dataframe return pd.Dataframe
-            dfrm = pd.DataFrame(self.client.get_dataframe({"props": "Seebeck coefficient"}))
+            dfrm = pd.DataFrame(
+                self.client.get_dataframe({"props": "Seebeck coefficient"})
+            )
             dfrm = pl.from_pandas(dfrm)
             dfrm = dfrm.filter(pl.col("Phase").is_finite())
             dfrm = dfrm.rename({"Value": "Seebeck coefficient"})
@@ -48,32 +52,34 @@ class RequestMPDS:
             self.client = MPDSDataRetrieval(
                 dtype=MPDSDataTypes.PEER_REVIEWED, api_key=self.api_key
             )
-            answer_df = pl.from_pandas(pd.DataFrame(
-                self.client.get_data(
-                    {"props": "atomic structure"},
-                    phases=phases,
-                    fields={
-                        "S": [
-                            "phase_id",
-                            "occs_noneq",
-                            "cell_abc",
-                            "sg_n",
-                            "basis_noneq",
-                            "els_noneq",
-                            "entry",
-                            "condition"
-                        ]
-                    },
-                ),
-                columns=[
-                    "phase_id",
-                    "occs_noneq",
-                    "cell_abc",
-                    "sg_n",
-                    "basis_noneq",
-                    "els_noneq",
-                    "entry",
-                    "temperature"
-                ]
-            ))
+            answer_df = pl.from_pandas(
+                pd.DataFrame(
+                    self.client.get_data(
+                        {"props": "atomic structure"},
+                        phases=phases,
+                        fields={
+                            "S": [
+                                "phase_id",
+                                "occs_noneq",
+                                "cell_abc",
+                                "sg_n",
+                                "basis_noneq",
+                                "els_noneq",
+                                "entry",
+                                "condition",
+                            ]
+                        },
+                    ),
+                    columns=[
+                        "phase_id",
+                        "occs_noneq",
+                        "cell_abc",
+                        "sg_n",
+                        "basis_noneq",
+                        "els_noneq",
+                        "entry",
+                        "temperature",
+                    ],
+                )
+            )
             return answer_df

@@ -1,13 +1,18 @@
 """
 Test GAT on CrystalGraphVectorsDataset
 """
+
 import torch
 from torch_geometric.loader import DataLoader
 
 from datasets.poly_graph_dataset import PolyGraphDataset
 from models.neural_network_models.GAT.gat_regression_model import GAT
 
-dataset = PolyGraphDataset()
+path = "/root/projects/ml-selection/data/processed_data/poly/0_features.json"
+n_features = 2
+temperature = False
+
+dataset = PolyGraphDataset(path, n_features, temperature)
 
 train_size = int(0.9 * len(dataset))
 test_size = len(dataset) - train_size
@@ -17,7 +22,7 @@ train_dataloader = DataLoader(train_data, batch_size=64, shuffle=False, num_work
 test_dataloader = DataLoader(test_data, batch_size=1000, shuffle=False, num_workers=0)
 
 device = torch.device("cpu")
-model = GAT(in_ch=2).to(device)
+model = GAT(features=n_features).to(device)
 
 model.load_state_dict(
     torch.load(

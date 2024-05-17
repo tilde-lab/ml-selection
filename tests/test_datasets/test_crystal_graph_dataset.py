@@ -22,7 +22,9 @@ class TestRequestMPDS(unittest.TestCase):
         self.dataset = CrystalGraphDataset()
 
     def test_build_graph(self):
-        graph, seebeck = self.dataset.build_graph([list(self.dfrm.row(i)) for i in range(len(self.dfrm))])
+        graph, seebeck = self.dataset.build_graph(
+            [list(self.dfrm.row(i)) for i in range(len(self.dfrm))]
+        )
         self.assertEqual(type(seebeck), float, "incorrect type of Seebeck")
         self.assertEqual(type(graph), Data, "incorrect type of graph")
         self.assertEqual(

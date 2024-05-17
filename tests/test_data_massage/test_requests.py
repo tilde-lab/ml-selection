@@ -1,6 +1,7 @@
 """
 Test cases to test request to MPDS database
 """
+
 import unittest
 
 import polars as pl
@@ -16,14 +17,14 @@ class TestRequestMPDS(unittest.TestCase):
         self.client_handler = RequestMPDS(dtype=1, api_key=self.key)
         self.seebeck_columns = ["Phase", "Formula", "Seebeck coefficient"]
         self.structure_columns = [
-            'phase_id',
-            'occs_noneq',
-            'cell_abc',
-            'sg_n',
-            'basis_noneq',
-            'els_noneq',
-            'entry',
-            'temperature'
+            "phase_id",
+            "occs_noneq",
+            "cell_abc",
+            "sg_n",
+            "basis_noneq",
+            "els_noneq",
+            "entry",
+            "temperature",
         ]
 
     def test_make_request(self):
@@ -34,9 +35,7 @@ class TestRequestMPDS(unittest.TestCase):
             self.seebeck_columns,
             "incorrect columns in DataFrame",
         )
-        self.assertEqual(
-            len(seebeck), 8182, "wrong number of samples in answer"
-        )
+        self.assertEqual(len(seebeck), 8182, "wrong number of samples in answer")
 
         structures = self.client_handler.make_request(
             is_structure=True, phases=list(seebeck["Phase"])
