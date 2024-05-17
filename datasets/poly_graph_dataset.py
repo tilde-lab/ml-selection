@@ -23,11 +23,12 @@ class PolyGraphDataset(Dataset):
         super().__init__()
         self.features_type = features_type
         # now is 3 features
-        self.poly = pl.read_csv(poly_path)
+        poly = pl.read_json(poly_path)
+        self.poly = poly.with_columns(pl.col("phase_id").cast(pl.Int64))
         self.temperature = add_temperature
         self.seebeck = pl.read_json(
             "/root/projects/ml-selection/data/raw_data/median_seebeck.json"
-        ).rename({"Phase": "phase_id"})
+        )
         data = self.seebeck.join(
             self.poly, on="phase_id", how="inner"
         )
@@ -88,29 +89,29 @@ class PolyGraphDataset(Dataset):
         # create list with features for every node
         x_vector = []
 
-        for i, d in enumerate(eval(poly_el)):
+        for i, d in enumerate(poly_el):
             x_vector.append([])
             x_vector[i].append(d)
             # if descriptor is vector of counts
-            if len(eval(poly_el)) > len(eval(poly_type)):
-                x_vector[i].append(eval(poly_type)[0])
+            if len(poly_el) > len(poly_type):
+                x_vector[i].append(poly_type[0])
             else:
-                x_vector[i].append(eval(poly_type)[i])
+                x_vector[i].append(poly_type[i])
             if len(poly) == 3:
                 if self.temperature:
                     x_vector[i].append(t)
                 else:
-                    x_vector[i].append(eval(poly_vertex)[i])
+                    x_vector[i].append(poly_vertex[i])
             elif len(poly) == 4:
-                x_vector[i].append(eval(poly_vertex)[i])
+                x_vector[i].append(poly_vertex[i])
                 x_vector[i].append(t)
 
         node_features = torch.tensor(x_vector)
 
         edge_index = []
 
-        for i in range(len(eval(poly_el))):
-            for j in range(i + 1, len(eval(poly_el))):
+        for i in range(len(poly_el)):
+            for j in range(i + 1, len(poly_el)):
                 # graph is undirected, so we duplicate edge
                 if i != j:
                     edge_index.append([i, j])

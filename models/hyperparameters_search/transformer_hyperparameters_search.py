@@ -13,10 +13,11 @@ BEST_R2 = -100
 
 
 def main(poly_path: str, features: int, ds: int, temperature: bool):
-    poly = pl.read_csv(poly_path)
+    poly = pl.read_json(poly_path)
     seebeck = pl.read_json(
         "/root/projects/ml-selection/data/raw_data/median_seebeck.json"
     )
+    poly = poly.with_columns(pl.col("phase_id").cast(pl.Int64))
     dataset = seebeck.join(
         poly, on="phase_id", how="inner"
     ).drop(['phase_id', 'Formula'])
@@ -31,14 +32,13 @@ def main(poly_path: str, features: int, ds: int, temperature: bool):
         dataset, range(train_size, train_size + test_size)
     )
 
-
     def objective(trial) -> int:
         """Search of hyperparameters"""
         global BEST_WEIGHTS, BEST_R2
 
         hidd = trial.suggest_categorical("hidden", [8, 16, 32, 64])
         lr = trial.suggest_float("lr", 0.0001, 0.01)
-        ep = trial.suggest_int("ep", 3, 7)
+        ep = trial.suggest_int("ep", 1, 1)
         heads = trial.suggest_categorical("heads", [1, features])
         activ = trial.suggest_categorical("activ", ["leaky_relu", "relu", "elu", "tanh"])
 
@@ -56,7 +56,7 @@ def main(poly_path: str, features: int, ds: int, temperature: bool):
         return r2
 
     study = optuna.create_study(sampler=optuna.samplers.TPESampler(), direction="maximize")
-    study.optimize(objective, n_trials=5)
+    study.optimize(objective, n_trials=1)
 
     res = [study.best_trial]
 

@@ -86,7 +86,7 @@ class TransformerModel(nn.Module):
             cnt = 0
             if self.n_feature == 4:
                 for y, poly, p_vert, p_type, temp in train_data:
-                    data = [eval(poly), eval(p_vert), eval(p_type), [temp]*len(eval(poly))]
+                    data = [poly, p_vert, p_type, [temp]*len(poly)]
                     cnt += 1
                     optimizer.zero_grad()
                     out = model([torch.tensor(data).permute(1, 0).unsqueeze(0)])
@@ -97,11 +97,11 @@ class TransformerModel(nn.Module):
             if self.n_feature == 3:
                 for y, poly, p_vert, p_type in train_data:
                     try:
-                        data = [eval(poly), eval(p_vert), eval(p_type)]
+                        data = [poly, p_vert, p_type]
                         if len(data[0]) == 118:
                             data[1] = [data[1][0]]*118
                     except:
-                        data = [eval(poly), eval(p_vert), [p_type]*len(eval(poly))]
+                        data = [poly, p_vert, [p_type]*len(poly)]
                         if len(data[0]) == 118:
                             data[1] = [data[1][0]]*118
                     cnt += 1
@@ -113,7 +113,7 @@ class TransformerModel(nn.Module):
                     mean_loss += loss
             if self.n_feature == 2:
                 for y, els, p_type in train_data:
-                    data = [eval(els), eval(p_type)]
+                    data = [els, p_type]
                     if len(data[0]) != len(data[1]):
                         while len(data[0]) != len(data[1]):
                             data[1].append(data[1][0])
@@ -141,7 +141,7 @@ class TransformerModel(nn.Module):
         with torch.no_grad():
             if self.n_feature == 2:
                 for y, els, p_type in test_data:
-                    data = [eval(els), eval(p_type)]
+                    data = [els, p_type]
                     if len(data[0]) != len(data[1]):
                         while len(data[0]) != len(data[1]):
                             data[1].append(data[1][0])
@@ -151,11 +151,11 @@ class TransformerModel(nn.Module):
             if self.n_feature == 3:
                 for y, poly, p_vertex, p_type in test_data:
                     try:
-                        data = [eval(poly), eval(p_vertex), eval(p_type)]
+                        data = [poly, p_vertex, p_type]
                         if len(data[0]) == 118:
                             data[1] = [data[1][0]] * 118
                     except:
-                        data = [eval(poly), eval(p_vertex), [p_type] * len(eval(poly))]
+                        data = [poly, p_vertex, [p_type] * len(poly)]
                         if len(data[0]) == 118:
                             data[1] = [data[1][0]] * 118
                     pred = model([torch.tensor(data).permute(1, 0).unsqueeze(0)])
@@ -163,7 +163,7 @@ class TransformerModel(nn.Module):
                     y_s.append(y)
             if self.n_feature == 4:
                 for y, poly, p_vert, p_type, temp in test_data:
-                    data = [eval(poly), eval(p_vert), eval(p_type), [temp]*len(eval(poly))]
+                    data = [poly, p_vert, p_type, [temp]*len(poly)]
                     if len(data[0]) != len(data[1]):
                         while len(data[0]) != len(data[1]):
                             data[1].append(data[1][0])

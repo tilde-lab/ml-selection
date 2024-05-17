@@ -3,6 +3,7 @@ Any of the below regression models can be used for predicting Seebeck Coefficien
 """
 
 import polars as pl
+import pandas as pd
 import torch
 import turicreate as tc
 from torcheval.metrics import R2Score
@@ -19,12 +20,13 @@ models = {
 }
 
 
-def split_data_for_turi_models(poly_path, seebeck_path):
+def split_data_for_turi_models(poly_path: str, seebeck_path: str) -> pd.DataFrame:
     # Crystal in vectors format
-    poly = pl.read_csv(poly_path)
-    seebeck = pl.read_json(
-       seebeck_path
-    ).rename({"Phase": "phase_id"})
+    poly = pl.read_json(poly_path)
+    seebeck = pl.read_json(seebeck_path)
+
+    # change float to int
+    poly = poly.with_columns(pl.col("phase_id").cast(pl.Int64))
     data = seebeck.join(poly, on="phase_id", how="inner")
 
     train_size = int(0.9 * len(data))
@@ -32,7 +34,7 @@ def split_data_for_turi_models(poly_path, seebeck_path):
     train = data[:train_size]
     test = data[train_size:]
 
-    return train, test
+    return (train.to_pandas(), test.to_pandas())
 
 
 def run_linear_regression(train, test, features):
@@ -167,15 +169,15 @@ def run_math_models(poly_paths: list, seebeck_path: str, features: list) -> None
             mae_for_best_r2 = mae[r2.index(max(r2))]
 
     print(f'\n\nBest result from all experiments: {best_result_r2}, model: {best_model}, dataset: {dataset}')
-    return [best_result_r2, mae_for_best_r2, best_model, dataset]
+    return (best_result_r2, mae_for_best_r2, best_model, dataset)
 
 
 if __name__ == '__main__':
     seebeck_path = "/root/projects/ml-selection/data/raw_data/median_seebeck.json"
     poly_path = [
-        "/root/projects/ml-selection/data/processed_data/poly/2_features.csv",
-        "/root/projects/ml-selection/data/processed_data/poly/3_features.csv",
-        "/root/projects/ml-selection/data/processed_data/poly/poly_vector_of_count.csv"
+        "/root/projects/ml-selection/data/processed_data/poly/2_features.json",
+        "/root/projects/ml-selection/data/processed_data/poly/3_features.json",
+        "/root/projects/ml-selection/data/processed_data/poly/poly_vector_of_count.json"
     ]
 
     features = [
