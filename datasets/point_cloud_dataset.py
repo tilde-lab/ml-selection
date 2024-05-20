@@ -11,12 +11,13 @@ class PointCloudDataset(Dataset):
 
     def __init__(self, features: int):
         super().__init__()
-        self.struct = pl.read_json(
+        struct = pl.read_json(
             "/root/projects/ml-selection/data/raw_data/rep_structures.json"
         )
         self.seeb = pl.read_json(
             "/root/projects/ml-selection/data/raw_data/median_seebeck.json"
         )
+        self.struct = struct.with_columns(pl.col("phase_id").cast(pl.Int64))
         data = self.struct.join(self.seeb, on="phase_id", how="inner")
         self.data = [list(data.row(i)) for i in range(len(data))]
         self.features = features

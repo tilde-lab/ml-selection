@@ -142,11 +142,11 @@ if __name__ == "__main__":
     test_loader = DataLoader(test_data, batch_size=64, shuffle=False, num_workers=0)
 
     model = PointNet(3)
-    # model.load_state_dict(
-    #     torch.load(
-    #         r"/root/projects/ml-selection/models/neural_network_models/PointNet/weights/30_01.pth"
-    #     )
-    # )
+    model.load_state_dict(
+        torch.load(
+            r"/root/projects/ml-selection/models/neural_network_models/PointNet/weights/30_01.pth"
+        )
+    )
     optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
     criterion = torch.nn.MSELoss()
 
