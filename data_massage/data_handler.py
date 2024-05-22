@@ -22,7 +22,7 @@ class DataHandler:
     Implemented support for processing data just from MPDS
     """
 
-    def __init__(self, is_MPDS: bool, dtype: int = 1) -> None:
+    def __init__(self, is_MPDS: bool = True, dtype: int = 1) -> None:
         """
         Initializes the client to access database
 
@@ -586,3 +586,16 @@ class DataHandler:
         result_dfrm = pl.DataFrame(data_list, schema=columns)
 
         return result_dfrm
+
+    def convert_mp_data_to_dataframe(self, mp_data):
+        identifier, seebeck, formula = [], [], []
+        for row in mp_data:
+            identifier.append(row['identifier'])
+            seebeck.append(row['data']['S'])
+            formula.append(row['formula'])
+        return pl.DataFrame({"identifier": identifier, "formula": formula, "Seebeck coefficient": seebeck},
+                            schema=["identifier", "formula", "Seebeck coefficient"]
+)
+
+
+
