@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import polars as pl
 import yaml
+import json
 from ase import Atoms
 from ase.data import chemical_symbols
 from polars import DataFrame
@@ -42,8 +43,10 @@ class DataHandler:
 
         if is_MPDS:
             self.client_handler = RequestMPDS(dtype=dtype, api_key=self.api_key)
+            self.db = 'MPDS'
         else:
             self.client_handler = None
+            self.db = 'MP'
         self.available_dtypes = [1, 4]
         self.dtype = dtype
 
@@ -195,18 +198,26 @@ class DataHandler:
         return result_df
 
     def add_seebeck_by_phase_id(
-        self, seebeck_df: DataFrame, structures_df: DataFrame
+        self, seebeck_df: DataFrame, structures_or_sg__df: DataFrame
     ) -> DataFrame:
-        try:
-            seebeck_df = seebeck_df.rename({"Phase": "phase_id"})
-        except:
-            pass
-        dfrm = pd.merge(
-            seebeck_df.to_pandas(),
-            structures_df.to_pandas(),
-            on="phase_id",
-            how="inner",
-        )
+        if self.db == 'MPDS':
+            try:
+                seebeck_df = seebeck_df.rename({"Phase": "phase_id"})
+            except:
+                pass
+            dfrm = pd.merge(
+                seebeck_df.to_pandas(),
+                structures_or_sg__df.to_pandas(),
+                on="phase_id",
+                how="inner",
+            )
+        else:
+            dfrm = pd.merge(
+                seebeck_df.to_pandas(),
+                structures_or_sg__df.to_pandas(),
+                on="identifier",
+                how="inner",
+            )
         return pl.from_pandas(dfrm)
 
     def just_uniq_phase_id(self, df: DataFrame) -> DataFrame:
@@ -587,15 +598,37 @@ class DataHandler:
 
         return result_dfrm
 
-    def convert_mp_data_to_dataframe(self, mp_data):
+    def convert_mp_data_to_dataframe(self, mp_data: list) -> pl.DataFrame:
+        """
+        Convert answer in Materials Projects format to Polars DataFrame
+
+        Parameters
+        ----------
+        mp_data : list
+            Consist of any dicts with keys: 'identifier', 'data', 'formula'.
+            Value by key 'data' consist of dict with keys: 'n', 'p'
+
+        Returns
+        -------
+        pl.DataFrame
+            Consist of columns: "identifier", "formula", "Seebeck coefficient"
+        """
         identifier, seebeck, formula = [], [], []
         for row in mp_data:
             identifier.append(row['identifier'])
             seebeck.append(row['data']['S'])
             formula.append(row['formula'])
         return pl.DataFrame({"identifier": identifier, "formula": formula, "Seebeck coefficient": seebeck},
-                            schema=["identifier", "formula", "Seebeck coefficient"]
-)
+                            schema=["identifier", "formula", "Seebeck coefficient"])
+
+
+
+
+if __name__ == "__main__":
+    with open('/root/projects/ml-selection/data/mp_database/space_group_mp.json', "r") as f:
+        data = f.read()
+    handler = DataHandler(True)
+
 
 
 
