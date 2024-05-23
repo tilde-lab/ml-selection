@@ -1,21 +1,30 @@
 import pandas as pd
 import polars as pl
 from mpds_client import MPDSDataRetrieval, MPDSDataTypes
+import yaml
+from yaml import Loader
+
+CONF = '/root/projects/ml-selection/configs/config.yaml'
 
 
 class RequestMPDS:
     """
-    Make requests to MplS database
+    Make requests to MPDS database
     """
 
-    def __init__(self, dtype: int, api_key: str = None) -> None:
+    def __init__(self, dtype: int = 7, api_key: str = None) -> None:
+        conf = open(CONF, 'r')
+        self.conf = yaml.load(conf, Loader)
+        if api_key == None:
+            api_key = self.conf['api_key']
         self.client = MPDSDataRetrieval(dtype=dtype, api_key=api_key)
         self.client.chillouttime = 1
         self.dtype = dtype
         self.api_key = api_key
 
     def make_request(
-        self, is_seebeck: bool = False, is_structure: bool = False, phases: list = None
+        self, is_seebeck: bool = False, is_structure: bool = False, is_phase: bool = False,
+            phases: list = None, formulas: list = None, sg: list = None, mp_ids: list = None
     ) -> pl.DataFrame:
         """
         Requests data from the MplS according to the input parameters
@@ -83,3 +92,28 @@ class RequestMPDS:
                 )
             )
             return answer_df
+
+        elif is_phase:
+            phase_ids = []
+            found, loss = 0, 0
+            for i in range(len(formulas)):
+                try:
+                    self.client.chillouttime = 2
+                    ans = self.client.get_data(
+                        {"sgs": sg[i], "formulae": formulas[i]}
+                    )
+                    phase_ids.append([str(ans[0][0]), mp_ids[i]])
+                    found += 1
+                except Exception as e:
+                    print(e)
+                    if e != 'HTTP error code 204: No Results (No hits)':
+                        self.client.chillouttime += 1
+                    loss += 1
+                    print('Not found:', loss)
+
+            print('Matches by formula and Space group found:', found)
+            return pl.DataFrame(phase_ids, schema=['phase_id', 'identifier'])
+
+
+
+
