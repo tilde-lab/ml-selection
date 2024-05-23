@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 import polars as pl
 import yaml
-import json
 from ase import Atoms
 from ase.data import chemical_symbols
 from polars import DataFrame
@@ -620,8 +619,6 @@ class DataHandler:
             formula.append(row['formula'])
         return pl.DataFrame({"identifier": identifier, "formula": formula, "Seebeck coefficient": seebeck},
                             schema=["identifier", "formula", "Seebeck coefficient"])
-
-
 
 
 if __name__ == "__main__":
