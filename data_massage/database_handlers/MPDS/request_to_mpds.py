@@ -1,3 +1,5 @@
+import json
+
 import pandas as pd
 import polars as pl
 from mpds_client import MPDSDataRetrieval, MPDSDataTypes
@@ -17,6 +19,7 @@ class RequestMPDS:
         self.conf = yaml.load(conf, Loader)
         if api_key == None:
             api_key = self.conf['api_key']
+        self.raw_mpds = self.conf['raw_mpds']
         self.client = MPDSDataRetrieval(dtype=dtype, api_key=api_key)
         self.client.chillouttime = 1
         self.dtype = dtype
@@ -96,20 +99,31 @@ class RequestMPDS:
         elif is_phase:
             phase_ids = []
             found, loss = 0, 0
-            for i in range(len(formulas)):
-                try:
-                    self.client.chillouttime = 2
-                    ans = self.client.get_data(
-                        {"sgs": sg[i], "formulae": formulas[i]}
-                    )
-                    phase_ids.append([str(ans[0][0]), mp_ids[i]])
-                    found += 1
-                except Exception as e:
-                    print(e)
-                    if e != 'HTTP error code 204: No Results (No hits)':
-                        self.client.chillouttime += 1
-                    loss += 1
-                    print('Not found:', loss)
+            try:
+                data = json.load(open(self.raw_mpds + 'mpds_phases_jan2024.json', 'r'))
+                for i in range(len(formulas)):
+                    for row in data:
+                        if ((row['formula']['full'] == formulas[i] or
+                                row['formula']['short'] == formulas[i]) and row['spg'] == sg[i]):
+                            phase_ids.append([row['id'].split('/')[-1], mp_ids[i]])
+                            print('Found matches:', len(phase_ids))
+                return pl.DataFrame(phase_ids, schema=['phase_id', 'identifier'])
+            except:
+                print('Raw data with MPDS phase_ids not found in directory. Start requests!')
+                for i in range(len(formulas)):
+                    try:
+                        self.client.chillouttime = 2
+                        ans = self.client.get_data(
+                            {"sgs": sg[i], "formulae": formulas[i]}
+                        )
+                        phase_ids.append([str(ans[0][0]), mp_ids[i]])
+                        found += 1
+                    except Exception as e:
+                        print(e)
+                        if e != 'HTTP error code 204: No Results (No hits)':
+                            self.client.chillouttime += 1
+                        loss += 1
+                        print('Not found:', loss)
 
             print('Matches by formula and Space group found:', found)
             return pl.DataFrame(phase_ids, schema=['phase_id', 'identifier'])
