@@ -8,7 +8,7 @@ The best configurations for each model with a specific type of polyhedra dataset
 """
 
 from scripts.hyp_search.run_all_models import main as run_models
-from scripts.launch.run_data_collection import main as run_collection
+from data_massage.run_data_collection import main as run_collection
 
 if __name__ == "__main__":
     run_collection()

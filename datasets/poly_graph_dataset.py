@@ -30,7 +30,7 @@ class PolyGraphDataset(Dataset):
         self.poly = poly.with_columns(pl.col("phase_id").cast(pl.Int64))
         self.temperature = add_temperature
         self.seebeck = pl.read_json(
-            "/root/projects/ml-selection/data/raw_data/median_seebeck.json"
+            "/data/raw_mpds/median_seebeck.json"
         )
         data = self.seebeck.join(self.poly, on="phase_id", how="inner")
         self.data = [list(data.row(i)) for i in range(len(data))]

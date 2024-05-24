@@ -16,7 +16,7 @@ class TestDataHandler(unittest.TestCase):
         with open("/root/projects/ml-selection/configs/config.yaml", "r") as yamlfile:
             self.api_key = yaml.load(yamlfile, Loader=yaml.FullLoader)["api_key"]
 
-        self.raw_path = "/root/projects/ml-selection/data/raw_data/"
+        self.raw_path = "/data/raw_mpds/"
         self.processed_path = "/root/projects/ml-selection/data/processed_data/"
         self.handler = DataHandler(True, self.api_key)
         self.phases = [

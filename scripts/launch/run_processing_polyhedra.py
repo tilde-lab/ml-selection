@@ -5,7 +5,7 @@ Run add polyhedra to structures by entry, make descriptor
 from data_massage.data_handler import DataHandler
 
 hand = DataHandler(True)
-raw_data = "/root/projects/ml-selection/data/raw_data/"
+raw_data = "/root/projects/ml-selection/data/raw_mpds/"
 processed_data = "/root/projects/ml-selection/data/processed_data/poly/"
 
 

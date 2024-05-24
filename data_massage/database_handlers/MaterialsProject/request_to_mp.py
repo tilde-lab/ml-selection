@@ -117,7 +117,7 @@ class RequestMP:
 
 if __name__ == "__main__":
     path = '/root/projects/ml-selection/configs/config.yaml'
-    RequestMP(path).run_requests()
+    dfrm = RequestMP(path).run_requests()
 
 
 

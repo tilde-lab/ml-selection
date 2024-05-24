@@ -180,7 +180,7 @@ def run_math_models(poly_paths: list, seebeck_path: str, features: list) -> None
 
 
 if __name__ == "__main__":
-    seebeck_path = "/root/projects/ml-selection/data/raw_data/median_seebeck.json"
+    seebeck_path = "/data/raw_mpds/median_seebeck.json"
     poly_path = [
         "/root/projects/ml-selection/data/processed_data/poly/2_features.json",
         "/root/projects/ml-selection/data/processed_data/poly/3_features.json",

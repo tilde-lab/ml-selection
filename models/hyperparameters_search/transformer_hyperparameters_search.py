@@ -16,7 +16,7 @@ BEST_R2 = -100
 def main(poly_path: str, features: int, ds: int, temperature: bool):
     poly = pl.read_json(poly_path)
     seebeck = pl.read_json(
-        "/root/projects/ml-selection/data/raw_data/median_seebeck.json"
+        "/data/raw_mpds/median_seebeck.json"
     )
     poly = poly.with_columns(pl.col("phase_id").cast(pl.Int64))
     dataset = seebeck.join(poly, on="phase_id", how="inner").drop(

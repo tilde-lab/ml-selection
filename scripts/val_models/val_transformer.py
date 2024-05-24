@@ -13,7 +13,7 @@ poly = pd.read_csv(
     f"/root/projects/ml-selection/data/processed_data/poly/2_features.csv",
 )
 seebeck = pd.read_json(
-    "/root/projects/ml-selection/data/raw_data/median_seebeck.json",
+    "/data/raw_mpds/median_seebeck.json",
     orient="split",
 )
 dataset = (

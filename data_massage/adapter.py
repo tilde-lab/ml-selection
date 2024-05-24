@@ -2,6 +2,7 @@ import yaml
 from yaml import Loader
 import polars as pl
 from data_massage.database_handlers.MPDS.request_to_mpds import RequestMPDS
+import pandas as pd
 
 CONF = '/root/projects/ml-selection/configs/config.yaml'
 
@@ -55,7 +56,7 @@ class MPDS_MP_Adapter():
             Structures from MPDS
         """
         try:
-            structures_for_mp_seebeck = pl.read_json(self.raw_mpds + 'structures_mp_mpds.json')
+            structures_for_mp_seebeck = pl.read_json(self.mp_path + 'structures_mp_mpds.json')
         except:
             structures_for_mp_seebeck = self.mpds_client.make_request(
                 is_structure=True, phases=phases
@@ -63,14 +64,41 @@ class MPDS_MP_Adapter():
             structures_for_mp_seebeck.write_json(self.mp_path + 'structures_mp_mpds.json')
         return structures_for_mp_seebeck
 
+
+    def process_seebeck_to_mpds_format(self, seebeck_dfrm_mpds_format):
+        seebeck_list = seebeck_dfrm_mpds_format['Seebeck coefficient']
+        new_column_seeb = []
+        for row in seebeck_list:
+            new_column_seeb.append(row['n']['value'])
+
+        seebeck_dfrm_mpds_format = seebeck_dfrm_mpds_format.with_columns(
+            pl.Series("Seebeck coefficient", new_column_seeb)
+        )
+
+        # filter by value
+        condition = (seebeck_dfrm_mpds_format['Seebeck coefficient'] >= -150) & \
+                    (seebeck_dfrm_mpds_format['Seebeck coefficient'] <= 200)
+        # use filter
+        filtered_df = seebeck_dfrm_mpds_format.filter(condition)
+        filtered_df = filtered_df.with_columns(pl.col("phase_id").cast(pl.Int64))
+
+        return filtered_df
+
     def run_match_mp_mpds_data(self):
         phases = self.finding_matches_id_by_formula_sg()
-        structures_for_mp_seebeck = self.match_structures_by_phase_id(list(phases['phase_id']))
-        print('Number of found structures in MPDS for Seebeck from MP:', len(structures_for_mp_seebeck))
+        seebeck_dfrm_mpds_format = pl.from_pandas(pd.merge(self.mp_dfrm.to_pandas(), phases.to_pandas(),
+                                       on="identifier",
+                                       how="inner",
+                                       )).drop(columns=['identifier', 'symmetry'])
+        seebeck_dfrm_mpds_format = self.process_seebeck_to_mpds_format(seebeck_dfrm_mpds_format)
+        return seebeck_dfrm_mpds_format.rename(
+            {'phase_id': 'Phase', 'formula': 'Formula'}
+        )
+
 
 
 if __name__ == "__main__":
-    phases = MPDS_MP_Adapter().run_match_mp_mpds_data()
+    structures_for_mp_seebeck = MPDS_MP_Adapter().run_match_mp_mpds_data()
 
 
 
