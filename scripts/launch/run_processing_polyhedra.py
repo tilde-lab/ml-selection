@@ -13,7 +13,7 @@ def combine_structure_and_poly():
     """
     Combine structures and polyhedra by entry
     """
-    dfrm = hand.add_polyhedra(raw_data + "rep_structures_test.json")
+    dfrm = hand.add_polyhedra(raw_data + "rep_structures.json")
     dfrm.write_json(raw_data + "large_poly.json")
 
 

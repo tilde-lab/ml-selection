@@ -98,7 +98,7 @@ def convert_structure_to_vectors(
         dfrm_seeb.write_json(path_to_save + "rep_vect_seebeck.json")
 
     total = pl.concat((dfrm_str, dfrm_seeb), how="horizontal")
-    total.write_json(path_to_save + "rep_vect_str_clear.json")
+    total.write_json(path_to_save + "total_str_seeb.json")
 
     return dfrm_str, dfrm_seeb
 
@@ -133,9 +133,10 @@ def main():
         handler,
         is_uniq_structure_for_phase,
         raw_seebeck_path=raw_path + "seebeck.json",
+        raw_str_path=raw_path + "rep_structures.json",
         path_to_save=raw_path,
     )
-    get_data_for_vectors_dataset(handler, result_dfrm, proc_path)
+    # get_data_for_vectors_dataset(handler, result_dfrm, proc_path)
     run_processing_polyhedra.main()
 
 

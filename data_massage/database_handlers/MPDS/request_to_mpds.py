@@ -44,7 +44,7 @@ class RequestMPDS:
         Returns
         -------
             Answer from MPDS:
-            If is_structure -> columns: "phase_id", "occs_noneq", "cell_abc", "sg_n", "basis_noneq",
+            If is_structure -> columns: "phase_id", "formula", "occs_noneq", "cell_abc", "sg_n", "basis_noneq",
             "els_noneq", "entry", "temperature"
             If is_seebeck -> "Phase", "Formula", "Seebeck coefficient"
         """
@@ -64,36 +64,42 @@ class RequestMPDS:
             self.client = MPDSDataRetrieval(
                 dtype=MPDSDataTypes.PEER_REVIEWED, api_key=self.api_key
             )
-            answer_df = pl.from_pandas(
-                pd.DataFrame(
-                    self.client.get_data(
-                        {"props": "atomic structure"},
-                        phases=phases,
-                        fields={
-                            "S": [
-                                "phase_id",
-                                "occs_noneq",
-                                "cell_abc",
-                                "sg_n",
-                                "basis_noneq",
-                                "els_noneq",
-                                "entry",
-                                "condition",
-                            ]
-                        },
-                    ),
-                    columns=[
-                        "phase_id",
-                        "occs_noneq",
-                        "cell_abc",
-                        "sg_n",
-                        "basis_noneq",
-                        "els_noneq",
-                        "entry",
-                        "temperature",
-                    ],
+            try:
+                answer_df = pl.read_json(self.raw_mpds + 'raw_structures.json')
+            except:
+                answer_df = pl.from_pandas(
+                    pd.DataFrame(
+                        self.client.get_data(
+                            {"props": "atomic structure"},
+                            phases=phases,
+                            fields={
+                                "S": [
+                                    "phase_id",
+                                    "chemical_formula",
+                                    "occs_noneq",
+                                    "cell_abc",
+                                    "sg_n",
+                                    "basis_noneq",
+                                    "els_noneq",
+                                    "entry",
+                                    "condition",
+                                ]
+                            },
+                        ),
+                        columns=[
+                            "phase_id",
+                            "formula",
+                            "occs_noneq",
+                            "cell_abc",
+                            "sg_n",
+                            "basis_noneq",
+                            "els_noneq",
+                            "entry",
+                            "temperature",
+                        ],
+                    )
                 )
-            )
+            answer_df.write_json(self.raw_mpds + 'raw_structures.json')
             return answer_df
 
         elif is_phase:

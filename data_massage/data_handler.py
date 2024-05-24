@@ -102,10 +102,10 @@ class DataHandler:
         Return polars Dataframe with ordered structures
         """
         # get disordered structures from db, save random structure for specific 'phase_id'
-        all_data_df = self.cleaning_trash_data(
+        all_data_df = pl.from_pandas(self.cleaning_trash_data(
             self.client_handler.make_request(is_structure=True, phases=phases),
             idx_check=5,
-        )
+        ).to_pandas().drop_duplicates(subset=["formula", "sg_n"])).drop("formula")
         if is_uniq_phase_id:
             all_data_df = self.just_uniq_phase_id(all_data_df)
 
@@ -124,8 +124,8 @@ class DataHandler:
                 "basis_noneq",
                 "els_noneq",
                 "entry",
-                "temperature",
-            ],
+                "temperature"
+            ]
         )
 
         result_list = []
@@ -247,16 +247,7 @@ class DataHandler:
                 print("Removed garbage data:", row)
         data = pl.DataFrame(
             data_res,
-            schema=[
-                "phase_id",
-                "occs_noneq",
-                "cell_abc",
-                "sg_n",
-                "basis_noneq",
-                "els_noneq",
-                "entry",
-                "temperature",
-            ],
+            schema=df.columns
         )
         return data
 
