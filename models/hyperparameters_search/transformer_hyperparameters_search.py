@@ -13,10 +13,10 @@ BEST_WEIGHTS = None
 BEST_R2 = -100
 
 
-def main(poly_path: str, features: int, ds: int, temperature: bool):
+def main(poly_path: str, features: int, ds: int, temperature: bool, n_trials=5, epoch=[4, 7]):
     poly = pl.read_json(poly_path)
     seebeck = pl.read_json(
-        "/data/raw_mpds/median_seebeck.json"
+        "/root/projects/ml-selection/data/raw_mpds/median_seebeck.json"
     )
     poly = poly.with_columns(pl.col("phase_id").cast(pl.Int64))
     dataset = seebeck.join(poly, on="phase_id", how="inner").drop(
@@ -28,9 +28,9 @@ def main(poly_path: str, features: int, ds: int, temperature: bool):
     train_size = int(0.9 * len(dataset))
     test_size = len(dataset) - train_size
 
-    train_data = torch.utils.data.Subset(dataset, range(train_size))
+    train_data = torch.utils.data.Subset(dataset, test_size)
     test_data = torch.utils.data.Subset(
-        dataset, range(train_size, train_size + test_size)
+        dataset, range(test_size, train_size)
     )
 
     def objective(trial) -> int:
@@ -39,7 +39,7 @@ def main(poly_path: str, features: int, ds: int, temperature: bool):
 
         hidd = trial.suggest_categorical("hidden", [8, 16, 32, 64])
         lr = trial.suggest_float("lr", 0.0001, 0.01)
-        ep = trial.suggest_int("ep", 1, 1)
+        ep = trial.suggest_int("ep", epoch[0], epoch[1])
         heads = trial.suggest_categorical("heads", [1, features])
         activ = trial.suggest_categorical(
             "activ", ["leaky_relu", "relu", "elu", "tanh"]
@@ -61,7 +61,7 @@ def main(poly_path: str, features: int, ds: int, temperature: bool):
     study = optuna.create_study(
         sampler=optuna.samplers.TPESampler(), direction="maximize"
     )
-    study.optimize(objective, n_trials=1)
+    study.optimize(objective, n_trials=n_trials)
 
     res = [study.best_trial]
 
@@ -85,7 +85,7 @@ def main(poly_path: str, features: int, ds: int, temperature: bool):
 
 
 if __name__ == "__main__":
-    path = "/root/projects/ml-selection/data/processed_data/poly/2_features.csv"
-    features = 2
+    path = "/root/projects/ml-selection/data/processed_data/poly/3_features.json"
+    features = 3
     temperature = False
     main(path, features, 1, temperature)

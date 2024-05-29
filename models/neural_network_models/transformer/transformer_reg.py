@@ -39,7 +39,7 @@ class TransformerModel(nn.Module):
         self.n_feature = n_feature
         self.agg_token = torch.rand((1, 1, n_feature))
         self.transformer_encoder = nn.TransformerEncoder(
-            encoder_layer, num_layers=1, norm=None
+            encoder_layer, num_layers=3, norm=None
         )
         self.layer1 = nn.Linear(n_feature, n_feature * hidd * heads)
         self.layer2 = nn.Linear(hidd * n_feature * heads, 1 * hidd)
@@ -103,10 +103,14 @@ class TransformerModel(nn.Module):
                         data = [poly, p_vert, p_type]
                         if len(data[0]) == 118:
                             data[1] = [data[1][0]] * 118
+                            data[2] = [data[2]] * 118
                     except:
                         data = [poly, p_vert, [p_type] * len(poly)]
                         if len(data[0]) == 118:
                             data[1] = [data[1][0]] * 118
+                            data[2] = [data[2]] * 118
+                    if type(data[2]) != list and len(data[0]) == 100:
+                        data[2] = [data[2]] * 100
                     cnt += 1
                     optimizer.zero_grad()
                     out = model([torch.tensor(data).permute(1, 0).unsqueeze(0)])
@@ -161,6 +165,10 @@ class TransformerModel(nn.Module):
                         data = [poly, p_vertex, [p_type] * len(poly)]
                         if len(data[0]) == 118:
                             data[1] = [data[1][0]] * 118
+                    if type(data[2]) != list and len(data[0]) == 100:
+                        data[2] = [data[2]] * 100
+                    elif type(data[2]) != list and len(data[0]) == 118:
+                        data[2] = [data[2]] * 118
                     pred = model([torch.tensor(data).permute(1, 0).unsqueeze(0)])
                     preds.append(pred)
                     y_s.append(y)
@@ -183,8 +191,8 @@ class TransformerModel(nn.Module):
         mape.update(torch.tensor(preds).reshape(-1), torch.tensor(y_s))
         mape_res = mape.compute()
 
-        evs = explained_variance_score(np.array(preds), np.array(y_s))
-        theils_u_res = theils_u(np.array(preds), np.array(y_s))
+        evs = explained_variance_score(np.array([i[0][0] for i in preds]), np.array(y_s))
+        theils_u_res = theils_u(np.array([i[0][0] for i in preds]), np.array(y_s))
 
         print(
             "R2: ",
