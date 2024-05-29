@@ -4,7 +4,7 @@ Training a TransformerModel to predict the Seebeck value.
 Transformer made from encoder (without decoder). Uses token-vector to represent embedding for each crystal.
 Tensor of tokens is fed to fully connected layer. Next, loss is calculated as in standard models.
 """
-
+import numpy as np
 import polars as pl
 import torch
 import torch.nn as nn
@@ -14,6 +14,8 @@ from torch.utils.data import Subset
 from torcheval.metrics import R2Score
 from torchmetrics import MeanAbsoluteError, MeanAbsolutePercentageError
 from tqdm import tqdm
+from sklearn.metrics import explained_variance_score
+from data_massage.metrics.statistic_metrics import theils_u
 
 r2 = R2Score()
 mae = MeanAbsoluteError()
@@ -181,11 +183,18 @@ class TransformerModel(nn.Module):
         mape.update(torch.tensor(preds).reshape(-1), torch.tensor(y_s))
         mape_res = mape.compute()
 
+        evs = explained_variance_score(np.array(preds), np.array(y_s))
+        theils_u_res = theils_u(np.array(preds), np.array(y_s))
+
         print(
             "R2: ",
             r2_res,
             " MAE: ",
             mae_result,
+            " EVS: ",
+            evs,
+            "Theil's U: ",
+            theils_u_res,
             " MAPE: ",
             mape_res,
             " Pred from",
@@ -207,7 +216,7 @@ if __name__ == "__main__":
         f"/root/projects/ml-selection/data/processed_data/poly/3_features.json",
     )
     seebeck = pl.read_json(
-        "/root/projects/ml-selection/data/raw_data/median_seebeck.json"
+        "/data/raw_mpds/median_seebeck.json"
     )
     dataset = seebeck.join(poly, on="phase_id", how="inner").drop(
         ["phase_id", "Formula"]

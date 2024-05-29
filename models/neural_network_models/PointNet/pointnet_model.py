@@ -6,6 +6,8 @@ from torch_geometric.nn import MessagePassing, global_max_pool
 from torcheval.metrics import R2Score
 from torchmetrics import MeanAbsoluteError, MeanAbsolutePercentageError
 from tqdm import tqdm
+from sklearn.metrics import explained_variance_score
+from data_massage.metrics.statistic_metrics import theils_u
 
 from datasets.point_cloud_dataset import PointCloudDataset
 
@@ -109,6 +111,8 @@ def val(model, test_loader):
             mae.update(pred.reshape(-1), y)
             r2.update(pred.reshape(-1), y)
             mape.update(pred.reshape(-1), y)
+            evs = explained_variance_score(pred.reshape(-1), y)
+            theils_u_res = theils_u(pred.reshape(-1), y)
 
         mae_result = mae.compute()
         r2_res = r2.compute()
@@ -121,6 +125,10 @@ def val(model, test_loader):
             mae_result,
             " MAPE: ",
             mape_res,
+            " EVS: ",
+            evs,
+            "Theil's U: ",
+            theils_u_res,
             "Pred from",
             min([i.min() for i in preds]),
             " to ",
@@ -138,6 +146,7 @@ if __name__ == "__main__":
     test_data = torch.utils.data.Subset(
         dataset, range(train_size, train_size + test_size)
     )
+
     train_loader = DataLoader(train_data, batch_size=64, shuffle=True, num_workers=0)
     test_loader = DataLoader(test_data, batch_size=64, shuffle=False, num_workers=0)
 

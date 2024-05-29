@@ -6,6 +6,8 @@ from torch_geometric.utils import scatter
 from torcheval.metrics import R2Score
 from torchmetrics import MeanAbsoluteError, MeanAbsolutePercentageError
 from tqdm import tqdm
+from sklearn.metrics import explained_variance_score
+from data_massage.metrics.statistic_metrics import theils_u
 
 from datasets.poly_graph_dataset import PolyGraphDataset
 
@@ -79,6 +81,7 @@ class GCN(torch.nn.Module):
                 mean_loss += loss
                 r2.update(out.reshape(-1), y)
                 mape.update(out.reshape(-1), y)
+
             print(
                 f"--------Mean loss for epoch {epoch} is {mean_loss / cnt}--------R2 is {r2.compute()}--------MAPE is {mape.compute()}"
             )
@@ -109,6 +112,9 @@ class GCN(torch.nn.Module):
 
                 mape.update(pred.reshape(-1), y)
                 mape_res = mape.compute()
+
+                evs = explained_variance_score(pred.reshape(-1), y)
+                theils_u_res = theils_u(pred.reshape(-1), y)
         print(
             "R2: ",
             r2_res,
@@ -116,6 +122,10 @@ class GCN(torch.nn.Module):
             mae_result,
             " MAPE: ",
             mape_res,
+            " EVS: ",
+            evs,
+            "Theil's U: ",
+            theils_u_res,
             " Pred from",
             pred.min(),
             " to ",

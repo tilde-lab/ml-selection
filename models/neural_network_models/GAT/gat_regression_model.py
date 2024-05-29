@@ -6,7 +6,8 @@ from torch_geometric.utils import scatter
 from torcheval.metrics import R2Score
 from torchmetrics import MeanAbsoluteError, MeanAbsolutePercentageError
 from tqdm import tqdm
-
+from sklearn.metrics import explained_variance_score
+from data_massage.metrics.statistic_metrics import theils_u
 from datasets.poly_graph_dataset import PolyGraphDataset
 
 r2 = R2Score()
@@ -126,6 +127,9 @@ class GAT(torch.nn.Module):
 
                 mape.update(pred.reshape(-1), y)
                 mape_res = mape.compute()
+
+                evs = explained_variance_score(pred.reshape(-1), y)
+                theils_u_res = theils_u(pred.reshape(-1), y)
         print(
             "R2: ",
             r2_res,
@@ -133,6 +137,10 @@ class GAT(torch.nn.Module):
             mae_result,
             " MAPE: ",
             mape_res,
+            " EVS: ",
+            evs,
+            "Theil's U:",
+            theils_u_res,
             " Pred from",
             pred.min(),
             " to ",
@@ -162,7 +170,7 @@ if __name__ == "__main__":
         train_data, batch_size=64, shuffle=True, num_workers=0
     )
     test_dataloader = DataLoader(
-        test_data, batch_size=1000, shuffle=False, num_workers=0
+        test_data, batch_size=5000, shuffle=False, num_workers=0
     )
 
     device = torch.device("cpu")
@@ -171,7 +179,7 @@ if __name__ == "__main__":
 
     model.fit(
         model,
-        5,
+        1,
         train_dataloader,
         optimizer,
         device,

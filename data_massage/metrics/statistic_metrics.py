@@ -3,7 +3,12 @@ import torch
 
 
 def theils_u(y_true: torch.tensor, y_pred: torch.tensor):
-    """Theil's U Statistic"""
+    """
+    Theil's U Statistic.
+    If Theil's U < 1, model is better than naiv pred,
+    If Theil's U == 1, models acc like naiv pred,
+    If Theil's U > 1, model is worse than naiv pred
+    """
     numerator = np.sqrt(np.mean((y_pred.cpu().numpy() - y_true.cpu().numpy()) ** 2))
 
     # naive prediction: in moment i -> y=i-1
@@ -15,11 +20,3 @@ def theils_u(y_true: torch.tensor, y_pred: torch.tensor):
 
     theils_u_stat = numerator / denominator
     return theils_u_stat
-
-
-if __name__ == "__main__":
-    # test
-    y_true = np.array([3, -0.5, 2, 7, 4.2])
-    y_pred = np.array([2.5, 0.0, 2, 8, 4.5])
-    u_stat = theils_u(y_true, y_pred)
-    print(f"Theil's U Statistic: {u_stat}")
