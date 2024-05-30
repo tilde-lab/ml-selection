@@ -4,17 +4,20 @@ Training a TransformerModel to predict the Seebeck value.
 Transformer made from encoder (without decoder). Uses token-vector to represent embedding for each crystal.
 Tensor of tokens is fed to fully connected layer. Next, loss is calculated as in standard models.
 """
+
 import numpy as np
 import polars as pl
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.utils.data as data
+from sklearn.metrics import explained_variance_score
 from torch.utils.data import Subset
 from torcheval.metrics import R2Score
 from torchmetrics import MeanAbsoluteError, MeanAbsolutePercentageError
 from tqdm import tqdm
-from sklearn.metrics import explained_variance_score
+
+from data.poly_store import get_poly_info
 from data_massage.metrics.statistic_metrics import theils_u
 
 r2 = R2Score()
@@ -81,7 +84,9 @@ class TransformerModel(nn.Module):
         x = self.layer3(x)
         return x
 
-    def fit(self, model, optimizer, ep, train_data: Subset) -> None:
+    def fit(
+        self, model, optimizer, ep, train_data: Subset, name_to_save="tran_w"
+    ) -> None:
         """Train model"""
         model.train()
         for epoch in tqdm(range(ep)):
@@ -134,16 +139,13 @@ class TransformerModel(nn.Module):
 
         print(f"--------Mean loss for epoch {epoch} is {mean_loss / cnt}--------")
 
-    def val(self, model, test_data: Subset) -> None:
+    def val(self, model, test_data: Subset, name_to_save="tran_w") -> None:
         """Test model"""
 
         model.eval()
+        r2.reset(), mae.reset()
 
-        r2.reset()
-        mae.reset()
-
-        preds = []
-        y_s = []
+        preds, y_s = [], []
 
         with torch.no_grad():
             if self.n_feature == 2:
@@ -179,8 +181,7 @@ class TransformerModel(nn.Module):
                         while len(data[0]) != len(data[1]):
                             data[1].append(data[1][0])
                     pred = model([torch.tensor(data).permute(1, 0).unsqueeze(0)])
-                    preds.append(pred)
-                    y_s.append(y)
+                    preds.append(pred), y_s.append(y)
 
         mae.update(torch.tensor(preds).reshape(-1), torch.tensor(y_s))
         mae_result = mae.compute()
@@ -188,10 +189,9 @@ class TransformerModel(nn.Module):
         r2.update(torch.tensor(preds).reshape(-1), torch.tensor(y_s))
         r2_res = r2.compute()
 
-        mape.update(torch.tensor(preds).reshape(-1), torch.tensor(y_s))
-        mape_res = mape.compute()
-
-        evs = explained_variance_score(np.array([i[0][0] for i in preds]), np.array(y_s))
+        evs = explained_variance_score(
+            np.array([i[0][0] for i in preds]), np.array(y_s)
+        )
         theils_u_res = theils_u(np.array([i[0][0] for i in preds]), np.array(y_s))
 
         print(
@@ -203,8 +203,6 @@ class TransformerModel(nn.Module):
             evs,
             "Theil's U: ",
             theils_u_res,
-            " MAPE: ",
-            mape_res,
             " Pred from",
             min(preds),
             " to ",
@@ -213,36 +211,84 @@ class TransformerModel(nn.Module):
 
         torch.save(
             model.state_dict(),
-            r"/root/projects/ml-selection/models/neural_network_models/transformer/weights/0001.pth",
+            f"/root/projects/ml-selection/models/neural_network_models/transformer/weights/{name_to_save}.pth",
         )
 
-        return [r2_res, mae_result]
+        return r2_res, mae_result
+
+
+def main(epoch=5, name_to_save="tran_w"):
+    def get_ds(poly_path, temperature):
+        poly = pl.read_json(poly_path)
+        seebeck = pl.read_json(
+            "/root/projects/ml-selection/data/raw_mpds/median_seebeck.json"
+        )
+        poly = poly.with_columns(pl.col("phase_id").cast(pl.Int64))
+        dataset = seebeck.join(poly, on="phase_id", how="inner").drop(
+            ["phase_id", "Formula"]
+        )
+        if not (temperature):
+            dataset = dataset.drop(columns=["temperature"])
+        dataset = [list(dataset.row(i)) for i in range(len(dataset))]
+
+        train_size = int(0.9 * len(dataset))
+        test_size = len(dataset) - train_size
+
+        train_data = torch.utils.data.Subset(dataset, range(train_size))
+        test_data = torch.utils.data.Subset(
+            dataset, range(train_size, train_size + test_size)
+        )
+        return train_data, test_data
+
+    (
+        poly_dir_path,
+        poly_path,
+        poly_just_graph_models,
+        poly_features,
+        poly_features,
+        poly_temperature_features,
+    ) = get_poly_info()
+
+    total_features = []
+    (
+        total_features.append(poly_features),
+        total_features.append(poly_temperature_features),
+    )
+
+    for k, features in enumerate(total_features):
+        if k == 1:
+            temperature = True
+        else:
+            temperature = False
+        for idx, path in enumerate(poly_path):
+            train_dataloader, test_dataloader = get_ds(path, temperature)
+
+            model = TransformerModel(len(features[idx]), 1, 16, "elu")
+            optimizer = torch.optim.Adam(
+                model.parameters(), lr=0.0006479739574204421, weight_decay=5e-4
+            )
+            try:
+                model.load_state_dict(
+                    torch.load(
+                        f"/root/projects/ml-selection/models/neural_network_models/Transformer/weights/{name_to_save}_{len(features[idx])}.pth"
+                    )
+                )
+            except:
+                pass
+
+            model.fit(
+                model,
+                optimizer,
+                epoch,
+                train_dataloader,
+                name_to_save=name_to_save + str(len(features[idx])),
+            )
+            model.val(
+                model,
+                test_dataloader,
+                name_to_save=name_to_save + str(len(features[idx])),
+            )
 
 
 if __name__ == "__main__":
-    poly = pl.read_json(
-        f"/root/projects/ml-selection/data/processed_data/poly/3_features.json",
-    )
-    seebeck = pl.read_json(
-        "/data/raw_mpds/median_seebeck.json"
-    )
-    dataset = seebeck.join(poly, on="phase_id", how="inner").drop(
-        ["phase_id", "Formula"]
-    )
-    dataset = [list(dataset.row(i)) for i in range(len(dataset))]
-
-    train_size = int(0.9 * len(dataset))
-    test_size = len(dataset) - train_size
-
-    train_data = torch.utils.data.Subset(dataset, range(train_size))
-    test_data = torch.utils.data.Subset(
-        dataset, range(train_size, train_size + test_size)
-    )
-    model = TransformerModel(4, 4, 16, "elu")
-
-    optimizer = torch.optim.Adam(
-        model.parameters(), lr=0.0006479739574204421, weight_decay=5e-4
-    )
-
-    model.fit(model, optimizer, 5, train_data)
-    model.val(model, test_data)
+    main(epoch=1, name_to_save='31_05')
