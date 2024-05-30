@@ -93,38 +93,43 @@ def train(model, ep, train_loader, optimizer):
             optimizer.step()
             total_loss += float(loss) * data.num_graphs
             mape.update(logits.reshape(-1), y)
-        f"--------Mean loss for epoch {e} is {total_loss / len(train_loader.dataset)}--------"
+        print(f"--------Mean loss for epoch {e} is {total_loss / len(train_loader.dataset)}--------")
     return total_loss / len(train_loader.dataset)
 
 
-def val(model, test_loader):
+def val(model, test_loader, name_to_save: str = 'w_pn', f='3'):
     model.eval()
     r2.reset()
     mae.reset()
 
-    preds = []
+    preds = None
     with torch.no_grad():
         for d in test_loader:
             data, y = d
             pred = model(data.pos, data.edge_index.to(torch.int64), data.batch)
-            preds.append(pred)
+            if preds != None:
+                preds = torch.cat((preds, pred), dim=0)
+                y_true = torch.cat((y_true, y), dim=0)
+            else:
+                preds, y_true = pred, y
             mae.update(pred.reshape(-1), y)
             r2.update(pred.reshape(-1), y)
-            mape.update(pred.reshape(-1), y)
-            evs = explained_variance_score(pred.reshape(-1), y)
-            theils_u_res = theils_u(pred.reshape(-1), y)
 
         mae_result = mae.compute()
         r2_res = r2.compute()
-        mape_res = mape.compute()
+        evs = explained_variance_score(preds, y_true)
+        theils_u_res = theils_u(preds, y_true)
+
+        torch.save(
+            model.state_dict(),
+            f"/root/projects/ml-selection/models/neural_network_models/PointNet/weights/{name_to_save}_{f}.pth",
+        )
 
         print(
             "R2: ",
             r2_res,
             " MAE: ",
             mae_result,
-            " MAPE: ",
-            mape_res,
             " EVS: ",
             evs,
             "Theil's U: ",
@@ -137,28 +142,38 @@ def val(model, test_loader):
     return r2_res, mae_result
 
 
-if __name__ == "__main__":
-    dataset = PointCloudDataset(features=3)
-    train_size = int(0.9 * len(dataset))
-    test_size = len(dataset) - train_size
+def main(epoch: int = 20, batch_size: int = 2, name_to_save='w_pn'):
+    features = [3, 4]
 
-    train_data = torch.utils.data.Subset(dataset, range(train_size))
-    test_data = torch.utils.data.Subset(
-        dataset, range(train_size, train_size + test_size)
-    )
+    for f in features:
+        dataset = PointCloudDataset(features=f)
 
-    train_loader = DataLoader(train_data, batch_size=64, shuffle=True, num_workers=0)
-    test_loader = DataLoader(test_data, batch_size=64, shuffle=False, num_workers=0)
+        train_size = int(0.9 * len(dataset))
+        test_size = len(dataset) - train_size
 
-    model = PointNet(3)
-    model.load_state_dict(
-        torch.load(
-            r"/root/projects/ml-selection/models/neural_network_models/PointNet/weights/30_01.pth"
+        train_data = torch.utils.data.Subset(dataset, range(train_size))
+        test_data = torch.utils.data.Subset(
+            dataset, range(train_size, train_size + test_size)
         )
-    )
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
-    criterion = torch.nn.MSELoss()
 
-    for epoch in tqdm(range(1)):
-        loss = train(model, 7, train_loader, optimizer)
-        test_acc = val(model, test_loader)
+        train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True, num_workers=0)
+        test_loader = DataLoader(test_data, batch_size=batch_size, shuffle=False, num_workers=0)
+
+        model = PointNet(f)
+        optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+
+        try:
+            model.load_state_dict(
+                torch.load(
+                    f"/root/projects/ml-selection/models/neural_network_models/PointNet/weights/{name_to_save}_{f}.pth"
+                )
+            )
+        except:
+            pass
+
+        _ = train(model, epoch, train_loader, optimizer)
+        _ = val(model, test_loader, name_to_save=name_to_save, f=str(f))
+
+
+if __name__ == "__main__":
+    main(name_to_save='31_05')
