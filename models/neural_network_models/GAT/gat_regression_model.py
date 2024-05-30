@@ -9,6 +9,8 @@ from tqdm import tqdm
 from sklearn.metrics import explained_variance_score
 from data_massage.metrics.statistic_metrics import theils_u
 from datasets.poly_graph_dataset import PolyGraphDataset
+from data.poly_store import get_poly_info
+
 
 r2 = R2Score()
 mae = MeanAbsoluteError()
@@ -72,6 +74,8 @@ class GAT(torch.nn.Module):
         train_dataloader: DataLoader,
         optimizer: torch.optim,
         device: torch.device,
+        features = 1,
+        name_to_save='gat_w'
     ) -> None:
         """
         Train model
@@ -90,6 +94,7 @@ class GAT(torch.nn.Module):
             'cpu' or 'gpu'
         """
         model.train()
+
         for epoch in tqdm(range(ep)):
             mean_loss = 0
             cnt = 0
@@ -106,37 +111,40 @@ class GAT(torch.nn.Module):
             print(
                 f"--------Mean loss for epoch {epoch} is {mean_loss / cnt}--------R2 is {r2.compute()}--------MAPE is {mape.compute()}"
             )
+            if epoch % 5:
+                torch.save(
+                    model.state_dict(),
+                    f"/root/projects/ml-selection/models/neural_network_models/GAT/weights/{name_to_save}_{features}.pth",
+                )
 
     def val(
-        self, model, test_dataloader: DataLoader, device: torch.device
+        self, model, test_dataloader: DataLoader, device: torch.device, features=1, name_to_save='gat_w'
     ) -> torch.Tensor:
         """Test model"""
-        r2.reset()
-        mae.reset()
-        model.eval()
+        (model.eval(), r2.reset(), mae.reset())
+
+        preds = None
         with torch.no_grad():
-            cnt = 0
             for data, y in test_dataloader:
-                cnt += 1
                 pred = model(data.to(device))
+                if preds != None:
+                    preds = torch.cat((preds, pred), dim=0)
+                    y_true = torch.cat((y_true, y), dim=0)
+                else:
+                    preds, y_true = pred, y
                 mae.update(pred.reshape(-1), y)
-                mae_result = mae.compute()
-
                 r2.update(pred.reshape(-1), y)
-                r2_res = r2.compute()
 
-                mape.update(pred.reshape(-1), y)
-                mape_res = mape.compute()
+        mae_result = mae.compute()
+        r2_res = r2.compute()
+        evs = explained_variance_score(preds, y_true)
+        theils_u_res = theils_u(preds, y_true)
 
-                evs = explained_variance_score(pred.reshape(-1), y)
-                theils_u_res = theils_u(pred.reshape(-1), y)
         print(
             "R2: ",
             r2_res,
             " MAE: ",
             mae_result,
-            " MAPE: ",
-            mape_res,
             " EVS: ",
             evs,
             "Theil's U:",
@@ -148,40 +156,118 @@ class GAT(torch.nn.Module):
         )
         torch.save(
             model.state_dict(),
-            r"/root/projects/ml-selection/models/neural_network_models/GAT/weights/0001.pth",
+            f"/root/projects/ml-selection/models/neural_network_models/GAT/weights/{name_to_save}_{features}.pth",
         )
 
         return r2_res, mae_result
 
 
+def main(epoch=5, device="cpu", name_to_save="w_gat", batch_size=2):
+    def get_ds(path, f, temperature):
+        dataset = PolyGraphDataset(path, f, temperature)
+        train_size = int(0.9 * len(dataset))
+        test_size = len(dataset) - train_size
+
+        train_data = torch.utils.data.Subset(dataset, range(train_size))
+        test_data = torch.utils.data.Subset(
+            dataset, range(train_size, train_size + test_size)
+        )
+        train_dataloader = DataLoader(
+            train_data, batch_size=batch_size, shuffle=False, num_workers=0
+        )
+        test_dataloader = DataLoader(
+            test_data, batch_size=batch_size, shuffle=False, num_workers=0
+        )
+        return train_dataloader, test_dataloader
+
+    (
+        poly_dir_path,
+        poly_path,
+        poly_just_graph_models,
+        poly_features,
+        poly_features,
+        poly_temperature_features,
+    ) = get_poly_info()
+
+    total_features = []
+    (
+        total_features.append(poly_features),
+        total_features.append(poly_temperature_features),
+    )
+
+    for k, features in enumerate(total_features):
+        if k == 1:
+            temperature = True
+        else:
+            temperature = False
+        for idx, path in enumerate(poly_path):
+            train_dataloader, test_dataloader = get_ds(
+                path, len(features[idx]), temperature
+            )
+
+            device = torch.device(device)
+            model = GAT(len(features[idx]), 16, 32, "elu").to(device)
+            optimizer = torch.optim.Adam(model.parameters(), lr=0.008598391737229157, weight_decay=5e-4)
+
+            try:
+                model.load_state_dict(
+                    torch.load(
+                        f"/root/projects/ml-selection/models/neural_network_models/GAT/weights/{name_to_save}_{len(features[idx])}.pth"
+                    )
+                )
+            except:
+                pass
+
+            model.fit(
+                model,
+                epoch,
+                train_dataloader,
+                optimizer,
+                device,
+                len(features[idx]),
+                name_to_save=name_to_save + str(len(features[idx])),
+            )
+            model.val(model, test_dataloader, device, features, name_to_save=name_to_save + str(len(features[idx]))
+                      )
+
+    for k, features in enumerate(total_features):
+        if k == 1:
+            temperature, feature = True, 3
+        else:
+            temperature, feature = False, 2
+
+        train_dataloader, test_dataloader = get_ds(
+            poly_just_graph_models, feature, temperature
+        )
+        device = torch.device(device)
+
+        model = GAT(feature, 16, 32, "elu").to(device)
+        optimizer = torch.optim.Adam(model.parameters(), lr=0.008598391737229157, weight_decay=5e-4)
+
+        try:
+            model.load_state_dict(
+                torch.load(
+                    f"/root/projects/ml-selection/models/neural_network_models/GAT/weights/{name_to_save}_{features}.pth"
+                )
+            )
+        except:
+            pass
+
+        model.fit(
+            model,
+            epoch,
+            train_dataloader,
+            optimizer,
+            device,
+            feature,
+            name_to_save=name_to_save + str(feature),
+        )
+        model.val(model, test_dataloader, device, features, name_to_save=name_to_save + str(feature)
+        )
+
+
 if __name__ == "__main__":
-    path = "/root/projects/ml-selection/data/processed_data/poly/0_features.json"
-    n_features = 2
-    temperature = False
-    dataset = PolyGraphDataset(path, n_features, temperature)
+    main(epoch=1, name_to_save="31_05")
 
-    train_size = int(0.9 * len(dataset))
-    test_size = len(dataset) - train_size
-    train_data = torch.utils.data.Subset(dataset, range(train_size))
-    test_data = torch.utils.data.Subset(
-        dataset, range(train_size, train_size + test_size)
-    )
-    train_dataloader = DataLoader(
-        train_data, batch_size=64, shuffle=True, num_workers=0
-    )
-    test_dataloader = DataLoader(
-        test_data, batch_size=5000, shuffle=False, num_workers=0
-    )
 
-    device = torch.device("cpu")
-    model = GAT(n_features).to(device)
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.005919, weight_decay=5e-4)
 
-    model.fit(
-        model,
-        1,
-        train_dataloader,
-        optimizer,
-        device,
-    )
-    model.val(model, test_dataloader, device)
