@@ -2,6 +2,7 @@ import polars as pl
 import torch
 from torch.utils.data import Dataset
 from torch_geometric.data import Data
+from data_massage.normalization.normalization import make_normalization
 
 
 class PolyGraphDataset(Dataset):
@@ -32,7 +33,7 @@ class PolyGraphDataset(Dataset):
         self.seebeck = pl.read_json(
             "/root/projects/ml-selection/data/raw_mpds/median_seebeck.json"
         )
-        data = self.seebeck.join(self.poly, on="phase_id", how="inner")
+        data = make_normalization(self.seebeck.join(self.poly, on="phase_id", how="inner"))
         self.data = [list(data.row(i)) for i in range(len(data))]
 
     def __len__(self):
@@ -115,7 +116,10 @@ class PolyGraphDataset(Dataset):
                 # graph is undirected, so we duplicate edge
                 if i != j:
                     edge_index.append([i, j])
-                    # edge_index.append([j, i])
+                    edge_index.append([j, i])
+
+        if edge_index == []:
+            edge_index.append([i, i])
 
         graph_data = Data(
             x=node_features, edge_index=torch.tensor(edge_index).t().contiguous()
