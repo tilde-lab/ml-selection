@@ -185,7 +185,6 @@ def main(epoch=5, device="cpu", name_to_save="w_gat", batch_size=2):
         poly_path,
         poly_just_graph_models,
         poly_features,
-        poly_features,
         poly_temperature_features,
     ) = get_poly_info()
 

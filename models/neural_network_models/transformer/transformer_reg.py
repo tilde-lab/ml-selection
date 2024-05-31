@@ -245,7 +245,6 @@ def main(epoch=5, name_to_save="tran_w"):
         poly_path,
         poly_just_graph_models,
         poly_features,
-        poly_features,
         poly_temperature_features,
     ) = get_poly_info()
 
