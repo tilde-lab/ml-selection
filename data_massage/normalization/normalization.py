@@ -19,14 +19,18 @@ def make_normalization(
     with open("/root/projects/ml-selection/configs/config.yaml", "r") as yamlfile:
         yaml_f = yaml.load(yamlfile, Loader=yaml.FullLoader)
         path = yaml_f["scaler_path"]
-
     exceptions_col = ['phase_id', 'Phase', 'Formula']
     for column_name in data.columns:
         scaler = MinMaxScaler(feature_range=(-1, 1))
         if column_name not in exceptions_col:
             try:
-                scaler.fit([list(i) for i in list(data[column_name])])
-                d = scaler.transform([list(i) for i in list(data[column_name])])
+                temp, vectors_data = [], []
+                temp = [list(i) for i in list(data[column_name])]
+                for i in temp:
+                    for el in i:
+                        vectors_data.append(el)
+                scaler.fit(np.array([vectors_data]).reshape(-1, 1))
+                d = (scaler.transform(np.array([vectors_data]).reshape(-1, 1))).reshape(1, -1)
                 data = data.with_columns(pl.Series(column_name, d.tolist()))
             except:
                 scaler.fit(np.array([i for i in list(data[column_name])]).reshape(-1, 1))
