@@ -87,9 +87,9 @@ class GCN(torch.nn.Module):
                 loss.backward()
                 optimizer.step()
                 mean_loss += loss
-                print(
-                    f"--------Mean loss for epoch {epoch} is {mean_loss / cnt}--------"
-                )
+            print(
+                f"--------Mean loss for epoch {epoch} is {mean_loss / cnt}--------"
+            )
             if epoch % 5 == 0:
                 torch.save(
                     model.state_dict(),

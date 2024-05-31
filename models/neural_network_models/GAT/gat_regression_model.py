@@ -114,9 +114,9 @@ class GAT(torch.nn.Module):
                 mean_loss += loss
                 r2.update(out.reshape(-1), y)
                 mape.update(out.reshape(-1), y)
-                print(
-                    f"--------Mean loss for epoch {epoch} is {mean_loss / cnt}--------"
-                )
+            print(
+                f"--------Mean loss for epoch {epoch} is {mean_loss / cnt}--------"
+            )
             if epoch % 5:
                 torch.save(
                     model.state_dict(),
