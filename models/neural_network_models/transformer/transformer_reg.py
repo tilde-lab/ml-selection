@@ -4,7 +4,7 @@ Training a TransformerModel to predict the Seebeck value.
 Transformer made from encoder (without decoder). Uses token-vector to represent embedding for each crystal.
 Tensor of tokens is fed to fully connected layer. Next, loss is calculated as in standard models.
 """
-
+from data_massage.normalization.normalization import make_normalization
 import numpy as np
 import polars as pl
 import torch
@@ -237,17 +237,15 @@ def main(epoch=5, name_to_save="tran_w"):
             "/root/projects/ml-selection/data/raw_mpds/median_seebeck.json"
         )
         poly = poly.with_columns(pl.col("phase_id").cast(pl.Int64))
-        dataset = seebeck.join(poly, on="phase_id", how="inner").drop(
+        dataset = make_normalization(seebeck.join(poly, on="phase_id", how="inner").drop(
             ["phase_id", "Formula"]
-        )
+        ))
         if not (temperature):
             dataset = dataset.drop(columns=["temperature"])
         dataset = [list(dataset.row(i)) for i in range(len(dataset))]
 
-        # train_size = int(0.9 * len(dataset))
-        # test_size = len(dataset) - train_size
-        train_size = 10
-        test_size = 6
+        train_size = int(0.9 * len(dataset))
+        test_size = len(dataset) - train_size
 
         train_data = torch.utils.data.Subset(dataset, range(train_size))
         test_data = torch.utils.data.Subset(

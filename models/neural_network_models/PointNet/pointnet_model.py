@@ -113,16 +113,13 @@ def val(model, test_loader, name_to_save: str = 'w_pn', f='3'):
         for d in test_loader:
             data, y = d
             pred = model(data.pos, data.edge_index.to(torch.int64), data.batch)
-            pred, y = torch.tensor(scaler.inverse_transform(np.array(pred))), torch.tensor(
-                scaler.inverse_transform(np.array(y).reshape(-1, 1)))
-
             if preds != None:
                 preds = torch.cat((preds, pred), dim=0)
                 y_true = torch.cat((y_true, y), dim=0)
             else:
                 preds, y_true = pred, y
-            mae.update(pred, y)
-            r2.update(pred, y)
+            mae.update(pred.reshape(-1), y)
+            r2.update(pred.reshape(-1), y)
 
         mae_result = mae.compute()
         r2_res = r2.compute()
