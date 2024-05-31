@@ -5,9 +5,11 @@ from torch_geometric.loader import DataLoader
 from torch_geometric.nn import MessagePassing, global_max_pool
 from torcheval.metrics import R2Score
 from torchmetrics import MeanAbsoluteError, MeanAbsolutePercentageError
-from tqdm import tqdm
 from sklearn.metrics import explained_variance_score
 from data_massage.metrics.statistic_metrics import theils_u
+import pickle
+import yaml
+import numpy as np
 
 from datasets.point_cloud_dataset import PointCloudDataset
 
@@ -15,6 +17,9 @@ r2 = R2Score()
 mae = MeanAbsoluteError()
 mape = MeanAbsolutePercentageError()
 
+with open("/root/projects/ml-selection/configs/config.yaml", "r") as yamlfile:
+    yaml_f = yaml.load(yamlfile, Loader=yaml.FullLoader)
+    path_sc = yaml_f["scaler_path"]
 
 class PointNetLayer(MessagePassing):
     """PointNet encoder"""
@@ -98,22 +103,26 @@ def train(model, ep, train_loader, optimizer):
 
 
 def val(model, test_loader, name_to_save: str = 'w_pn', f='3'):
-    model.eval()
-    r2.reset()
-    mae.reset()
+    model.eval(), r2.reset(), mae.reset()
+
+    with open(f'{path_sc}scalerSeebeck coefficient.pkl', 'rb') as f:
+        scaler = pickle.load(f)
 
     preds = None
     with torch.no_grad():
         for d in test_loader:
             data, y = d
             pred = model(data.pos, data.edge_index.to(torch.int64), data.batch)
+            pred, y = torch.tensor(scaler.inverse_transform(np.array(pred))), torch.tensor(
+                scaler.inverse_transform(np.array(y).reshape(-1, 1)))
+
             if preds != None:
                 preds = torch.cat((preds, pred), dim=0)
                 y_true = torch.cat((y_true, y), dim=0)
             else:
                 preds, y_true = pred, y
-            mae.update(pred.reshape(-1), y)
-            r2.update(pred.reshape(-1), y)
+            mae.update(pred, y)
+            r2.update(pred, y)
 
         mae_result = mae.compute()
         r2_res = r2.compute()

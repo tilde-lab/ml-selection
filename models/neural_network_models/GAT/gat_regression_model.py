@@ -10,7 +10,13 @@ from sklearn.metrics import explained_variance_score
 from data_massage.metrics.statistic_metrics import theils_u
 from datasets.poly_graph_dataset import PolyGraphDataset
 from data.poly_store import get_poly_info
+import pickle
+import yaml
+import numpy as np
 
+with open("/root/projects/ml-selection/configs/config.yaml", "r") as yamlfile:
+    yaml_f = yaml.load(yamlfile, Loader=yaml.FullLoader)
+    path_sc = yaml_f["scaler_path"]
 
 r2 = R2Score()
 mae = MeanAbsoluteError()
@@ -108,9 +114,9 @@ class GAT(torch.nn.Module):
                 mean_loss += loss
                 r2.update(out.reshape(-1), y)
                 mape.update(out.reshape(-1), y)
-            print(
-                f"--------Mean loss for epoch {epoch} is {mean_loss / cnt}--------R2 is {r2.compute()}--------MAPE is {mape.compute()}"
-            )
+                print(
+                    f"--------Mean loss for epoch {epoch} is {mean_loss / cnt}--------"
+                )
             if epoch % 5:
                 torch.save(
                     model.state_dict(),
@@ -124,16 +130,21 @@ class GAT(torch.nn.Module):
         (model.eval(), r2.reset(), mae.reset())
 
         preds = None
+        with open(f'{path_sc}scalerSeebeck coefficient.pkl', 'rb') as f:
+            scaler = pickle.load(f)
+
         with torch.no_grad():
             for data, y in test_dataloader:
                 pred = model(data.to(device))
+                pred, y = torch.tensor(scaler.inverse_transform(np.array(pred))), torch.tensor(scaler.inverse_transform(np.array(y).reshape(-1, 1)))
+
                 if preds != None:
                     preds = torch.cat((preds, pred), dim=0)
                     y_true = torch.cat((y_true, y), dim=0)
                 else:
                     preds, y_true = pred, y
-                mae.update(pred.reshape(-1), y)
-                r2.update(pred.reshape(-1), y)
+                mae.update(pred, y)
+                r2.update(pred, y)
 
         mae_result = mae.compute()
         r2_res = r2.compute()

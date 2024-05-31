@@ -16,9 +16,17 @@ from torch.utils.data import Subset
 from torcheval.metrics import R2Score
 from torchmetrics import MeanAbsoluteError, MeanAbsolutePercentageError
 from tqdm import tqdm
+import pickle
+import yaml
+import numpy as np
 
 from data.poly_store import get_poly_info
 from data_massage.metrics.statistic_metrics import theils_u
+
+
+with open("/root/projects/ml-selection/configs/config.yaml", "r") as yamlfile:
+    yaml_f = yaml.load(yamlfile, Loader=yaml.FullLoader)
+    path_sc = yaml_f["scaler_path"]
 
 r2 = R2Score()
 mae = MeanAbsoluteError()
@@ -146,6 +154,8 @@ class TransformerModel(nn.Module):
         r2.reset(), mae.reset()
 
         preds, y_s = [], []
+        with open(f'{path_sc}scalerSeebeck coefficient.pkl', 'rb') as f:
+            scaler = pickle.load(f)
 
         with torch.no_grad():
             if self.n_feature == 2:
@@ -155,6 +165,9 @@ class TransformerModel(nn.Module):
                         while len(data[0]) != len(data[1]):
                             data[1].append(data[1][0])
                     pred = model([torch.tensor(data).permute(1, 0).unsqueeze(0)])
+                    pred, y = torch.tensor(scaler.inverse_transform(np.array(pred))), torch.tensor(
+                        scaler.inverse_transform(np.array(y).reshape(-1, 1))[0])
+
                     preds.append(pred)
                     y_s.append(y)
             if self.n_feature == 3:
@@ -231,8 +244,10 @@ def main(epoch=5, name_to_save="tran_w"):
             dataset = dataset.drop(columns=["temperature"])
         dataset = [list(dataset.row(i)) for i in range(len(dataset))]
 
-        train_size = int(0.9 * len(dataset))
-        test_size = len(dataset) - train_size
+        # train_size = int(0.9 * len(dataset))
+        # test_size = len(dataset) - train_size
+        train_size = 10
+        test_size = 6
 
         train_data = torch.utils.data.Subset(dataset, range(train_size))
         test_data = torch.utils.data.Subset(
