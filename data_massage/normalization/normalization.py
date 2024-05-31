@@ -24,13 +24,8 @@ def make_normalization(
         scaler = MinMaxScaler(feature_range=(-1, 1))
         if column_name not in exceptions_col:
             try:
-                temp, vectors_data = [], []
-                temp = [list(i) for i in list(data[column_name])]
-                for i in temp:
-                    for el in i:
-                        vectors_data.append(el)
-                scaler.fit(np.array([vectors_data]).reshape(-1, 1))
-                d = (scaler.transform(np.array([vectors_data]).reshape(-1, 1))).reshape(1, -1)
+                scaler.fit(np.array([list(i) for i in list(data[column_name])]))
+                d = scaler.transform(np.array([list(i) for i in list(data[column_name])]))
                 data = data.with_columns(pl.Series(column_name, d.tolist()))
             except:
                 scaler.fit(np.array([i for i in list(data[column_name])]).reshape(-1, 1))
