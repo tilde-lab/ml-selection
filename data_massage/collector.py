@@ -124,19 +124,17 @@ def main():
         conf = yaml.load(yamlfile, Loader=yaml.FullLoader)
         api_key = conf["api_key"]
         raw_path = conf["raw_mpds"]
-        proc_path = conf["processed_path"]
 
     is_uniq_structure_for_phase = False
     handler = DataHandler(True, api_key)
 
-    result_dfrm = get_structures_and_seebeck(
+    get_structures_and_seebeck(
         handler,
         is_uniq_structure_for_phase,
         raw_seebeck_path=raw_path + "seebeck.json",
         raw_str_path=raw_path + "rep_structures.json",
-        path_to_save=raw_path,
+        path_to_save=raw_path
     )
-    # get_data_for_vectors_dataset(handler, result_dfrm, proc_path)
     run_processing_polyhedra.main()
 
 
