@@ -50,7 +50,7 @@ class TransformerModel(nn.Module):
         self.n_feature = n_feature
         self.agg_token = torch.rand((1, 1, n_feature))
         self.transformer_encoder = nn.TransformerEncoder(
-            encoder_layer, num_layers=3, norm=None
+            encoder_layer, num_layers=1, norm=None
         )
         self.layer1 = nn.Linear(n_feature, n_feature * hidd * heads)
         self.layer2 = nn.Linear(hidd * n_feature * heads, 1 * hidd)
@@ -145,9 +145,9 @@ class TransformerModel(nn.Module):
                     optimizer.step()
                     mean_loss += loss
 
-        print(f"--------Mean loss for epoch {epoch} is {mean_loss / cnt}--------")
+            print(f"--------Mean loss for epoch {epoch} is {mean_loss / cnt}--------")
 
-    def val(self, model, test_data: Subset, name_to_save="tran_w") -> None:
+    def val(self, model, test_data: Subset, name_to_save="tran_w", temperature=True) -> None:
         """Test model"""
 
         model.eval()
@@ -185,6 +185,8 @@ class TransformerModel(nn.Module):
                     elif type(data[2]) != list and len(data[0]) == 118:
                         data[2] = [data[2]] * 118
                     pred = model([torch.tensor(data).permute(1, 0).unsqueeze(0)])
+                    pred, y = torch.tensor(scaler.inverse_transform(np.array(pred))), torch.tensor(
+                        scaler.inverse_transform(np.array(y).reshape(-1, 1))[0])
                     preds.append(pred)
                     y_s.append(y)
             if self.n_feature == 4:
@@ -194,6 +196,8 @@ class TransformerModel(nn.Module):
                         while len(data[0]) != len(data[1]):
                             data[1].append(data[1][0])
                     pred = model([torch.tensor(data).permute(1, 0).unsqueeze(0)])
+                    pred, y = torch.tensor(scaler.inverse_transform(np.array(pred))), torch.tensor(
+                        scaler.inverse_transform(np.array(y).reshape(-1, 1))[0])
                     preds.append(pred), y_s.append(y)
 
         mae.update(torch.tensor(preds).reshape(-1), torch.tensor(y_s))
@@ -224,7 +228,7 @@ class TransformerModel(nn.Module):
 
         torch.save(
             model.state_dict(),
-            f"/root/projects/ml-selection/models/neural_network_models/transformer/weights/{name_to_save}.pth",
+            f"/root/projects/ml-selection/models/neural_network_models/transformer/weights/{name_to_save}_{temperature}.pth",
         )
 
         return r2_res, mae_result
@@ -275,14 +279,14 @@ def main(epoch=5, name_to_save="tran_w"):
         for idx, path in enumerate(poly_path):
             train_dataloader, test_dataloader = get_ds(path, temperature)
 
-            model = TransformerModel(len(features[idx]), 1, 16, "elu")
+            model = TransformerModel(len(features[idx]), len(features[idx]), 32, "elu")
             optimizer = torch.optim.Adam(
                 model.parameters(), lr=0.0006479739574204421, weight_decay=5e-4
             )
             try:
                 model.load_state_dict(
                     torch.load(
-                        f"/root/projects/ml-selection/models/neural_network_models/Transformer/weights/{name_to_save}_{len(features[idx])}.pth"
+                        f"/root/projects/ml-selection/models/neural_network_models/Transformer/weights/{name_to_save}_{len(features[idx])}_{temperature}.pth"
                     )
                 )
             except:
@@ -293,14 +297,15 @@ def main(epoch=5, name_to_save="tran_w"):
                 optimizer,
                 epoch,
                 train_dataloader,
-                name_to_save=name_to_save + str(len(features[idx])),
+                name_to_save=name_to_save + str(len(features[idx]))
             )
             model.val(
                 model,
                 test_dataloader,
                 name_to_save=name_to_save + str(len(features[idx])),
+                temperature=temperature
             )
 
 
 if __name__ == "__main__":
-    main(epoch=1, name_to_save='31_05')
+    main(epoch=1, name_to_save='01_06')

@@ -13,7 +13,7 @@ BEST_WEIGHTS = None
 BEST_R2 = -100
 
 
-def main(path: str, features: int, ds: int, temperature: bool, n_trials=5, epoch=[4, 7]):
+def main(path: str, features: int, ds: int, temperature: bool, n_trials=3, epoch=[3, 5]):
     def objective(trial) -> int:
         """Search of hyperparameters"""
         global BEST_WEIGHTS, BEST_R2
@@ -27,7 +27,7 @@ def main(path: str, features: int, ds: int, temperature: bool, n_trials=5, epoch
             dataset, range(train_size, train_size + test_size)
         )
         train_dataloader = DataLoader(
-            train_data, batch_size=64, shuffle=True, num_workers=0
+            train_data, batch_size=32, shuffle=True, num_workers=0
         )
         test_dataloader = DataLoader(
             test_data, batch_size=5240, shuffle=False, num_workers=0

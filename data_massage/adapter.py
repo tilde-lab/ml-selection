@@ -64,7 +64,6 @@ class MPDS_MP_Adapter():
             structures_for_mp_seebeck.write_json(self.mp_path + 'structures_mp_mpds.json')
         return structures_for_mp_seebeck
 
-
     def process_seebeck_to_mpds_format(self, seebeck_dfrm_mpds_format):
         seebeck_list = seebeck_dfrm_mpds_format['Seebeck coefficient']
         new_column_seeb = []
@@ -94,7 +93,6 @@ class MPDS_MP_Adapter():
         return seebeck_dfrm_mpds_format.rename(
             {'phase_id': 'Phase', 'formula': 'Formula'}
         )
-
 
 
 if __name__ == "__main__":

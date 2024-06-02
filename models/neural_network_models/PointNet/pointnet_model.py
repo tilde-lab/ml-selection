@@ -128,7 +128,7 @@ def val(model, test_loader, name_to_save: str = 'w_pn', f='3'):
 
         torch.save(
             model.state_dict(),
-            f"/root/projects/ml-selection/models/neural_network_models/PointNet/weights/{name_to_save}_{f}.pth",
+            f"/root/projects/ml-selection/models/neural_network_models/PointNet/weights/{name_to_save}_{r2_res}.pth",
         )
 
         print(

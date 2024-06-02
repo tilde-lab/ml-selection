@@ -9,6 +9,8 @@ import turicreate as tc
 from torcheval.metrics import R2Score
 from torchmetrics import MeanAbsoluteError, MeanAbsolutePercentageError
 from turicreate import SFrame
+from sklearn.metrics import explained_variance_score
+from data_massage.metrics.statistic_metrics import theils_u
 
 mae = MeanAbsoluteError()
 metric = R2Score()
@@ -24,8 +26,8 @@ models = {
 
 def split_data_for_turi_models(poly_path: str, seebeck_path: str) -> pd.DataFrame:
     # Crystal in vectors format
-    poly = pl.read_json(poly_path)
-    seebeck = pl.read_json(seebeck_path)
+    poly = pl.read_parquet(poly_path)
+    seebeck = pl.read_parquet(seebeck_path)
 
     # change float to int
     poly = poly.with_columns(pl.col("phase_id").cast(pl.Int64))
@@ -54,13 +56,12 @@ def run_linear_regression(train, test, features):
     mae.update(
         torch.tensor(predictions_linear), torch.tensor(test_r["Seebeck coefficient"])
     )
-    mape.update(
-        torch.tensor(predictions_linear), torch.tensor(test_r["Seebeck coefficient"])
-    )
-    mape_res = mape.compute()
     mae_result_r = mae.compute()
+    evs = explained_variance_score(torch.tensor(predictions_linear), torch.tensor(test_r["Seebeck coefficient"]))
+    theils_u_res = theils_u(torch.tensor(predictions_linear), torch.tensor(test_r["Seebeck coefficient"]))
+
     print(
-        f"LINEAR REGRESSION MODEL:\nR2: {r2_res_r}, MAE: {mae_result_r}, MAPE: {mape_res}, min pred: {predictions_linear.min()}, max pred: {predictions_linear.max()}\n\n"
+        f"LINEAR REGRESSION MODEL:\nR2: {r2_res_r}, MAE: {mae_result_r}, EVS: {evs}, TUR: {theils_u_res}, min pred: {predictions_linear.min()}, max pred: {predictions_linear.max()}\n\n"
     )
     return [r2_res_r, mae_result_r]
 
@@ -81,12 +82,11 @@ def run_decision_tree(train, test, features):
         torch.tensor(predictions_decision), torch.tensor(test_d["Seebeck coefficient"])
     )
     mae_result_d = mae.compute()
-    mape.update(
-        torch.tensor(predictions_decision), torch.tensor(test_d["Seebeck coefficient"])
-    )
-    mape_res = mape.compute()
+    evs = explained_variance_score(torch.tensor(predictions_decision), torch.tensor(test_d["Seebeck coefficient"]))
+    theils_u_res = theils_u(torch.tensor(predictions_decision), torch.tensor(test_d["Seebeck coefficient"]))
+
     print(
-        f"DECISION TREE MODEL\nR2: {r2_res_d}, MAE: {mae_result_d}, MAPE: {mape_res}, min pred: {predictions_decision.min()}, max pred: {predictions_decision.max()}\n\n"
+        f"DECISION TREE MODEL\nR2: {r2_res_d}, MAE: {mae_result_d}, EVS: {evs}, TUR: {theils_u_res}, min pred: {predictions_decision.min()}, max pred: {predictions_decision.max()}\n\n"
     )
     return [r2_res_d, mae_result_d]
 
@@ -106,13 +106,11 @@ def run_boosted_trees(train, test, features):
         torch.tensor(predictions_boosted), torch.tensor(test_b["Seebeck coefficient"])
     )
     mae_result_b = mae.compute()
-    mape.update(
-        torch.tensor(predictions_boosted), torch.tensor(test_b["Seebeck coefficient"])
-    )
-    mape_res = mape.compute()
+    evs = explained_variance_score(torch.tensor(predictions_boosted), torch.tensor(test_b["Seebeck coefficient"]))
+    theils_u_res = theils_u(torch.tensor(predictions_boosted), torch.tensor(test_b["Seebeck coefficient"]))
 
     print(
-        f"BOOSTED TREES MODEL\nR2: {r2_res_b}, MAE: {mae_result_b}, MAPE: {mape_res}, min pred: {predictions_boosted.min()}, max pred: {predictions_boosted.max()}\n\n"
+        f"BOOSTED TREES MODEL\nR2: {r2_res_b}, MAE: {mae_result_b}, EVS: {evs}, TUR: {theils_u_res}, min pred: {predictions_boosted.min()}, max pred: {predictions_boosted.max()}\n\n"
     )
     return [r2_res_b, mae_result_b]
 
@@ -132,12 +130,11 @@ def run_random_forest(train, test, features):
         torch.tensor(predictions_random), torch.tensor(test_r["Seebeck coefficient"])
     )
     mae_result_rf = mae.compute()
-    mape.update(
-        torch.tensor(predictions_random), torch.tensor(test_r["Seebeck coefficient"])
-    )
-    mape_res = mape.compute()
+    evs = explained_variance_score(torch.tensor(predictions_random), torch.tensor(test_r["Seebeck coefficient"]))
+    theils_u_res = theils_u(torch.tensor(predictions_random), torch.tensor(test_r["Seebeck coefficient"]))
+
     print(
-        f"RANDOM FOREST MODEL\nR2: {r2_res_rf}, MAE: {mae_result_rf}, MAPE: {mape_res} min pred: {predictions_random.min()}, max pred: {predictions_random.max()}\n\n"
+        f"RANDOM FOREST MODEL\nR2: {r2_res_rf}, MAE: {mae_result_rf}, EVS: {evs}, TUR: {theils_u_res}, min pred: {predictions_random.min()}, max pred: {predictions_random.max()}\n\n"
     )
     return [r2_res_rf, mae_result_rf]
 
@@ -180,11 +177,11 @@ def run_math_models(poly_paths: list, seebeck_path: str, features: list) -> None
 
 
 if __name__ == "__main__":
-    seebeck_path = "/data/raw_mpds/median_seebeck.json"
+    seebeck_path = "/root/projects/ml-selection/data/raw_mpds/median_seebeck.parquet"
     poly_path = [
-        "/root/projects/ml-selection/data/processed_data/poly/2_features.json",
-        "/root/projects/ml-selection/data/processed_data/poly/3_features.json",
-        "/root/projects/ml-selection/data/processed_data/poly/poly_vector_of_count.json",
+        "/root/projects/ml-selection/data/processed_data/poly/2_features.parquet",
+        "/root/projects/ml-selection/data/processed_data/poly/3_features.parquet",
+        "/root/projects/ml-selection/data/processed_data/poly/poly_vector_of_count.parquet",
     ]
 
     features = [
@@ -198,4 +195,4 @@ if __name__ == "__main__":
         ["poly_elements", "poly_type", "temperature"],
     ]
 
-    run_math_models(poly_path, seebeck_path, features)
+    run_math_models(poly_path, seebeck_path, poly_temperature_features)

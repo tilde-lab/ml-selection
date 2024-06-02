@@ -14,7 +14,7 @@ BEST_WEIGHTS = None
 BEST_R2 = -100
 
 
-def main(features, ds, n_trials=3, epoch=[4, 7]):
+def main(features, ds, n_trials=3, epoch=[3, 4]):
     def objective(trial) -> int:
         """Search of hyperparameters"""
         global BEST_WEIGHTS, BEST_R2
@@ -28,10 +28,10 @@ def main(features, ds, n_trials=3, epoch=[4, 7]):
             dataset, range(train_size, train_size + test_size)
         )
         train_dataloader = DataLoader(
-            train_data, batch_size=64, shuffle=True, num_workers=0
+            train_data, batch_size=32, shuffle=True, num_workers=0
         )
         test_dataloader = DataLoader(
-            test_data, batch_size=64, shuffle=False, num_workers=0
+            test_data, batch_size=6000, shuffle=False, num_workers=0
         )
 
         hidden = trial.suggest_categorical("hidden", [8, 16, 32, 64, 128, 256])

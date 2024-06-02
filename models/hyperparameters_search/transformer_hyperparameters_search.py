@@ -13,7 +13,7 @@ BEST_WEIGHTS = None
 BEST_R2 = -100
 
 
-def main(poly_path: str, features: int, ds: int, temperature: bool, n_trials=5, epoch=[4, 7]):
+def main(poly_path: str, features: int, ds: int, temperature: bool, n_trials=3, epoch=[3, 4]):
     poly = pl.read_json(poly_path)
     seebeck = pl.read_json(
         "/root/projects/ml-selection/data/raw_mpds/median_seebeck.json"
