@@ -241,42 +241,6 @@ def main(epoch=5, device="cpu", name_to_save="w_gat", batch_size=2):
             model.val(model, test_dataloader, device, features, name_to_save=name_to_save + str(len(features[idx]))
                       )
 
-    for k, features in enumerate(total_features):
-        if k == 1:
-            temperature, feature = True, 3
-        else:
-            temperature, feature = False, 2
-
-        train_dataloader, test_dataloader = get_ds(
-            poly_just_graph_models, feature, temperature
-        )
-        device = torch.device(device)
-
-        model = GAT(feature, 16, 32, "elu").to(device)
-        optimizer = torch.optim.Adam(model.parameters(), lr=0.008598391737229157, weight_decay=5e-4)
-
-        try:
-            model.load_state_dict(
-                torch.load(
-                    f"/root/projects/ml-selection/models/neural_network_models/GAT/weights/{name_to_save}_{features}_{temperature}.pth"
-                )
-            )
-        except:
-            pass
-
-        model.fit(
-            model,
-            epoch,
-            train_dataloader,
-            optimizer,
-            device,
-            feature,
-            name_to_save=name_to_save + str(feature),
-        )
-        model.val(model, test_dataloader, device, features, name_to_save=name_to_save + str(feature)
-        )
-
-
 if __name__ == "__main__":
     main(epoch=1, name_to_save="31_05")
 

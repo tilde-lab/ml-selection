@@ -195,7 +195,7 @@ def main(epoch=5, device="cpu", name_to_save="w_gcn", batch_size=2):
             )
 
             device = torch.device(device)
-            model = GCN(len(features[idx]), 16, 32, "relu").to(device)
+            model = GCN(len(features[idx]), 16, 32, "tanh").to(device)
             try:
                 model.load_state_dict(
                     torch.load(
@@ -220,38 +220,6 @@ def main(epoch=5, device="cpu", name_to_save="w_gcn", batch_size=2):
                 name_to_save=name_to_save + str(len(features[idx])),
                 t=temperature
             )
-
-    for k, features in enumerate(total_features):
-        if k == 1:
-            temperature, feature = True, 3
-        else:
-            temperature, feature = False, 2
-
-        train_dataloader, test_dataloader = get_ds(
-            poly_just_graph_models, feature, temperature
-        )
-        device = torch.device(device)
-        model = GCN(feature, 16, 32, "tanh").to(device)
-        try:
-            model.load_state_dict(
-                torch.load(
-                    f"/root/projects/ml-selection/models/neural_network_models/GCN/weights/{name_to_save}_{features}_{t}.pth"
-                )
-            )
-        except:
-            pass
-
-        model.fit(
-            model,
-            epoch,
-            train_dataloader,
-            device,
-            lr=0.008598391737229157,
-            name_to_save=name_to_save + str(feature),
-        )
-        model.val(
-            model, test_dataloader, device, name_to_save=name_to_save + str(feature)
-        )
 
 
 if __name__ == "__main__":
