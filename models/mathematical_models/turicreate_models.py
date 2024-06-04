@@ -179,7 +179,7 @@ def run_math_models(poly_paths: list, seebeck_path: str, features: list) -> None
     return (best_result_r2, mae_for_best_r2, best_model, dataset)
 
 
-def main():
+def main(just_mp: bool = False):
     with open("/root/projects/ml-selection/configs/config.yaml", "r") as yamlfile:
         yaml_f = yaml.load(yamlfile, Loader=yaml.FullLoader)
         raw_mpds = yaml_f["raw_mpds"]
@@ -193,12 +193,19 @@ def main():
     ) = get_poly_info()
 
     # change json on parquet
-    for i in range(len(poly_path)):
-        poly_path[i] = poly_path[i].replace('.json', '.parquet')
+    if not just_mp:
+        for i in range(len(poly_path)):
+            poly_path[i] = poly_path[i].replace('.json', '.parquet')
+    else:
+        for i in range(len(poly_path)):
+            poly_path[i] = poly_path[i].replace('.json', '_mp.parquet')
 
     for f in [poly_features, poly_temperature_features]:
-        run_math_models(poly_path, raw_mpds + 'median_seebeck.parquet', f)
+        if not just_mp:
+            run_math_models(poly_path, raw_mpds + 'median_seebeck.parquet', f)
+        else:
+            run_math_models(poly_path, raw_mpds + 'mp_seebeck.parquet', f)
 
 
 if __name__ == "__main__":
-    main()
+    main(just_mp=True)
