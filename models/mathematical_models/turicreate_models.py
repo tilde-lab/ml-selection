@@ -5,12 +5,15 @@ Any of the below regression models can be used for predicting Seebeck Coefficien
 import pandas as pd
 import polars as pl
 import torch
+import yaml
 import turicreate as tc
 from torcheval.metrics import R2Score
 from torchmetrics import MeanAbsoluteError, MeanAbsolutePercentageError
 from turicreate import SFrame
 from sklearn.metrics import explained_variance_score
 from data_massage.metrics.statistic_metrics import theils_u
+from data.poly_store import get_poly_info
+
 
 mae = MeanAbsoluteError()
 metric = R2Score()
@@ -176,23 +179,26 @@ def run_math_models(poly_paths: list, seebeck_path: str, features: list) -> None
     return (best_result_r2, mae_for_best_r2, best_model, dataset)
 
 
+def main():
+    with open("/root/projects/ml-selection/configs/config.yaml", "r") as yamlfile:
+        yaml_f = yaml.load(yamlfile, Loader=yaml.FullLoader)
+        raw_mpds = yaml_f["raw_mpds"]
+
+    (
+        poly_dir_path,
+        poly_path,
+        poly_just_graph_models,
+        poly_features,
+        poly_temperature_features,
+    ) = get_poly_info()
+
+    # change json on parquet
+    for i in range(len(poly_path)):
+        poly_path[i] = poly_path[i].replace('.json', '.parquet')
+
+    for f in [poly_features, poly_temperature_features]:
+        run_math_models(poly_path, raw_mpds + 'median_seebeck.parquet', f)
+
+
 if __name__ == "__main__":
-    seebeck_path = "/root/projects/ml-selection/data/raw_mpds/median_seebeck.parquet"
-    poly_path = [
-        "/root/projects/ml-selection/data/processed_data/poly/2_features.parquet",
-        "/root/projects/ml-selection/data/processed_data/poly/3_features.parquet",
-        "/root/projects/ml-selection/data/processed_data/poly/poly_vector_of_count.parquet",
-    ]
-
-    features = [
-        ["poly_elements", "poly_type"],
-        ["poly_elements", "poly_vertex", "poly_type"],
-        ["poly_elements", "poly_type"],
-    ]
-    poly_temperature_features = [
-        ["poly_elements", "poly_type", "temperature"],
-        ["poly_elements", "poly_vertex", "poly_type", "temperature"],
-        ["poly_elements", "poly_type", "temperature"],
-    ]
-
-    run_math_models(poly_path, seebeck_path, poly_temperature_features)
+    main()

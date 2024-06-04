@@ -13,9 +13,9 @@ from models.neural_network_models.GAT import gat_regression_model
 from models.neural_network_models.PointNet import pointnet_model
 from models.neural_network_models.transformer import transformer_reg
 
-from models.mathematical_models.turicreate_models import run_math_models
+# from models.mathematical_models.turicreate_models import run_math_models
 
-with open("/root/projects/ml-selection/configs/config.yaml", "r") as yamlfile:
+with open("/configs/config.yaml", "r") as yamlfile:
     yaml_f = yaml.load(yamlfile, Loader=yaml.FullLoader)
     raw_mpds = yaml_f["raw_mpds"]
 
@@ -34,11 +34,11 @@ total_features = []
 total_features.append(poly_features), total_features.append(poly_temperature_features)
 
 
-def run_net_models(epoch=15, name_to_save_w='31_05'):
-    gcn_regression_model.main(epoch=epoch, name_to_save=name_to_save_w)
-    gat_regression_model.main(epoch=epoch, name_to_save=name_to_save_w)
+def run_net_models(epoch=10, name_to_save_w='test'):
+    # gcn_regression_model.main(epoch=epoch, name_to_save=name_to_save_w)
+    # gat_regression_model.main(epoch=epoch, name_to_save=name_to_save_w)
     transformer_reg.main(epoch=epoch, name_to_save=name_to_save_w)
-    pointnet_model.main(epoch=epoch, name_to_save=name_to_save_w)
+    # pointnet_model.main(epoch=epoch, name_to_save=name_to_save_w)
 
 
 def run_hypp_search_net_models(with_except=True) -> list:
@@ -177,7 +177,7 @@ def run_hypp_search_net_models(with_except=True) -> list:
     return [total_res_gcn, total_res_gat, total_res_transf, total_res_point_n]
 
 
-def main():
+def main_hypp():
     """
     Run hyperparameter search for math and network models on PolyDataset and PointCloudDataset
     """
