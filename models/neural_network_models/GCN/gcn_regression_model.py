@@ -23,6 +23,7 @@ with open("/root/projects/ml-selection/configs/config.yaml", "r") as yamlfile:
     yaml_f = yaml.load(yamlfile, Loader=yaml.FullLoader)
     path_sc = yaml_f["scaler_path"]
 
+
 class GCN(torch.nn.Module):
     """Graph Convolutional Network"""
 
@@ -124,8 +125,8 @@ class GCN(torch.nn.Module):
                 mae.update(pred, y)
                 r2.update(pred, y)
 
-        mae_result = mae.compute()
-        r2_res = r2.compute()
+        mae_result = mae.compute().item()
+        r2_res = r2.compute().item()
         evs = explained_variance_score(preds, y_true)
         theils_u_res = theils_u(preds, y_true)
 
@@ -152,9 +153,9 @@ class GCN(torch.nn.Module):
         return r2_res, mae_result
 
 
-def main(epoch=5, device="cpu", name_to_save="w_gcn", batch_size=2):
+def main(epoch=5, device="cpu", name_to_save="w_gcn", batch_size=2, just_mp=False):
     def get_ds(path, f, temperature):
-        dataset = PolyGraphDataset(path, f, temperature)
+        dataset = PolyGraphDataset(path, f, temperature, just_mp)
         train_size = int(0.9 * len(dataset))
         test_size = len(dataset) - train_size
 
@@ -173,10 +174,14 @@ def main(epoch=5, device="cpu", name_to_save="w_gcn", batch_size=2):
     (
         poly_dir_path,
         poly_path,
-        poly_just_graph_models,
+        _,
         poly_features,
         poly_temperature_features,
     ) = get_poly_info()
+
+    if just_mp:
+        for i in range(len(poly_path)):
+            poly_path[i] = poly_path[i].replace('.json', '_mp.json')
 
     total_features = []
     (

@@ -11,7 +11,7 @@ class PolyGraphDataset(Dataset):
     """
 
     def __init__(
-        self, poly_path, features_type: int = 3, add_temperature: bool = False
+        self, poly_path, features_type: int = 3, add_temperature: bool = False, just_mp: bool = False
     ):
         """
         Parameters
@@ -30,9 +30,14 @@ class PolyGraphDataset(Dataset):
         poly = pl.read_json(poly_path)
         self.poly = poly.with_columns(pl.col("phase_id").cast(pl.Int64))
         self.temperature = add_temperature
-        self.seebeck = pl.read_json(
-            "/root/projects/ml-selection/data/raw_mpds/median_seebeck.json"
-        )
+        if just_mp:
+            self.seebeck = pl.read_json(
+                "/root/projects/ml-selection/data/raw_mpds/mp_seebeck.json"
+            )
+        else:
+            self.seebeck = pl.read_json(
+                "/root/projects/ml-selection/data/raw_mpds/median_seebeck.json"
+            )
         data = make_normalization(self.seebeck.join(self.poly, on="phase_id", how="inner"))
         self.data = [list(data.row(i)) for i in range(len(data))]
 

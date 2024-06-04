@@ -148,9 +148,7 @@ class TransformerModel(nn.Module):
 
     def val(self, model, test_data: Subset, name_to_save="tran_w", temperature=True) -> None:
         """Test model"""
-
-        model.eval()
-        r2.reset(), mae.reset()
+        (model.eval(), r2.reset(), mae.reset())
 
         preds, y_s = [], []
         with open(f'{path_sc}scalerSeebeck coefficient.pkl', 'rb') as f:
@@ -227,18 +225,24 @@ class TransformerModel(nn.Module):
 
         torch.save(
             model.state_dict(),
-            f"/root/projects/ml-selection/models/neural_network_models/transformer/weights/{name_to_save}_{temperature}.pth",
+            f"/root/projects/ml-selection/models/neural_network_models/transformer"
+            f"/weights/{name_to_save}_{temperature}.pth",
         )
 
         return r2_res, mae_result
 
 
-def main(epoch=5, name_to_save="tran_w"):
+def main(epoch=5, name_to_save="tran_w", just_mp=False):
     def get_ds(poly_path, temperature):
         poly = pl.read_json(poly_path)
-        seebeck = pl.read_json(
-            "/root/projects/ml-selection/data/raw_mpds/median_seebeck.json"
-        )
+        if just_mp:
+            seebeck = pl.read_json(
+                "/root/projects/ml-selection/data/raw_mpds/mp_seebeck.json"
+            )
+        else:
+            seebeck = pl.read_json(
+                "/root/projects/ml-selection/data/raw_mpds/median_seebeck.json"
+            )
         poly = poly.with_columns(pl.col("phase_id").cast(pl.Int64))
         dataset = make_normalization(seebeck.join(poly, on="phase_id", how="inner").drop(
             ["phase_id", "Formula"]
@@ -259,10 +263,14 @@ def main(epoch=5, name_to_save="tran_w"):
     (
         poly_dir_path,
         poly_path,
-        poly_just_graph_models,
+        _,
         poly_features,
         poly_temperature_features,
     ) = get_poly_info()
+
+    if just_mp:
+        for i in range(len(poly_path)):
+            poly_path[i] = poly_path[i].replace('.json', '_mp.json')
 
     total_features = []
     (
@@ -285,7 +293,8 @@ def main(epoch=5, name_to_save="tran_w"):
             try:
                 model.load_state_dict(
                     torch.load(
-                        f"/root/projects/ml-selection/models/neural_network_models/Transformer/weights/{name_to_save}_{len(features[idx])}_{temperature}.pth"
+                        f"/root/projects/ml-selection/models/neural_network_models/transformer"
+                        f"/weights/{name_to_save}_{len(features[idx])}_{temperature}.pth"
                     )
                 )
             except:
@@ -307,4 +316,4 @@ def main(epoch=5, name_to_save="tran_w"):
 
 
 if __name__ == "__main__":
-    main(epoch=1, name_to_save='01_06')
+    main(epoch=1, name_to_save='04_06', just_mp=True)

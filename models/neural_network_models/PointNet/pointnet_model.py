@@ -140,11 +140,11 @@ def val(model, test_loader, name_to_save: str = 'w_pn', f='3'):
     return r2_res, mae_result
 
 
-def main(epoch: int = 20, batch_size: int = 2, name_to_save='w_pn'):
+def main(epoch: int = 20, batch_size: int = 2, name_to_save='w_pn', just_mp=False):
     features = [3, 4]
 
     for f in features:
-        dataset = PointCloudDataset(features=f)
+        dataset = PointCloudDataset(features=f, just_mp=just_mp)
 
         train_size = int(0.9 * len(dataset))
         test_size = len(dataset) - train_size
@@ -163,7 +163,8 @@ def main(epoch: int = 20, batch_size: int = 2, name_to_save='w_pn'):
         try:
             model.load_state_dict(
                 torch.load(
-                    f"/root/projects/ml-selection/models/neural_network_models/PointNet/weights/{name_to_save}_{f}.pth"
+                    f"/root/projects/ml-selection/models/neural_network_models"
+                    f"/PointNet/weights/{name_to_save}_{f}.pth"
                 )
             )
         except:
@@ -174,4 +175,4 @@ def main(epoch: int = 20, batch_size: int = 2, name_to_save='w_pn'):
 
 
 if __name__ == "__main__":
-    main(name_to_save='31_05')
+    main(name_to_save='31_05', just_mp=True)

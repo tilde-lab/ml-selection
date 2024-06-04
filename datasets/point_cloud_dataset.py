@@ -9,14 +9,22 @@ from data.mendeleev_table import get_periodic_number
 class PointCloudDataset(Dataset):
     """Dataset for PointNetwork"""
 
-    def __init__(self, features: int):
+    def __init__(self, features: int, just_mp=False):
         super().__init__()
-        struct = pl.read_json(
-            "/root/projects/ml-selection/data/raw_mpds/rep_structures.json"
-        )
-        self.seeb = pl.read_json(
-            "/root/projects/ml-selection/data/raw_mpds/median_seebeck.json"
-        )
+        if not just_mp:
+            struct = pl.read_json(
+                "/root/projects/ml-selection/data/raw_mpds/rep_structures.json"
+            )
+            self.seeb = pl.read_json(
+                "/root/projects/ml-selection/data/raw_mpds/median_seebeck.json"
+            )
+        else:
+            struct = pl.read_json(
+                "/root/projects/ml-selection/data/raw_mpds/mp_structures.json"
+            )
+            self.seeb = pl.read_json(
+                "/root/projects/ml-selection/data/raw_mpds/mp_seebeck.json"
+            )
         self.struct = struct.with_columns(pl.col("phase_id").cast(pl.Int64))
         data = self.struct.join(self.seeb, on="phase_id", how="inner")
         self.data = [list(data.row(i)) for i in range(len(data))]

@@ -14,7 +14,7 @@ from models.neural_network_models.PointNet import pointnet_model
 from models.neural_network_models.transformer import transformer_reg
 
 
-with open("/configs/config.yaml", "r") as yamlfile:
+with open("/root/projects/ml-selection/configs/config.yaml", "r") as yamlfile:
     yaml_f = yaml.load(yamlfile, Loader=yaml.FullLoader)
     raw_mpds = yaml_f["raw_mpds"]
 
@@ -33,11 +33,11 @@ total_features = []
 total_features.append(poly_features), total_features.append(poly_temperature_features)
 
 
-def run_net_models(epoch=10, name_to_save_w='test'):
-    gcn_regression_model.main(epoch=epoch, name_to_save=name_to_save_w)
-    gat_regression_model.main(epoch=epoch, name_to_save=name_to_save_w)
-    transformer_reg.main(epoch=epoch, name_to_save=name_to_save_w)
-    pointnet_model.main(epoch=epoch, name_to_save=name_to_save_w)
+def run_net_models(epoch=10, name_to_save_w='test', just_mp=False):
+    transformer_reg.main(epoch=epoch, name_to_save=name_to_save_w, just_mp=just_mp)
+    gcn_regression_model.main(epoch=epoch, name_to_save=name_to_save_w, just_mp=just_mp)
+    gat_regression_model.main(epoch=epoch, name_to_save=name_to_save_w, just_mp=just_mp)
+    pointnet_model.main(epoch=epoch, name_to_save=name_to_save_w, just_mp=just_mp)
 
 
 def run_hypp_search_net_models(with_except=True) -> list:
@@ -203,4 +203,4 @@ def main_hypp():
 
 
 if __name__ == "__main__":
-    run_net_models()
+    run_net_models(name_to_save_w='04_06', just_mp=True)

@@ -120,7 +120,8 @@ class GAT(torch.nn.Module):
             if epoch % 5 == 0:
                 torch.save(
                     model.state_dict(),
-                    f"/root/projects/ml-selection/models/neural_network_models/GAT/weights/{name_to_save}_{features}.pth",
+                    f"/root/projects/ml-selection/models/neural_network_models/GAT/weights/"
+                    f"{name_to_save}_{features}.pth",
                 )
 
     def val(
@@ -168,15 +169,16 @@ class GAT(torch.nn.Module):
         )
         torch.save(
             model.state_dict(),
-            f"/root/projects/ml-selection/models/neural_network_models/GAT/weights/{name_to_save}_{features}_{t}.pth",
+            f"/root/projects/ml-selection/models/neural_network_models/GAT/"
+            f"weights/{name_to_save}_{features}_{t}.pth",
         )
 
         return r2_res, mae_result
 
 
-def main(epoch=5, device="cpu", name_to_save="w_gat", batch_size=2):
+def main(epoch=5, device="cpu", name_to_save="w_gat", batch_size=2, just_mp=False):
     def get_ds(path, f, temperature):
-        dataset = PolyGraphDataset(path, f, temperature)
+        dataset = PolyGraphDataset(path, f, temperature, just_mp)
         train_size = int(0.9 * len(dataset))
         test_size = len(dataset) - train_size
 
@@ -200,6 +202,10 @@ def main(epoch=5, device="cpu", name_to_save="w_gat", batch_size=2):
         poly_temperature_features,
     ) = get_poly_info()
 
+    if just_mp:
+        for i in range(len(poly_path)):
+            poly_path[i] = poly_path[i].replace('.json', '_mp.json')
+
     total_features = []
     (
         total_features.append(poly_features),
@@ -217,13 +223,14 @@ def main(epoch=5, device="cpu", name_to_save="w_gat", batch_size=2):
             )
 
             device = torch.device(device)
-            model = GAT(len(features[idx]), 16, 32, "elu").to(device)
+            model = GAT(len(features[idx]), 16, 32, "tanh").to(device)
             optimizer = torch.optim.Adam(model.parameters(), lr=0.008598391737229157, weight_decay=5e-4)
 
             try:
                 model.load_state_dict(
                     torch.load(
-                        f"/root/projects/ml-selection/models/neural_network_models/GAT/weights/{name_to_save}_{len(features[idx])}_{temperature}.pth"
+                        f"/root/projects/ml-selection/models/neural_network_models/GAT/"
+                        f"weights/{name_to_save}_{len(features[idx])}_{temperature}.pth"
                     )
                 )
             except:
@@ -240,6 +247,7 @@ def main(epoch=5, device="cpu", name_to_save="w_gat", batch_size=2):
             )
             model.val(model, test_dataloader, device, features, name_to_save=name_to_save + str(len(features[idx]))
                       )
+
 
 if __name__ == "__main__":
     main(epoch=1, name_to_save="31_05")
