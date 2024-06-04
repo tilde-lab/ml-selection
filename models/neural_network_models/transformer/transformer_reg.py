@@ -5,7 +5,6 @@ Transformer made from encoder (without decoder). Uses token-vector to represent 
 Tensor of tokens is fed to fully connected layer. Next, loss is calculated as in standard models.
 """
 from data_massage.normalization.normalization import make_normalization
-import numpy as np
 import polars as pl
 import torch
 import torch.nn as nn

@@ -7,9 +7,6 @@ from torcheval.metrics import R2Score
 from torchmetrics import MeanAbsoluteError, MeanAbsolutePercentageError
 from sklearn.metrics import explained_variance_score
 from data_massage.metrics.statistic_metrics import theils_u
-import pickle
-import yaml
-import numpy as np
 
 from datasets.point_cloud_dataset import PointCloudDataset
 
@@ -17,9 +14,6 @@ r2 = R2Score()
 mae = MeanAbsoluteError()
 mape = MeanAbsolutePercentageError()
 
-with open("/root/projects/ml-selection/configs/config.yaml", "r") as yamlfile:
-    yaml_f = yaml.load(yamlfile, Loader=yaml.FullLoader)
-    path_sc = yaml_f["scaler_path"]
 
 class PointNetLayer(MessagePassing):
     """PointNet encoder"""
@@ -105,8 +99,6 @@ def train(model, ep, train_loader, optimizer):
 def val(model, test_loader, name_to_save: str = 'w_pn', f='3'):
     model.eval(), r2.reset(), mae.reset()
 
-    with open(f'{path_sc}scalerSeebeck coefficient.pkl', 'rb') as f:
-        scaler = pickle.load(f)
 
     preds = None
     with torch.no_grad():
@@ -128,7 +120,7 @@ def val(model, test_loader, name_to_save: str = 'w_pn', f='3'):
 
         torch.save(
             model.state_dict(),
-            f"/root/projects/ml-selection/models/neural_network_models/PointNet/weights/{name_to_save}_{r2_res}.pth",
+            f"/root/projects/ml-selection/models/neural_network_models/PointNet/weights/{name_to_save}_{f}.pth",
         )
 
         print(

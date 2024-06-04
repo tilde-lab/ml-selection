@@ -101,7 +101,8 @@ class GCN(torch.nn.Module):
         model,
         test_dataloader: DataLoader,
         device: torch.device,
-        name_to_save="gcn_w",
+        name_to_save: str = "gcn_w",
+        t: bool = True,
     ) -> torch.Tensor:
         """Test model"""
         (model.eval(), r2.reset(), mae.reset())
@@ -145,7 +146,7 @@ class GCN(torch.nn.Module):
 
         torch.save(
             model.state_dict(),
-            f"/root/projects/ml-selection/models/neural_network_models/GCN/weights/{name_to_save}.pth",
+            f"/root/projects/ml-selection/models/neural_network_models/GCN/weights/{name_to_save}_{t}.pth",
         )
 
         return r2_res, mae_result
@@ -198,7 +199,7 @@ def main(epoch=5, device="cpu", name_to_save="w_gcn", batch_size=2):
             try:
                 model.load_state_dict(
                     torch.load(
-                        f"/root/projects/ml-selection/models/neural_network_models/GCN/weights/{name_to_save}_{len(features[idx])}.pth"
+                        f"/root/projects/ml-selection/models/neural_network_models/GCN/weights/{name_to_save}_{len(features[idx])}_{t}.pth"
                     )
                 )
             except:
@@ -217,6 +218,7 @@ def main(epoch=5, device="cpu", name_to_save="w_gcn", batch_size=2):
                 test_dataloader,
                 device,
                 name_to_save=name_to_save + str(len(features[idx])),
+                t=temperature
             )
 
     for k, features in enumerate(total_features):
@@ -233,7 +235,7 @@ def main(epoch=5, device="cpu", name_to_save="w_gcn", batch_size=2):
         try:
             model.load_state_dict(
                 torch.load(
-                    f"/root/projects/ml-selection/models/neural_network_models/GCN/weights/{name_to_save}_{features}.pth"
+                    f"/root/projects/ml-selection/models/neural_network_models/GCN/weights/{name_to_save}_{features}_{t}.pth"
                 )
             )
         except:

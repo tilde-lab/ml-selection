@@ -117,14 +117,15 @@ class GAT(torch.nn.Module):
             print(
                 f"--------Mean loss for epoch {epoch} is {mean_loss / cnt}--------"
             )
-            if epoch % 5:
+            if epoch % 5 == 0:
                 torch.save(
                     model.state_dict(),
                     f"/root/projects/ml-selection/models/neural_network_models/GAT/weights/{name_to_save}_{features}.pth",
                 )
 
     def val(
-        self, model, test_dataloader: DataLoader, device: torch.device, features=1, name_to_save='gat_w'
+        self, model, test_dataloader: DataLoader, device: torch.device,
+            features=1, name_to_save='gat_w', t=True
     ) -> torch.Tensor:
         """Test model"""
         (model.eval(), r2.reset(), mae.reset())
@@ -167,7 +168,7 @@ class GAT(torch.nn.Module):
         )
         torch.save(
             model.state_dict(),
-            f"/root/projects/ml-selection/models/neural_network_models/GAT/weights/{name_to_save}_{features}.pth",
+            f"/root/projects/ml-selection/models/neural_network_models/GAT/weights/{name_to_save}_{features}_{t}.pth",
         )
 
         return r2_res, mae_result
@@ -222,7 +223,7 @@ def main(epoch=5, device="cpu", name_to_save="w_gat", batch_size=2):
             try:
                 model.load_state_dict(
                     torch.load(
-                        f"/root/projects/ml-selection/models/neural_network_models/GAT/weights/{name_to_save}_{len(features[idx])}.pth"
+                        f"/root/projects/ml-selection/models/neural_network_models/GAT/weights/{name_to_save}_{len(features[idx])}_{temperature}.pth"
                     )
                 )
             except:
@@ -257,7 +258,7 @@ def main(epoch=5, device="cpu", name_to_save="w_gat", batch_size=2):
         try:
             model.load_state_dict(
                 torch.load(
-                    f"/root/projects/ml-selection/models/neural_network_models/GAT/weights/{name_to_save}_{features}.pth"
+                    f"/root/projects/ml-selection/models/neural_network_models/GAT/weights/{name_to_save}_{features}_{temperature}.pth"
                 )
             )
         except:

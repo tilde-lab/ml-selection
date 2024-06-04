@@ -69,7 +69,7 @@ def get_structures_and_seebeck(
     else:
         phase_id_mp = phase_id_mp.select(['Phase', 'Formula', 'Seebeck coefficient'])
         phases = list(set(phase_id_mp['Phase']))
-        median_seebeck = seebeck_median_value(phase_id_mp, phases)
+        median_seebeck = phase_id_mp
         file_path = path_to_save + "mp_seebeck.json"
         median_seebeck.write_json(file_path)
 
@@ -152,7 +152,7 @@ def main():
         handler,
         is_uniq_structure_for_phase,
         path_to_save=raw_path,
-        just_mp=True
+        just_mp=False
     )
     run_processing_polyhedra.main(True)
 

@@ -7,9 +7,9 @@ on all types of polyhedra descriptors and PointCloudDataset (just for PointNet).
 The best configurations for each model with a specific type of polyhedra dataset are printed.
 """
 
-from scripts.hyp_search.run_all_models import main as run_models
+from scripts.run_net_models import main as run_net_models
 from data_massage.collector import main as run_collection
 
 if __name__ == "__main__":
     run_collection()
-    run_models()
+    run_net_models()
