@@ -62,7 +62,7 @@ class RequestMP:
             print(f'Successfully saved!')
             return eval(cont_in_dict)
 
-    def request_space_group(self, ids, step=120) -> pl.DataFrame:
+    def request_space_group(self, ids: list, step: int = 120, save: bool = True) -> pl.DataFrame:
         """
         Request symmetry by material_id. Retrieves number of spacy group
 
@@ -89,8 +89,24 @@ class RequestMP:
                 answer = client.summary.search(material_ids=batch, fields=['material_id', 'symmetry'])
                 [(ans_ids.append(str(i.material_id)), ans_sg.append(i.symmetry.number)) for i in answer]
             dfrm = pl.DataFrame({'identifier': ans_ids, 'symmetry': ans_sg}, schema=['identifier', 'symmetry'])
-            dfrm.write_json(self.mp_path + 'space_group_mp.json')
+            if save:
+                dfrm.write_json(self.mp_path + 'space_group_mp.json')
             return dfrm
+
+    def request_all_data(self) -> None:
+        """
+        Request all available mp-ids, symmetry, chemical formulas.
+        Save in json format
+        """
+        client = MPRester(self.api_key)
+        ans_ids, ans_formula, ans_sg = [], [], []
+        answer = client.summary.search(fields=['material_id', 'formula_pretty', 'symmetry'])
+        [(ans_ids.append(str(i.material_id)), ans_formula.append(i.formula_pretty), ans_sg.append(str(i.symmetry.number))) for i in answer]
+        dfrm = pl.DataFrame(
+            {'identifier': ans_ids, 'formula': ans_formula, 'symmetry': ans_sg},
+            schema=['identifier', 'formula', 'symmetry']
+        )
+        dfrm.write_json(self.mp_path + 'all_id_mp.json')
 
     def run_requests(self, step: int = 120) -> pl.DataFrame:
         """
@@ -117,7 +133,7 @@ class RequestMP:
 
 if __name__ == "__main__":
     path = '/root/projects/ml-selection/configs/config.yaml'
-    dfrm = RequestMP(path).run_requests()
+    dfrm = RequestMP(path).request_all_data()
 
 
 
