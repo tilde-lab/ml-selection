@@ -13,8 +13,9 @@ from models.neural_network_models.GAT import gat_regression_model
 from models.neural_network_models.PointNet import pointnet_model
 from models.neural_network_models.transformer import transformer_reg
 
+CONF = "/root/projects/ml-selection/configs/config.yaml"
 
-with open("/root/projects/ml-selection/configs/config.yaml", "r") as yamlfile:
+with open(CONF, "r") as yamlfile:
     yaml_f = yaml.load(yamlfile, Loader=yaml.FullLoader)
     raw_mpds = yaml_f["raw_mpds"]
 
@@ -33,10 +34,14 @@ total_features = []
 total_features.append(poly_features), total_features.append(poly_temperature_features)
 
 
-def run_net_models(epoch=10, name_to_save_w='test', just_mp=False):
+def run_net_models(epoch: int, name_to_save_w: str, just_mp: bool = False):
+    print('START TRANSFORMER')
     transformer_reg.main(epoch=epoch, name_to_save=name_to_save_w, just_mp=just_mp)
+    print('START GCN')
     gcn_regression_model.main(epoch=epoch, name_to_save=name_to_save_w, just_mp=just_mp)
+    print('START GAT')
     gat_regression_model.main(epoch=epoch, name_to_save=name_to_save_w, just_mp=just_mp)
+    print('START PONIT NET')
     pointnet_model.main(epoch=epoch, name_to_save=name_to_save_w, just_mp=just_mp)
 
 
@@ -203,4 +208,4 @@ def main_hypp():
 
 
 if __name__ == "__main__":
-    run_net_models(name_to_save_w='04_06', just_mp=True)
+    run_net_models(epoch=10, name_to_save_w='04_06', just_mp=True)
