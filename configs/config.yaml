@@ -1,3 +1,10 @@
-api_key: KEY_FROM_MPDS
-structure_path: /root/projects/ml-selection/data/processed_data/rep_str.csv
-seebeck_path: /root/projects/ml-selection/data/processed_data/rep_seebeck.csv
+api_key: KEY_MPDS
+api_mp: KEY_MATERIALS_PROJECT
+mp_path: ./data/mp_database/
+mpds_path: ./data/
+processed_path: ./data/processed_data/
+raw_mpds: ./data/raw_mpds/
+raw_polyhedra_path: ./data/raw_mpds/aets.csv
+polyhedra_path: ./data/processed_data/poly/
+scaler_path: ./data_massage/normalization/scalers/
+weights: ./models/weights/
