@@ -2,8 +2,12 @@ import polars as pl
 import torch
 from torch.utils.data import Dataset
 from torch_geometric.data import Data
+import yaml
 
 from data.mendeleev_table import get_periodic_number
+
+
+CONF = "/root/projects/ml-selection/configs/config.yaml"
 
 
 class PointCloudDataset(Dataset):
@@ -11,20 +15,15 @@ class PointCloudDataset(Dataset):
 
     def __init__(self, features: int, just_mp=False):
         super().__init__()
+        with open(CONF, "r") as yamlfile:
+            yaml_f = yaml.load(yamlfile, Loader=yaml.FullLoader)
+            path_mpds = yaml_f["raw_mpds"]
         if not just_mp:
-            struct = pl.read_json(
-                "/root/projects/ml-selection/data/raw_mpds/rep_structures.json"
-            )
-            self.seeb = pl.read_json(
-                "/root/projects/ml-selection/data/raw_mpds/median_seebeck.json"
-            )
+            struct = pl.read_json(f"{path_mpds}rep_structures.json")
+            self.seeb = pl.read_json(f"{path_mpds}median_seebeck.json")
         else:
-            struct = pl.read_json(
-                "/root/projects/ml-selection/data/raw_mpds/mp_structures.json"
-            )
-            self.seeb = pl.read_json(
-                "/root/projects/ml-selection/data/raw_mpds/mp_seebeck.json"
-            )
+            struct = pl.read_json(f"{path_mpds}mp_structures.json")
+            self.seeb = pl.read_json(f"{path_mpds}mp_seebeck.json")
         self.struct = struct.with_columns(pl.col("phase_id").cast(pl.Int64))
         data = self.struct.join(self.seeb, on="phase_id", how="inner")
         self.data = [list(data.row(i)) for i in range(len(data))]

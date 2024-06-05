@@ -7,8 +7,16 @@ from torcheval.metrics import R2Score
 from torchmetrics import MeanAbsoluteError, MeanAbsolutePercentageError
 from sklearn.metrics import explained_variance_score
 from data_massage.metrics.statistic_metrics import theils_u
+import yaml
 
 from datasets.point_cloud_dataset import PointCloudDataset
+
+
+CONF = "/root/projects/ml-selection/configs/config.yaml"
+
+with open(CONF, "r") as yamlfile:
+    yaml_f = yaml.load(yamlfile, Loader=yaml.FullLoader)
+    WEIGHTS_DIR = yaml_f["weights"]
 
 r2 = R2Score()
 mae = MeanAbsoluteError()
@@ -96,7 +104,7 @@ def train(model, ep, train_loader, optimizer):
     return total_loss / len(train_loader.dataset)
 
 
-def val(model, test_loader, name_to_save: str = 'w_pn', f='3'):
+def val(model, test_loader, save_dir):
     model.eval(), r2.reset(), mae.reset()
 
 
@@ -118,10 +126,7 @@ def val(model, test_loader, name_to_save: str = 'w_pn', f='3'):
         evs = explained_variance_score(preds, y_true)
         theils_u_res = theils_u(preds, y_true)
 
-        torch.save(
-            model.state_dict(),
-            f"/root/projects/ml-selection/models/neural_network_models/PointNet/weights/{name_to_save}_{f}.pth",
-        )
+        torch.save(model.state_dict(), save_dir)
 
         print(
             "R2: ",
@@ -140,10 +145,14 @@ def val(model, test_loader, name_to_save: str = 'w_pn', f='3'):
     return r2_res, mae_result
 
 
-def main(epoch: int = 20, batch_size: int = 2, name_to_save='w_pn', just_mp=False):
+def main(epoch: int = 20, batch_size: int = 2, name_to_save='w_pn', just_mp: bool = False):
     features = [3, 4]
 
     for f in features:
+        path_to_w = (
+                WEIGHTS_DIR
+                + f"pointnet_{name_to_save}_{f}.pth"
+        )
         dataset = PointCloudDataset(features=f, just_mp=just_mp)
 
         train_size = int(0.9 * len(dataset))
@@ -161,17 +170,13 @@ def main(epoch: int = 20, batch_size: int = 2, name_to_save='w_pn', just_mp=Fals
         optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
         try:
-            model.load_state_dict(
-                torch.load(
-                    f"/root/projects/ml-selection/models/neural_network_models"
-                    f"/PointNet/weights/{name_to_save}_{f}.pth"
-                )
-            )
+            model.load_state_dict(torch.load(path_to_w))
+            print('Successfully loaded pretrained weights to PointNet')
         except:
-            pass
+            print('No pretrained weights found for PointNet')
 
         _ = train(model, epoch, train_loader, optimizer)
-        _ = val(model, test_loader, name_to_save=name_to_save, f=str(f))
+        _ = val(model, test_loader, save_dir=path_to_w)
 
 
 if __name__ == "__main__":

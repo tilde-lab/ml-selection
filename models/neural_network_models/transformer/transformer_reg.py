@@ -23,9 +23,13 @@ from data.poly_store import get_poly_info
 from data_massage.metrics.statistic_metrics import theils_u
 
 
-with open("/root/projects/ml-selection/configs/config.yaml", "r") as yamlfile:
+CONF = "/root/projects/ml-selection/configs/config.yaml"
+
+with open(CONF, "r") as yamlfile:
     yaml_f = yaml.load(yamlfile, Loader=yaml.FullLoader)
-    path_sc = yaml_f["scaler_path"]
+    PATH_SC = yaml_f["scaler_path"]
+    WEIGHTS_DIR = yaml_f["weights"]
+    path_seebeck = yaml_f["raw_mpds"]
 
 r2 = R2Score()
 mae = MeanAbsoluteError()
@@ -92,7 +96,7 @@ class TransformerModel(nn.Module):
         return x
 
     def fit(
-        self, model, optimizer, ep, train_data: Subset, name_to_save="tran_w"
+        self, model, optimizer, ep, train_data: Subset
     ) -> None:
         """Train model"""
         model.train()
@@ -146,13 +150,13 @@ class TransformerModel(nn.Module):
 
             print(f"--------Mean loss for epoch {epoch} is {mean_loss / cnt}--------")
 
-    def val(self, model, test_data: Subset, f: int = 0, name_to_save="tran_w", temperature=True,) -> None:
+    def val(self, model, test_data: Subset, save_dir):
         """Test model"""
         (model.eval(), r2.reset(), mae.reset())
 
         preds, y_s = [], []
-        with open(f'{path_sc}scalerSeebeck coefficient.pkl', 'rb') as f:
-            scaler = pickle.load(f)
+        with open(f'{PATH_SC}scalerSeebeck coefficient.pkl', 'rb') as file:
+            scaler = pickle.load(file)
 
         with torch.no_grad():
             if self.n_feature == 2:
@@ -223,12 +227,7 @@ class TransformerModel(nn.Module):
             max(preds),
         )
 
-        torch.save(
-            model.state_dict(),
-            f"/root/projects/ml-selection/models/neural_network_models/transformer"
-            f"/weights/{name_to_save}_{f}_{temperature}.pth",
-        )
-        print(f'Weights saved with name: {name_to_save}_{f}_{temperature}.pth')
+        torch.save(model.state_dict(), save_dir)
 
         return r2_res, mae_result
 
@@ -237,13 +236,9 @@ def main(epoch=5, name_to_save="tran_w", just_mp=False):
     def get_ds(poly_path, temperature):
         poly = pl.read_json(poly_path)
         if just_mp:
-            seebeck = pl.read_json(
-                "/root/projects/ml-selection/data/raw_mpds/mp_seebeck.json"
-            )
+            seebeck = pl.read_json(f"{path_seebeck}mp_seebeck.json")
         else:
-            seebeck = pl.read_json(
-                "/root/projects/ml-selection/data/raw_mpds/median_seebeck.json"
-            )
+            seebeck = pl.read_json(f"{path_seebeck}median_seebeck.json")
         poly = poly.with_columns(pl.col("phase_id").cast(pl.Int64))
         dataset = make_normalization(seebeck.join(poly, on="phase_id", how="inner").drop(
             ["phase_id", "Formula"]
@@ -285,6 +280,10 @@ def main(epoch=5, name_to_save="tran_w", just_mp=False):
         else:
             temperature = False
         for idx, path in enumerate(poly_path):
+            path_to_w = (
+                    WEIGHTS_DIR
+                    + f"transform_{name_to_save}_{len(features[idx])}_{temperature}.pth"
+            )
             train_dataloader, test_dataloader = get_ds(path, temperature)
 
             model = TransformerModel(len(features[idx]), len(features[idx]), 32, "tanh")
@@ -292,12 +291,7 @@ def main(epoch=5, name_to_save="tran_w", just_mp=False):
                 model.parameters(), lr=0.0006479739574204421, weight_decay=5e-4
             )
             try:
-                model.load_state_dict(
-                    torch.load(
-                        f"/root/projects/ml-selection/models/neural_network_models/transformer"
-                        f"/weights/{name_to_save}_{len(features[idx])}_{temperature}.pth"
-                    )
-                )
+                model.load_state_dict(torch.load(path_to_w))
                 print('Successfully loaded pretrained weights to Transformer')
             except:
                 print('No pretrained weights found for Transformer')
@@ -306,15 +300,12 @@ def main(epoch=5, name_to_save="tran_w", just_mp=False):
                 model,
                 optimizer,
                 epoch,
-                train_dataloader,
-                name_to_save=name_to_save + str(len(features[idx]))
+                train_dataloader
             )
             model.val(
                 model,
                 test_dataloader,
-                name_to_save=name_to_save + str(len(features[idx])),
-                temperature=temperature,
-                f=len(features[idx])
+                save_dir=path_to_w
             )
 
 

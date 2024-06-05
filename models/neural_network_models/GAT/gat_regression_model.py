@@ -14,9 +14,12 @@ import pickle
 import yaml
 import numpy as np
 
-with open("/root/projects/ml-selection/configs/config.yaml", "r") as yamlfile:
+CONF = "/root/projects/ml-selection/configs/config.yaml"
+
+with open(CONF, "r") as yamlfile:
     yaml_f = yaml.load(yamlfile, Loader=yaml.FullLoader)
-    path_sc = yaml_f["scaler_path"]
+    PATH_SC = yaml_f["scaler_path"]
+    WEIGHTS_DIR = yaml_f["weights"]
 
 r2 = R2Score()
 mae = MeanAbsoluteError()
@@ -80,8 +83,7 @@ class GAT(torch.nn.Module):
         train_dataloader: DataLoader,
         optimizer: torch.optim,
         device: torch.device,
-        features = 1,
-        name_to_save='gat_w'
+        save_dir: str = "./gat.pth",
     ) -> None:
         """
         Train model
@@ -114,31 +116,33 @@ class GAT(torch.nn.Module):
                 mean_loss += loss
                 r2.update(out.reshape(-1), y)
                 mape.update(out.reshape(-1), y)
-            print(
-                f"--------Mean loss for epoch {epoch} is {mean_loss / cnt}--------"
-            )
+            print(f"--------Mean loss for epoch {epoch} is {mean_loss / cnt}--------")
             if epoch % 5 == 0:
-                torch.save(
-                    model.state_dict(),
-                    f"/root/projects/ml-selection/models/neural_network_models/GAT/weights/"
-                    f"{name_to_save}_{features}.pth",
-                )
+                torch.save(model.state_dict(), save_dir)
 
     def val(
-        self, model, test_dataloader: DataLoader, device: torch.device,
-            features=1, name_to_save='gat_w', t=True
+        self,
+        model,
+        test_dataloader: DataLoader,
+        device: torch.device,
+        save_dir="./gat.pth"
     ) -> torch.Tensor:
         """Test model"""
         (model.eval(), r2.reset(), mae.reset())
 
         preds = None
-        with open(f'{path_sc}scalerSeebeck coefficient.pkl', 'rb') as f:
+        with open(f"{PATH_SC}scalerSeebeck coefficient.pkl", "rb") as f:
             scaler = pickle.load(f)
 
         with torch.no_grad():
             for data, y in test_dataloader:
                 pred = model(data.to(device))
-                pred, y = torch.tensor(scaler.inverse_transform(np.array(pred))), torch.tensor(scaler.inverse_transform(np.array(y).reshape(-1, 1)))
+                pred, y = (
+                    torch.tensor(scaler.inverse_transform(np.array(pred.cpu()))),
+                    torch.tensor(
+                        scaler.inverse_transform(np.array(y.cpu()).reshape(-1, 1))
+                    ),
+                )
 
                 if preds != None:
                     preds = torch.cat((preds, pred), dim=0)
@@ -167,11 +171,7 @@ class GAT(torch.nn.Module):
             " to ",
             pred.max(),
         )
-        torch.save(
-            model.state_dict(),
-            f"/root/projects/ml-selection/models/neural_network_models/GAT/"
-            f"weights/{name_to_save}_{features}_{t}.pth",
-        )
+        torch.save(model.state_dict(), save_dir)
 
         return r2_res, mae_result
 
@@ -204,7 +204,7 @@ def main(epoch=5, device="cpu", name_to_save="w_gat", batch_size=2, just_mp=Fals
 
     if just_mp:
         for i in range(len(poly_path)):
-            poly_path[i] = poly_path[i].replace('.json', '_mp.json')
+            poly_path[i] = poly_path[i].replace(".json", "_mp.json")
 
     total_features = []
     (
@@ -218,39 +218,31 @@ def main(epoch=5, device="cpu", name_to_save="w_gat", batch_size=2, just_mp=Fals
         else:
             temperature = False
         for idx, path in enumerate(poly_path):
+            path_to_w = (
+                WEIGHTS_DIR
+                + f"gat_{name_to_save}_{len(features[idx])}_{temperature}.pth"
+            )
             train_dataloader, test_dataloader = get_ds(
                 path, len(features[idx]), temperature
             )
 
             device = torch.device(device)
             model = GAT(len(features[idx]), 16, 32, "tanh").to(device)
-            optimizer = torch.optim.Adam(model.parameters(), lr=0.008598391737229157, weight_decay=5e-4)
+            optimizer = torch.optim.Adam(
+                model.parameters(), lr=0.008598391737229157, weight_decay=5e-4
+            )
 
             try:
-                model.load_state_dict(
-                    torch.load(
-                        f"/root/projects/ml-selection/models/neural_network_models/GAT/"
-                        f"weights/{name_to_save}_{len(features[idx])}_{temperature}.pth"
-                    )
-                )
+                model.load_state_dict(torch.load(path_to_w))
+                print("Successfully loaded pretrained weights to GAT")
             except:
-                pass
+                print("No pretrained weights found for GAT")
 
             model.fit(
-                model,
-                epoch,
-                train_dataloader,
-                optimizer,
-                device,
-                len(features[idx]),
-                name_to_save=name_to_save + str(len(features[idx])),
+                model, epoch, train_dataloader, optimizer, device, save_dir=path_to_w
             )
-            model.val(model, test_dataloader, device, features, name_to_save=name_to_save + str(len(features[idx]))
-                      )
+            model.val(model, test_dataloader, device, save_dir=path_to_w)
 
 
 if __name__ == "__main__":
     main(epoch=1, name_to_save="31_05")
-
-
-

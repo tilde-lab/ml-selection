@@ -19,9 +19,12 @@ r2 = R2Score()
 mae = MeanAbsoluteError()
 mape = MeanAbsolutePercentageError()
 
-with open("/root/projects/ml-selection/configs/config.yaml", "r") as yamlfile:
+CONF = "/root/projects/ml-selection/configs/config.yaml"
+
+with open(CONF, "r") as yamlfile:
     yaml_f = yaml.load(yamlfile, Loader=yaml.FullLoader)
-    path_sc = yaml_f["scaler_path"]
+    PATH_SC = yaml_f["scaler_path"]
+    WEIGHTS_DIR = yaml_f["weights"]
 
 
 class GCN(torch.nn.Module):
@@ -71,7 +74,7 @@ class GCN(torch.nn.Module):
         train_dataloader: DataLoader,
         device: torch.device,
         lr=0.005,
-        name_to_save="gcn_w",
+        save_dir="./gcn.pth"
     ):
         """Train model"""
         optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=5e-4)
@@ -93,29 +96,26 @@ class GCN(torch.nn.Module):
             )
             if epoch % 5 == 0:
                 torch.save(
-                    model.state_dict(),
-                    f"/root/projects/ml-selection/models/neural_network_models/GCN/weights/{name_to_save}.pth",
-                )
+                    model.state_dict(), save_dir)
 
     def val(
         self,
         model,
         test_dataloader: DataLoader,
         device: torch.device,
-        name_to_save: str = "gcn_w",
-        t: bool = True,
+        save_dir="./gcn.pth"
     ) -> torch.Tensor:
         """Test model"""
         (model.eval(), r2.reset(), mae.reset())
 
         preds = None
-        with open(f'{path_sc}scalerSeebeck coefficient.pkl', 'rb') as f:
-            scaler = pickle.load(f)
+        with open(f'{PATH_SC}scalerSeebeck coefficient.pkl', 'rb') as file:
+            scaler = pickle.load(file)
 
         with torch.no_grad():
             for data, y in test_dataloader:
                 pred = model(data.to(device))
-                pred, y = torch.tensor(scaler.inverse_transform(np.array(pred))), torch.tensor(scaler.inverse_transform(np.array(y).reshape(-1, 1)))
+                pred, y = torch.tensor(scaler.inverse_transform(np.array(pred.cpu()))), torch.tensor(scaler.inverse_transform(np.array(y.cpu()).reshape(-1, 1)))
 
                 if preds != None:
                     preds = torch.cat((preds, pred), dim=0)
@@ -125,8 +125,8 @@ class GCN(torch.nn.Module):
                 mae.update(pred, y)
                 r2.update(pred, y)
 
-        mae_result = mae.compute().item()
-        r2_res = r2.compute().item()
+        mae_result = mae.compute()
+        r2_res = r2.compute()
         evs = explained_variance_score(preds, y_true)
         theils_u_res = theils_u(preds, y_true)
 
@@ -145,10 +145,7 @@ class GCN(torch.nn.Module):
             pred.max(),
         )
 
-        torch.save(
-            model.state_dict(),
-            f"/root/projects/ml-selection/models/neural_network_models/GCN/weights/{name_to_save}_{t}.pth",
-        )
+        torch.save(model.state_dict(), save_dir)
 
         return r2_res, mae_result
 
@@ -195,6 +192,10 @@ def main(epoch=5, device="cpu", name_to_save="w_gcn", batch_size=2, just_mp=Fals
         else:
             temperature = False
         for idx, path in enumerate(poly_path):
+            path_to_w = (
+                    WEIGHTS_DIR
+                    + f"gcn_{name_to_save}_{len(features[idx])}_{temperature}.pth"
+            )
             train_dataloader, test_dataloader = get_ds(
                 path, len(features[idx]), temperature
             )
@@ -202,13 +203,10 @@ def main(epoch=5, device="cpu", name_to_save="w_gcn", batch_size=2, just_mp=Fals
             device = torch.device(device)
             model = GCN(len(features[idx]), 16, 32, "tanh").to(device)
             try:
-                model.load_state_dict(
-                    torch.load(
-                        f"/root/projects/ml-selection/models/neural_network_models/GCN/weights/{name_to_save}_{len(features[idx])}_{t}.pth"
-                    )
-                )
+                model.load_state_dict(torch.load(path_to_w))
+                print('Successfully loaded pretrained weights to GCN')
             except:
-                pass
+                print('No pretrained weights found for GCN')
 
             model.fit(
                 model,
@@ -216,14 +214,13 @@ def main(epoch=5, device="cpu", name_to_save="w_gcn", batch_size=2, just_mp=Fals
                 train_dataloader,
                 device,
                 lr=0.008598391737229157,
-                name_to_save=name_to_save + str(len(features[idx])),
+                save_dir=path_to_w
             )
             model.val(
                 model,
                 test_dataloader,
                 device,
-                name_to_save=name_to_save + str(len(features[idx])),
-                t=temperature
+                save_dir=path_to_w
             )
 
 

@@ -3,6 +3,10 @@ import torch
 from torch.utils.data import Dataset
 from torch_geometric.data import Data
 from data_massage.normalization.normalization import make_normalization
+import yaml
+
+
+CONF = "/root/projects/ml-selection/configs/config.yaml"
 
 
 class PolyGraphDataset(Dataset):
@@ -25,21 +29,20 @@ class PolyGraphDataset(Dataset):
             Add temperature to features
         """
         super().__init__()
+        with open(CONF, "r") as yamlfile:
+            yaml_f = yaml.load(yamlfile, Loader=yaml.FullLoader)
+            path_mpds = yaml_f["raw_mpds"]
         self.features_type = features_type
         # now is 3 features
         poly = pl.read_json(poly_path)
         self.poly = poly.with_columns(pl.col("phase_id").cast(pl.Int64))
         self.temperature = add_temperature
         if just_mp:
-            self.seebeck = pl.read_json(
-                "/root/projects/ml-selection/data/raw_mpds/mp_seebeck.json"
-            )
+            self.seebeck = pl.read_json(f"{path_mpds}mp_seebeck.json")
         else:
-            self.seebeck = pl.read_json(
-                "/root/projects/ml-selection/data/raw_mpds/median_seebeck.json"
-            )
+            self.seebeck = pl.read_json(f"{path_mpds}median_seebeck.json")
         data = make_normalization(self.seebeck.join(self.poly, on="phase_id", how="inner"))
-        self.data = [list(data.row(i)) for i in range(len(data))]
+        self.data = [list(data.row(i)) for i in range(len(data))][:40]
 
     def __len__(self):
         """Return num of samples"""
