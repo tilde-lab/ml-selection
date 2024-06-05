@@ -146,7 +146,7 @@ class TransformerModel(nn.Module):
 
             print(f"--------Mean loss for epoch {epoch} is {mean_loss / cnt}--------")
 
-    def val(self, model, test_data: Subset, name_to_save="tran_w", temperature=True) -> None:
+    def val(self, model, test_data: Subset, f: int = 0, name_to_save="tran_w", temperature=True,) -> None:
         """Test model"""
         (model.eval(), r2.reset(), mae.reset())
 
@@ -226,8 +226,9 @@ class TransformerModel(nn.Module):
         torch.save(
             model.state_dict(),
             f"/root/projects/ml-selection/models/neural_network_models/transformer"
-            f"/weights/{name_to_save}_{temperature}.pth",
+            f"/weights/{name_to_save}_{f}_{temperature}.pth",
         )
+        print(f'Weights saved with name: {name_to_save}_{f}_{temperature}.pth')
 
         return r2_res, mae_result
 
@@ -286,7 +287,7 @@ def main(epoch=5, name_to_save="tran_w", just_mp=False):
         for idx, path in enumerate(poly_path):
             train_dataloader, test_dataloader = get_ds(path, temperature)
 
-            model = TransformerModel(len(features[idx]), len(features[idx]), 32, "elu")
+            model = TransformerModel(len(features[idx]), len(features[idx]), 32, "tanh")
             optimizer = torch.optim.Adam(
                 model.parameters(), lr=0.0006479739574204421, weight_decay=5e-4
             )
@@ -297,8 +298,9 @@ def main(epoch=5, name_to_save="tran_w", just_mp=False):
                         f"/weights/{name_to_save}_{len(features[idx])}_{temperature}.pth"
                     )
                 )
+                print('Successfully loaded pretrained weights to Transformer')
             except:
-                pass
+                print('No pretrained weights found for Transformer')
 
             model.fit(
                 model,
@@ -311,9 +313,10 @@ def main(epoch=5, name_to_save="tran_w", just_mp=False):
                 model,
                 test_dataloader,
                 name_to_save=name_to_save + str(len(features[idx])),
-                temperature=temperature
+                temperature=temperature,
+                f=len(features[idx])
             )
 
 
 if __name__ == "__main__":
-    main(epoch=1, name_to_save='04_06', just_mp=True)
+    main(epoch=10, name_to_save='05_06', just_mp=True)
