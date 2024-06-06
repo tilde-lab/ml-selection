@@ -4,6 +4,7 @@ Training a TransformerModel to predict the Seebeck value.
 Transformer made from encoder (without decoder). Uses token-vector to represent embedding for each crystal.
 Tensor of tokens is fed to fully connected layer. Next, loss is calculated as in standard models.
 """
+
 from data_massage.normalization.normalization import make_normalization
 import polars as pl
 import torch
@@ -95,9 +96,7 @@ class TransformerModel(nn.Module):
         x = self.layer3(x)
         return x
 
-    def fit(
-        self, model, optimizer, ep, train_data: Subset
-    ) -> None:
+    def fit(self, model, optimizer, ep, train_data: Subset) -> None:
         """Train model"""
         model.train()
         for epoch in tqdm(range(ep)):
@@ -156,7 +155,7 @@ class TransformerModel(nn.Module):
 
         preds, y_s = [], []
         if is_norm:
-            with open(f'{PATH_SC}scalerSeebeck coefficient.pkl', 'rb') as file:
+            with open(f"{PATH_SC}scalerSeebeck coefficient.pkl", "rb") as file:
                 scaler = pickle.load(file)
 
         with torch.no_grad():
@@ -168,8 +167,11 @@ class TransformerModel(nn.Module):
                             data[1].append(data[1][0])
                     pred = model([torch.tensor(data).permute(1, 0).unsqueeze(0)])
                     if is_norm:
-                        pred, y = torch.tensor(scaler.inverse_transform(np.array(pred))), torch.tensor(
-                            scaler.inverse_transform(np.array(y).reshape(-1, 1))[0])
+                        pred, y = torch.tensor(
+                            scaler.inverse_transform(np.array(pred))
+                        ), torch.tensor(
+                            scaler.inverse_transform(np.array(y).reshape(-1, 1))[0]
+                        )
                     else:
                         pred, y = torch.tensor(pred), torch.tensor(y)
 
@@ -191,8 +193,11 @@ class TransformerModel(nn.Module):
                         data[2] = [data[2]] * 118
                     pred = model([torch.tensor(data).permute(1, 0).unsqueeze(0)])
                     if is_norm:
-                        pred, y = torch.tensor(scaler.inverse_transform(np.array(pred))), torch.tensor(
-                            scaler.inverse_transform(np.array(y).reshape(-1, 1))[0])
+                        pred, y = torch.tensor(
+                            scaler.inverse_transform(np.array(pred))
+                        ), torch.tensor(
+                            scaler.inverse_transform(np.array(y).reshape(-1, 1))[0]
+                        )
                     else:
                         pred, y = torch.tensor(pred), torch.tensor(y)
                     preds.append(pred)
@@ -205,8 +210,11 @@ class TransformerModel(nn.Module):
                             data[1].append(data[1][0])
                     pred = model([torch.tensor(data).permute(1, 0).unsqueeze(0)])
                     if is_norm:
-                        pred, y = torch.tensor(scaler.inverse_transform(np.array(pred))), torch.tensor(
-                            scaler.inverse_transform(np.array(y).reshape(-1, 1))[0])
+                        pred, y = torch.tensor(
+                            scaler.inverse_transform(np.array(pred))
+                        ), torch.tensor(
+                            scaler.inverse_transform(np.array(y).reshape(-1, 1))[0]
+                        )
                     else:
                         pred, y = torch.tensor(pred), torch.tensor(y)
                     preds.append(pred), y_s.append(y)
@@ -242,7 +250,12 @@ class TransformerModel(nn.Module):
         return r2_res, mae_result
 
 
-def main(epoch: int = 5, name_to_save: str = "tran_w", just_mp: bool = False, is_norm: bool = False):
+def main(
+    epoch: int = 5,
+    name_to_save: str = "tran_w",
+    just_mp: bool = False,
+    is_norm: bool = False,
+):
     def get_ds(poly_path, temperature):
         poly = pl.read_json(poly_path)
         if just_mp:
@@ -251,11 +264,15 @@ def main(epoch: int = 5, name_to_save: str = "tran_w", just_mp: bool = False, is
             seebeck = pl.read_json(f"{path_seebeck}median_seebeck.json")
         poly = poly.with_columns(pl.col("phase_id").cast(pl.Int64))
         if is_norm:
-            dataset = make_normalization(seebeck.join(poly, on="phase_id", how="inner").drop(
-                ["phase_id", "Formula"]
-            ))
+            dataset = make_normalization(
+                seebeck.join(poly, on="phase_id", how="inner").drop(
+                    ["phase_id", "Formula"]
+                )
+            )
         else:
-            dataset = seebeck.join(poly, on="phase_id", how="inner").drop(["phase_id", "Formula"])
+            dataset = seebeck.join(poly, on="phase_id", how="inner").drop(
+                ["phase_id", "Formula"]
+            )
         if not (temperature):
             dataset = dataset.drop(columns=["temperature"])
         dataset = [list(dataset.row(i)) for i in range(len(dataset))]
@@ -279,7 +296,7 @@ def main(epoch: int = 5, name_to_save: str = "tran_w", just_mp: bool = False, is
 
     if just_mp:
         for i in range(len(poly_path)):
-            poly_path[i] = poly_path[i].replace('.json', '_mp.json')
+            poly_path[i] = poly_path[i].replace(".json", "_mp.json")
 
     total_features = []
     (
@@ -294,8 +311,8 @@ def main(epoch: int = 5, name_to_save: str = "tran_w", just_mp: bool = False, is
             temperature = False
         for idx, path in enumerate(poly_path):
             path_to_w = (
-                    WEIGHTS_DIR
-                    + f"transform_{name_to_save}_{len(features[idx])}_{temperature}.pth"
+                WEIGHTS_DIR
+                + f"transform_{name_to_save}_{len(features[idx])}_{temperature}.pth"
             )
             train_dataloader, test_dataloader = get_ds(path, temperature)
 
@@ -305,18 +322,13 @@ def main(epoch: int = 5, name_to_save: str = "tran_w", just_mp: bool = False, is
             )
             try:
                 model.load_state_dict(torch.load(path_to_w))
-                print('Successfully loaded pretrained weights to Transformer')
+                print("Successfully loaded pretrained weights to Transformer")
             except:
-                print('No pretrained weights found for Transformer')
+                print("No pretrained weights found for Transformer")
 
-            model.fit(
-                model,
-                optimizer,
-                epoch,
-                train_dataloader
-            )
+            model.fit(model, optimizer, epoch, train_dataloader)
             model.val(model, test_dataloader, save_dir=path_to_w)
 
 
 if __name__ == "__main__":
-    main(epoch=5, name_to_save='06_06_not_norm', just_mp=True)
+    main(epoch=5, name_to_save="06_06_not_norm", just_mp=True)
