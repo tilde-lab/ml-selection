@@ -331,4 +331,4 @@ def main(
 
 
 if __name__ == "__main__":
-    main(epoch=5, name_to_save="06_06_not_norm", just_mp=True)
+    main(epoch=15, name_to_save="06_06_not_norm", just_mp=True)

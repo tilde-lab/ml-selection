@@ -10,7 +10,7 @@ import yaml
 from data_massage.calculate_median_value import seebeck_median_value
 from data_massage.data_handler import DataHandler
 from scripts.launch import run_processing_polyhedra
-from adapter import MPDS_MP_Adapter
+from data_massage.database_handlers.adapter import MPDS_MP_Adapter
 from data_massage.database_handlers.MaterialsProject.request_to_mp import RequestMP
 
 CONF = '/root/projects/ml-selection/configs/config.yaml'
@@ -151,6 +151,8 @@ def main():
     get_structures_and_seebeck(
         handler,
         is_uniq_structure_for_phase,
+        raw_seebeck_path=raw_path + "seebeck.json",
+        raw_str_path=raw_path + "rep_structures.json",
         path_to_save=raw_path,
         just_mp=False
     )

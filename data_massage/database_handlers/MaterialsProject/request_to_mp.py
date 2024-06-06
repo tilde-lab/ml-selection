@@ -7,13 +7,15 @@ from data_massage.data_handler import DataHandler
 import json
 import polars as pl
 
+conf_path = '/root/projects/ml-selection/configs/config.yaml'
+
 
 class RequestMP:
     """
     Make requests to Materials Project database
     """
 
-    def __init__(self, conf_path) -> None:
+    def __init__(self) -> None:
         conf = open(conf_path, 'r')
         dictionary = yaml.load(conf, Loader)
         self.api_key = dictionary['api_mp']
@@ -93,20 +95,25 @@ class RequestMP:
                 dfrm.write_json(self.mp_path + 'space_group_mp.json')
             return dfrm
 
-    def request_all_data(self) -> None:
+    def request_all_data(self) -> pl.DataFrame:
         """
         Request all available mp-ids, symmetry, chemical formulas.
         Save in json format
         """
-        client = MPRester(self.api_key)
-        ans_ids, ans_formula, ans_sg = [], [], []
-        answer = client.summary.search(fields=['material_id', 'formula_pretty', 'symmetry'])
-        [(ans_ids.append(str(i.material_id)), ans_formula.append(i.formula_pretty), ans_sg.append(str(i.symmetry.number))) for i in answer]
-        dfrm = pl.DataFrame(
-            {'identifier': ans_ids, 'formula': ans_formula, 'symmetry': ans_sg},
-            schema=['identifier', 'formula', 'symmetry']
-        )
-        dfrm.write_json(self.mp_path + 'all_id_mp.json')
+        try:
+            dfrm = pl.read_json(self.mp_path + 'all_id_mp.json')
+            print("All IDs, summetry, formulas already present in directory")
+        except:
+            client = MPRester(self.api_key)
+            ans_ids, ans_formula, ans_sg = [], [], []
+            answer = client.summary.search(fields=['material_id', 'formula_pretty', 'symmetry'])
+            [(ans_ids.append(str(i.material_id)), ans_formula.append(i.formula_pretty), ans_sg.append(str(i.symmetry.number))) for i in answer]
+            dfrm = pl.DataFrame(
+                {'identifier': ans_ids, 'formula': ans_formula, 'symmetry': ans_sg},
+                schema=['identifier', 'formula', 'symmetry']
+            )
+            dfrm.write_json(self.mp_path + 'all_id_mp.json')
+        return dfrm
 
     def run_requests(self, step: int = 120) -> pl.DataFrame:
         """
@@ -133,7 +140,8 @@ class RequestMP:
 
 if __name__ == "__main__":
     path = '/root/projects/ml-selection/configs/config.yaml'
-    dfrm = RequestMP(path).request_all_data()
+    dfrm = RequestMP().request_all_data()
+    print()
 
 
 

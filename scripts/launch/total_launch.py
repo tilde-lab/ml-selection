@@ -8,7 +8,7 @@ The best configurations for each model with a specific type of polyhedra dataset
 """
 
 from scripts.run_net_models import main as run_net_models
-from data_massage.collector import main as run_collection
+from data_massage.run.collector import main as run_collection
 
 if __name__ == "__main__":
     run_collection()

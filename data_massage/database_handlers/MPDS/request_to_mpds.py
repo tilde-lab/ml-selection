@@ -106,14 +106,35 @@ class RequestMPDS:
             phase_ids = []
             found, loss = 0, 0
             try:
-                data = json.load(open(self.raw_mpds + 'mpds_phases_jan2024.json', 'r'))
+                with open(self.raw_mpds + 'mpds_phases_jan2024.json', 'r') as file:
+                    data = json.load(file)
+
+                # Dict for fast search, with formula and space group
+                full_formula_dict = {}
+                short_formula_dict = {}
+                for row in data:
+                    key_full = (row['formula']['full'], row['spg'])
+                    key_short = (row['formula']['short'], row['spg'])
+
+                    if key_full not in full_formula_dict:
+                        full_formula_dict[key_full] = row['id'].split('/')[-1]
+
+                    if key_short not in short_formula_dict:
+                        short_formula_dict[key_short] = row['id'].split('/')[-1]
+
+                # Search match
                 for i in range(len(formulas)):
-                    for row in data:
-                        if ((row['formula']['full'] == formulas[i] or
-                                row['formula']['short'] == formulas[i]) and row['spg'] == sg[i]):
-                            phase_ids.append([row['id'].split('/')[-1], mp_ids[i]])
-                            print('Found matches:', len(phase_ids))
-                return pl.DataFrame(phase_ids, schema=['phase_id', 'identifier'])
+                    key_full = (formulas[i], int(sg[i]))
+                    key_short = (formulas[i], int(sg[i]))
+
+                    if key_full in full_formula_dict.keys():
+                        phase_ids.append([full_formula_dict[key_full], mp_ids[i], key_full[0], key_full[1]])
+                    elif key_short in short_formula_dict:
+                        phase_ids.append([short_formula_dict[key_short], mp_ids[i], key_short[0], key_short[1]])
+
+                print('Found matches:', len(phase_ids))
+                return pl.DataFrame(phase_ids, schema=['phase_id', 'identifier', 'formula', 'symmetry'])
+
             except:
                 print('Raw data with MPDS phase_ids not found in directory. Start requests!')
                 for i in range(len(formulas)):
