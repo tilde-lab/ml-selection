@@ -167,10 +167,11 @@ class TransformerModel(nn.Module):
                             data[1].append(data[1][0])
                     pred = model([torch.tensor(data).permute(1, 0).unsqueeze(0)])
                     if is_norm:
-                        pred, y = torch.tensor(
-                            scaler.inverse_transform(np.array(pred))
-                        ), torch.tensor(
-                            scaler.inverse_transform(np.array(y).reshape(-1, 1))[0]
+                        pred, y = (
+                            torch.tensor(scaler.inverse_transform(np.array(pred))),
+                            torch.tensor(
+                                scaler.inverse_transform(np.array(y).reshape(-1, 1))[0]
+                            ),
                         )
                     else:
                         pred, y = torch.tensor(pred), torch.tensor(y)
@@ -193,10 +194,11 @@ class TransformerModel(nn.Module):
                         data[2] = [data[2]] * 118
                     pred = model([torch.tensor(data).permute(1, 0).unsqueeze(0)])
                     if is_norm:
-                        pred, y = torch.tensor(
-                            scaler.inverse_transform(np.array(pred))
-                        ), torch.tensor(
-                            scaler.inverse_transform(np.array(y).reshape(-1, 1))[0]
+                        pred, y = (
+                            torch.tensor(scaler.inverse_transform(np.array(pred))),
+                            torch.tensor(
+                                scaler.inverse_transform(np.array(y).reshape(-1, 1))[0]
+                            ),
                         )
                     else:
                         pred, y = torch.tensor(pred), torch.tensor(y)
@@ -210,10 +212,11 @@ class TransformerModel(nn.Module):
                             data[1].append(data[1][0])
                     pred = model([torch.tensor(data).permute(1, 0).unsqueeze(0)])
                     if is_norm:
-                        pred, y = torch.tensor(
-                            scaler.inverse_transform(np.array(pred))
-                        ), torch.tensor(
-                            scaler.inverse_transform(np.array(y).reshape(-1, 1))[0]
+                        pred, y = (
+                            torch.tensor(scaler.inverse_transform(np.array(pred))),
+                            torch.tensor(
+                                scaler.inverse_transform(np.array(y).reshape(-1, 1))[0]
+                            ),
                         )
                     else:
                         pred, y = torch.tensor(pred), torch.tensor(y)

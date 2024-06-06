@@ -13,7 +13,7 @@ from scripts.launch import run_processing_polyhedra
 from data_massage.database_handlers.adapter import MPDS_MP_Adapter
 from data_massage.database_handlers.MaterialsProject.request_to_mp import RequestMP
 
-CONF = '/root/projects/ml-selection/configs/config.yaml'
+CONF = "/root/projects/ml-selection/configs/config.yaml"
 
 
 def get_structures_and_seebeck(
@@ -22,7 +22,7 @@ def get_structures_and_seebeck(
     raw_seebeck_path: str = None,
     raw_str_path: str = None,
     path_to_save: str = None,
-    just_mp: bool = False
+    just_mp: bool = False,
 ) -> DataFrame:
     """
     Get all available Seebeck values from -150 to 200. For each 'phase_id', calculate
@@ -60,15 +60,17 @@ def get_structures_and_seebeck(
 
         # change direction of columns for stack 2 dfrm
         phase_id_mp = phase_id_mp.select(seebeck_dfrm_mpds.columns)
-        phases = list(set(seebeck_dfrm_mpds["Phase"])) + list(set(phase_id_mp['Phase']))
+        phases = list(set(seebeck_dfrm_mpds["Phase"])) + list(set(phase_id_mp["Phase"]))
 
         # make median Seebeck value
-        median_seebeck = seebeck_median_value(phase_id_mp.vstack(seebeck_dfrm_mpds), phases)
+        median_seebeck = seebeck_median_value(
+            phase_id_mp.vstack(seebeck_dfrm_mpds), phases
+        )
         file_path = path_to_save + "median_seebeck.json"
         median_seebeck.write_json(file_path)
     else:
-        phase_id_mp = phase_id_mp.select(['Phase', 'Formula', 'Seebeck coefficient'])
-        phases = list(set(phase_id_mp['Phase']))
+        phase_id_mp = phase_id_mp.select(["Phase", "Formula", "Seebeck coefficient"])
+        phases = list(set(phase_id_mp["Phase"]))
         median_seebeck = phase_id_mp
         file_path = path_to_save + "mp_seebeck.json"
         median_seebeck.write_json(file_path)

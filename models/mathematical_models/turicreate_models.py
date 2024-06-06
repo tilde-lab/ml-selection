@@ -60,8 +60,12 @@ def run_linear_regression(train, test, features):
         torch.tensor(predictions_linear), torch.tensor(test_r["Seebeck coefficient"])
     )
     mae_result_r = mae.compute()
-    evs = explained_variance_score(torch.tensor(predictions_linear), torch.tensor(test_r["Seebeck coefficient"]))
-    theils_u_res = theils_u(torch.tensor(predictions_linear), torch.tensor(test_r["Seebeck coefficient"]))
+    evs = explained_variance_score(
+        torch.tensor(predictions_linear), torch.tensor(test_r["Seebeck coefficient"])
+    )
+    theils_u_res = theils_u(
+        torch.tensor(predictions_linear), torch.tensor(test_r["Seebeck coefficient"])
+    )
 
     print(
         f"LINEAR REGRESSION MODEL:\nR2: {r2_res_r}, MAE: {mae_result_r}, EVS: {evs}, TUR: {theils_u_res}, min pred: {predictions_linear.min()}, max pred: {predictions_linear.max()}\n\n"
@@ -85,8 +89,12 @@ def run_decision_tree(train, test, features):
         torch.tensor(predictions_decision), torch.tensor(test_d["Seebeck coefficient"])
     )
     mae_result_d = mae.compute()
-    evs = explained_variance_score(torch.tensor(predictions_decision), torch.tensor(test_d["Seebeck coefficient"]))
-    theils_u_res = theils_u(torch.tensor(predictions_decision), torch.tensor(test_d["Seebeck coefficient"]))
+    evs = explained_variance_score(
+        torch.tensor(predictions_decision), torch.tensor(test_d["Seebeck coefficient"])
+    )
+    theils_u_res = theils_u(
+        torch.tensor(predictions_decision), torch.tensor(test_d["Seebeck coefficient"])
+    )
 
     print(
         f"DECISION TREE MODEL\nR2: {r2_res_d}, MAE: {mae_result_d}, EVS: {evs}, TUR: {theils_u_res}, min pred: {predictions_decision.min()}, max pred: {predictions_decision.max()}\n\n"
@@ -109,8 +117,12 @@ def run_boosted_trees(train, test, features):
         torch.tensor(predictions_boosted), torch.tensor(test_b["Seebeck coefficient"])
     )
     mae_result_b = mae.compute()
-    evs = explained_variance_score(torch.tensor(predictions_boosted), torch.tensor(test_b["Seebeck coefficient"]))
-    theils_u_res = theils_u(torch.tensor(predictions_boosted), torch.tensor(test_b["Seebeck coefficient"]))
+    evs = explained_variance_score(
+        torch.tensor(predictions_boosted), torch.tensor(test_b["Seebeck coefficient"])
+    )
+    theils_u_res = theils_u(
+        torch.tensor(predictions_boosted), torch.tensor(test_b["Seebeck coefficient"])
+    )
 
     print(
         f"BOOSTED TREES MODEL\nR2: {r2_res_b}, MAE: {mae_result_b}, EVS: {evs}, TUR: {theils_u_res}, min pred: {predictions_boosted.min()}, max pred: {predictions_boosted.max()}\n\n"
@@ -133,8 +145,12 @@ def run_random_forest(train, test, features):
         torch.tensor(predictions_random), torch.tensor(test_r["Seebeck coefficient"])
     )
     mae_result_rf = mae.compute()
-    evs = explained_variance_score(torch.tensor(predictions_random), torch.tensor(test_r["Seebeck coefficient"]))
-    theils_u_res = theils_u(torch.tensor(predictions_random), torch.tensor(test_r["Seebeck coefficient"]))
+    evs = explained_variance_score(
+        torch.tensor(predictions_random), torch.tensor(test_r["Seebeck coefficient"])
+    )
+    theils_u_res = theils_u(
+        torch.tensor(predictions_random), torch.tensor(test_r["Seebeck coefficient"])
+    )
 
     print(
         f"RANDOM FOREST MODEL\nR2: {r2_res_rf}, MAE: {mae_result_rf}, EVS: {evs}, TUR: {theils_u_res}, min pred: {predictions_random.min()}, max pred: {predictions_random.max()}\n\n"
@@ -195,16 +211,16 @@ def main(just_mp: bool = False):
     # change json on parquet
     if not just_mp:
         for i in range(len(poly_path)):
-            poly_path[i] = poly_path[i].replace('.json', '.parquet')
+            poly_path[i] = poly_path[i].replace(".json", ".parquet")
     else:
         for i in range(len(poly_path)):
-            poly_path[i] = poly_path[i].replace('.json', '_mp.parquet')
+            poly_path[i] = poly_path[i].replace(".json", "_mp.parquet")
 
     for f in [poly_features, poly_temperature_features]:
         if not just_mp:
-            run_math_models(poly_path, raw_mpds + 'median_seebeck.parquet', f)
+            run_math_models(poly_path, raw_mpds + "median_seebeck.parquet", f)
         else:
-            run_math_models(poly_path, raw_mpds + 'mp_seebeck.parquet', f)
+            run_math_models(poly_path, raw_mpds + "mp_seebeck.parquet", f)
 
 
 if __name__ == "__main__":

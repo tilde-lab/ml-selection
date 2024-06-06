@@ -10,7 +10,5 @@ def get_and_match_ids():
     MPDS_MP_Adapter().finding_matches_id_by_formula_sg(is_all_id=True)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     get_and_match_ids()
-
-

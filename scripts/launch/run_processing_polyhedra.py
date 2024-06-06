@@ -8,7 +8,7 @@ import yaml
 
 hand = DataHandler(True)
 
-CONF = '/root/projects/ml-selection/configs/config.yaml'
+CONF = "/root/projects/ml-selection/configs/config.yaml"
 
 with open(CONF, "r") as yamlfile:
     conf = yaml.load(yamlfile, Loader=yaml.FullLoader)
@@ -53,7 +53,9 @@ def make_poly_descriptor(
     descriptor.write_parquet(processed_data + file_name + ".parquet")
 
 
-def get_different_descriptors(features: list = [2, 3, 0], just_mp: bool = False) -> None:
+def get_different_descriptors(
+    features: list = [2, 3, 0], just_mp: bool = False
+) -> None:
     """
     Run getting polyhedra descriptors of different types
 

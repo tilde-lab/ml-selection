@@ -36,20 +36,25 @@ class MPDS_MP_Adapter:
         """
         try:
             if is_all_id:
-                phases = pl.read_json(self.mp_path + 'id_matches_mp_mpds_all.json')
+                phases = pl.read_json(self.mp_path + "id_matches_mp_mpds_all.json")
+                print(
+                    f"id_matches_mp_mpds_all.json already in directory. Size: {len(phases)}"
+                )
             else:
-                phases = pl.read_json(self.mp_path + 'id_matches_mp_mpds.json')
+                phases = pl.read_json(self.mp_path + "id_matches_mp_mpds.json")
         except:
             if is_all_id:
-                self.mp_dfrm = pl.read_json(self.mp_path + 'all_id_mp.json')
+                self.mp_dfrm = pl.read_json(self.mp_path + "all_id_mp.json")
             phases = self.mpds_client.make_request(
-                is_phase=True, sg=list(self.mp_dfrm['symmetry']), formulas=list(self.mp_dfrm['formula']),
-                mp_ids=list(self.mp_dfrm['identifier'])
+                is_phase=True,
+                sg=list(self.mp_dfrm["symmetry"]),
+                formulas=list(self.mp_dfrm["formula"]),
+                mp_ids=list(self.mp_dfrm["identifier"]),
             )
             if is_all_id:
-                phases.write_json(self.mp_path + 'id_matches_mp_mpds_all.json')
+                phases.write_json(self.mp_path + "id_matches_mp_mpds_all.json")
             else:
-                phases.write_json(self.mp_path + 'id_matches_mp_mpds.json')
+                phases.write_json(self.mp_path + "id_matches_mp_mpds.json")
         return phases
 
     def match_structures_by_phase_id(self, phases: list) -> pl.DataFrame:
@@ -78,7 +83,6 @@ class MPDS_MP_Adapter:
                 self.mp_path + "structures_mp_mpds.json"
             )
         return structures_for_mp_seebeck
-
 
     def process_seebeck_to_mpds_format(self, seebeck_dfrm_mpds_format):
         seebeck_list = seebeck_dfrm_mpds_format["Seebeck coefficient"]
