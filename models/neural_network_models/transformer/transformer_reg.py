@@ -150,13 +150,14 @@ class TransformerModel(nn.Module):
 
             print(f"--------Mean loss for epoch {epoch} is {mean_loss / cnt}--------")
 
-    def val(self, model, test_data: Subset, save_dir):
+    def val(self, model, test_data: Subset, save_dir, is_norm: bool = False):
         """Test model"""
         (model.eval(), r2.reset(), mae.reset())
 
         preds, y_s = [], []
-        with open(f'{PATH_SC}scalerSeebeck coefficient.pkl', 'rb') as file:
-            scaler = pickle.load(file)
+        if is_norm:
+            with open(f'{PATH_SC}scalerSeebeck coefficient.pkl', 'rb') as file:
+                scaler = pickle.load(file)
 
         with torch.no_grad():
             if self.n_feature == 2:
@@ -166,8 +167,11 @@ class TransformerModel(nn.Module):
                         while len(data[0]) != len(data[1]):
                             data[1].append(data[1][0])
                     pred = model([torch.tensor(data).permute(1, 0).unsqueeze(0)])
-                    pred, y = torch.tensor(scaler.inverse_transform(np.array(pred))), torch.tensor(
-                        scaler.inverse_transform(np.array(y).reshape(-1, 1))[0])
+                    if is_norm:
+                        pred, y = torch.tensor(scaler.inverse_transform(np.array(pred))), torch.tensor(
+                            scaler.inverse_transform(np.array(y).reshape(-1, 1))[0])
+                    else:
+                        pred, y = torch.tensor(pred), torch.tensor(y)
 
                     preds.append(pred)
                     y_s.append(y)
@@ -186,8 +190,11 @@ class TransformerModel(nn.Module):
                     elif type(data[2]) != list and len(data[0]) == 118:
                         data[2] = [data[2]] * 118
                     pred = model([torch.tensor(data).permute(1, 0).unsqueeze(0)])
-                    pred, y = torch.tensor(scaler.inverse_transform(np.array(pred))), torch.tensor(
-                        scaler.inverse_transform(np.array(y).reshape(-1, 1))[0])
+                    if is_norm:
+                        pred, y = torch.tensor(scaler.inverse_transform(np.array(pred))), torch.tensor(
+                            scaler.inverse_transform(np.array(y).reshape(-1, 1))[0])
+                    else:
+                        pred, y = torch.tensor(pred), torch.tensor(y)
                     preds.append(pred)
                     y_s.append(y)
             if self.n_feature == 4:
@@ -197,8 +204,11 @@ class TransformerModel(nn.Module):
                         while len(data[0]) != len(data[1]):
                             data[1].append(data[1][0])
                     pred = model([torch.tensor(data).permute(1, 0).unsqueeze(0)])
-                    pred, y = torch.tensor(scaler.inverse_transform(np.array(pred))), torch.tensor(
-                        scaler.inverse_transform(np.array(y).reshape(-1, 1))[0])
+                    if is_norm:
+                        pred, y = torch.tensor(scaler.inverse_transform(np.array(pred))), torch.tensor(
+                            scaler.inverse_transform(np.array(y).reshape(-1, 1))[0])
+                    else:
+                        pred, y = torch.tensor(pred), torch.tensor(y)
                     preds.append(pred), y_s.append(y)
 
         mae.update(torch.tensor(preds).reshape(-1), torch.tensor(y_s))
@@ -232,7 +242,7 @@ class TransformerModel(nn.Module):
         return r2_res, mae_result
 
 
-def main(epoch=5, name_to_save="tran_w", just_mp=False):
+def main(epoch: int = 5, name_to_save: str = "tran_w", just_mp: bool = False, is_norm: bool = False):
     def get_ds(poly_path, temperature):
         poly = pl.read_json(poly_path)
         if just_mp:
@@ -240,9 +250,12 @@ def main(epoch=5, name_to_save="tran_w", just_mp=False):
         else:
             seebeck = pl.read_json(f"{path_seebeck}median_seebeck.json")
         poly = poly.with_columns(pl.col("phase_id").cast(pl.Int64))
-        dataset = make_normalization(seebeck.join(poly, on="phase_id", how="inner").drop(
-            ["phase_id", "Formula"]
-        ))
+        if is_norm:
+            dataset = make_normalization(seebeck.join(poly, on="phase_id", how="inner").drop(
+                ["phase_id", "Formula"]
+            ))
+        else:
+            dataset = seebeck.join(poly, on="phase_id", how="inner").drop(["phase_id", "Formula"])
         if not (temperature):
             dataset = dataset.drop(columns=["temperature"])
         dataset = [list(dataset.row(i)) for i in range(len(dataset))]
@@ -286,7 +299,7 @@ def main(epoch=5, name_to_save="tran_w", just_mp=False):
             )
             train_dataloader, test_dataloader = get_ds(path, temperature)
 
-            model = TransformerModel(len(features[idx]), len(features[idx]), 32, "tanh")
+            model = TransformerModel(len(features[idx]), len(features[idx]), 16, "elu")
             optimizer = torch.optim.Adam(
                 model.parameters(), lr=0.0006479739574204421, weight_decay=5e-4
             )
@@ -302,12 +315,8 @@ def main(epoch=5, name_to_save="tran_w", just_mp=False):
                 epoch,
                 train_dataloader
             )
-            model.val(
-                model,
-                test_dataloader,
-                save_dir=path_to_w
-            )
+            model.val(model, test_dataloader, save_dir=path_to_w)
 
 
 if __name__ == "__main__":
-    main(epoch=10, name_to_save='05_06', just_mp=True)
+    main(epoch=5, name_to_save='06_06_not_norm', just_mp=True)
