@@ -17,7 +17,7 @@ from sklearn.model_selection import RandomizedSearchCV
 
 
 def main(just_mp: bool = False):
-    with open("configs/config.yaml", "r") as yamlfile:
+    with open("/root/projects/ml-selection/configs/config.yaml", "r") as yamlfile:
         yaml_f = yaml.load(yamlfile, Loader=yaml.FullLoader)
         raw_mpds = yaml_f["raw_mpds"]
 
@@ -37,7 +37,9 @@ def main(just_mp: bool = False):
         for i in range(len(poly_path)):
             poly_path[i] = poly_path[i].replace(".json", "_mp.parquet")
 
-    for f in [poly_features, poly_temperature_features]:
+    # TODO: add poly_temperature_features
+    for f in [poly_features]:
+        print(f'\n\nSTART with descriptor: {f}\n')
         if not just_mp:
             run_ml_models(poly_path, raw_mpds + "median_seebeck.parquet", f)
         else:
@@ -61,10 +63,9 @@ def split_data_for_models(poly_path: str, seebeck_path: str) -> pd.DataFrame:
     return (train.to_pandas(), test.to_pandas())
 
 
-def run_ml_models(poly_paths: list, seebeck_path: str, features: list, n_iter: int = 1) -> None:
-    result = []
-
+def run_ml_models(poly_paths: list, seebeck_path: str, f: list, n_iter: int = 1) -> None:
     for i, poly in enumerate(poly_paths):
+        print(f'File: {poly}')
         train, test = split_data_for_models(poly, seebeck_path)
 
         train_y, test_y = train['Seebeck coefficient'], test['Seebeck coefficient']
@@ -74,11 +75,19 @@ def run_ml_models(poly_paths: list, seebeck_path: str, features: list, n_iter: i
 
         poly_elements_df = pd.DataFrame(train_x['poly_elements'].tolist())
         poly_type_df = pd.DataFrame(train_x['poly_type'].tolist())
-        train_x = pd.concat([poly_elements_df, poly_type_df], axis=1)
+        if len(f[i]) == 2:
+            train_x = pd.concat([poly_elements_df, poly_type_df], axis=1)
+        else:
+            poly_v = pd.DataFrame(train_x['poly_vertex'].tolist())
+            train_x = pd.concat([poly_elements_df, poly_type_df, poly_v], axis=1)
 
         poly_elements_df = pd.DataFrame(test_x['poly_elements'].tolist())
         poly_type_df = pd.DataFrame(test_x['poly_type'].tolist())
-        test_x = pd.concat([poly_elements_df, poly_type_df], axis=1)
+        if len(f[i]) == 2:
+            test_x = pd.concat([poly_elements_df, poly_type_df], axis=1)
+        else:
+            poly_v = pd.DataFrame(test_x['poly_vertex'].tolist())
+            test_x = pd.concat([poly_elements_df, poly_type_df, poly_v], axis=1)
 
         run_linear_regression(train_x, train_y, test_x, test_y, n_iter)
         run_decision_tree(train_x, train_y, test_x, test_y, n_iter)
@@ -89,7 +98,7 @@ def run_ml_models(poly_paths: list, seebeck_path: str, features: list, n_iter: i
 def run_linear_regression(X_train, y_train, X_test, y_test, n_iter):
     ridge = Ridge()
     ridge_param_distributions = {
-        'alpha': np.random.uniform(0.00001, 10.0, size=1)
+        'alpha': np.random.uniform(0.00001, 10.0, size=10000)
     }
     ridge_search = RandomizedSearchCV(
         estimator=ridge,
@@ -112,7 +121,7 @@ def run_boosted_trees(X_train, y_train, X_test, y_test, n_iter):
     gbm = GradientBoostingRegressor()
     gbm_param_distributions = {
         'n_estimators': randint(1, 200),
-        'learning_rate': np.random.uniform(0.00001, 0.5, size=1),
+        'learning_rate': np.random.uniform(0.000001, 0.5, size=100000),
         'max_depth': randint(3, 100)
     }
 
@@ -136,9 +145,9 @@ def run_boosted_trees(X_train, y_train, X_test, y_test, n_iter):
 def run_decision_tree(X_train, y_train, X_test, y_test, n_iter):
     decision_tree = DecisionTreeRegressor()
     param_distributions = {
-        'max_depth': randint(5, 100),
-        'min_samples_split': randint(1, 50),
-        'min_samples_leaf': randint(1, 50)
+        'max_depth': randint(5, 150),
+        'min_samples_split': randint(1, 100),
+        'min_samples_leaf': randint(1, 100)
     }
 
     random_search = RandomizedSearchCV(
@@ -164,7 +173,7 @@ def run_decision_tree(X_train, y_train, X_test, y_test, n_iter):
 def run_random_forest(X_train, y_train, X_test, y_test, n_iter):
     rf = RandomForestRegressor()
     rf_param_distributions = {
-        'n_estimators': randint(1, 250),
+        'n_estimators': randint(1, 100),
         'max_depth': randint(1, 100),
         'min_samples_split': randint(2, 100)
     }
@@ -190,7 +199,3 @@ def run_random_forest(X_train, y_train, X_test, y_test, n_iter):
 
 if __name__ == "__main__":
     poly_paths, seebeck_path, features = main()
-
-
-
-
