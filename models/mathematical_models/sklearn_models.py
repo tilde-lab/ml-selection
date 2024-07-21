@@ -161,8 +161,8 @@ def run_boosted_trees(X_train, y_train, X_test, y_test, n_iter):
         "n_estimators": randint(1, 100),
         "learning_rate": np.random.uniform(0.000001, 0.5, size=100000),
         "max_depth": randint(3, 100),
-        "min_samples_leaf": randint(1, 100),
-        "min_samples_split": randint(1, 100),
+        "min_samples_leaf": randint(3, 100),
+        "min_samples_split": randint(3, 100),
     }
 
     gbm_search = RandomizedSearchCV(
@@ -188,8 +188,8 @@ def run_decision_tree(X_train, y_train, X_test, y_test, n_iter):
     decision_tree = DecisionTreeRegressor()
     param_distributions = {
         "max_depth": randint(1, 200),
-        "min_samples_split": randint(1, 100),
-        "min_samples_leaf": randint(1, 100),
+        "min_samples_split": randint(3, 100),
+        "min_samples_leaf": randint(3, 100),
     }
 
     random_search = RandomizedSearchCV(
@@ -217,7 +217,7 @@ def run_random_forest(X_train, y_train, X_test, y_test, n_iter):
     rf_param_distributions = {
         "n_estimators": randint(1, 100),
         "max_depth": randint(1, 100),
-        "min_samples_split": randint(1, 100),
+        "min_samples_split": randint(3, 100),
     }
 
     rf_search = RandomizedSearchCV(
