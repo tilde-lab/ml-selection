@@ -1,9 +1,11 @@
 """
 Ml-models
 """
-
+import torch
 import numpy as np
 import polars as pl
+from torcheval.metrics import R2Score
+from typing import Union
 
 import pandas as pd
 from sklearn.linear_model import Ridge
@@ -14,6 +16,10 @@ import yaml
 from sklearn.tree import DecisionTreeRegressor
 from scipy.stats import randint
 from sklearn.model_selection import RandomizedSearchCV
+
+from torchmetrics import MeanAbsoluteError
+from data_massage.metrics.statistic_metrics import theils_u
+from sklearn.metrics import explained_variance_score
 
 
 def main(just_mp: bool = False):
@@ -37,16 +43,29 @@ def main(just_mp: bool = False):
         for i in range(len(poly_path)):
             poly_path[i] = poly_path[i].replace(".json", "_mp.parquet")
 
-    # TODO: add poly_temperature_features
-    for f in [poly_features]:
+    for cnt, f in enumerate([poly_features, poly_temperature_features]):
         print(f'\n\nSTART with descriptor: {f}\n')
         if not just_mp:
-            run_ml_models(poly_path, raw_mpds + "median_seebeck.parquet", f)
+            run_ml_models(poly_path, raw_mpds + "median_seebeck.parquet", f, cnt)
         else:
-            run_ml_models(poly_path, raw_mpds + "mp_seebeck.parquet", f)
+            run_ml_models(poly_path, raw_mpds + "mp_seebeck.parquet", f, cnt)
 
 
-def split_data_for_models(poly_path: str, seebeck_path: str) -> pd.DataFrame:
+def compute_metrics(y_pred, y_true) -> tuple:
+    mae, r2 = MeanAbsoluteError(), R2Score()
+
+    mae.update(y_pred, y_true)
+    r2.update(y_pred, y_true)
+
+    mae_result = mae.compute()
+    r2_res = r2.compute()
+    evs = explained_variance_score(y_pred, y_true)
+    theils_u_res = theils_u(y_pred, y_true)
+
+    return (r2_res, mae_result, evs, theils_u_res)
+
+
+def load_data(poly_path: str, seebeck_path: str) -> pd.DataFrame:
     # Crystal in vectors format
     poly = pl.read_parquet(poly_path)
     seebeck = pl.read_parquet(seebeck_path)
@@ -55,39 +74,43 @@ def split_data_for_models(poly_path: str, seebeck_path: str) -> pd.DataFrame:
     poly = poly.with_columns(pl.col("phase_id").cast(pl.Int64))
     data = seebeck.join(poly, on="phase_id", how="inner")
 
+    return data.to_pandas()
+
+
+def make_descriptors(data: pd.DataFrame, f: list, i: int, is_temp: bool):
+    poly_elements_df = pd.DataFrame(data['poly_elements'].tolist())
+    # there is no need to have same dim - take a number instead of an array
+    poly_type_df = pd.DataFrame([[row[0]] for row in data['poly_type'].values.tolist()])
+    y = data['Seebeck coefficient']
+
+    if is_temp:
+        temperature = data['temperature']
+        if len(f[i]) == 3:
+            x = pd.concat([poly_elements_df, poly_type_df, temperature], axis=1)
+        else:
+            # take a number instead of an array too
+            poly_v = pd.DataFrame([[row[0]] for row in data['poly_vertex'].values.tolist()])
+            x = pd.concat([poly_elements_df, poly_type_df, poly_v, temperature], axis=1)
+    else:
+        if len(f[i]) == 2:
+            x = pd.concat([poly_elements_df, poly_type_df], axis=1)
+        else:
+            # take a number instead of an array too
+            poly_v = pd.DataFrame([[row[0]] for row in data['poly_vertex'].values.tolist()])
+            x = pd.concat([poly_elements_df, poly_type_df, poly_v], axis=1)
+
     train_size = int(0.9 * len(data))
+    train_x, test_x = x[:train_size], x[train_size:]
+    train_y, test_y = y[:train_size], y[train_size:]
 
-    train = data[:train_size]
-    test = data[train_size:]
-
-    return (train.to_pandas(), test.to_pandas())
+    return train_x, train_y, test_x, test_y
 
 
-def run_ml_models(poly_paths: list, seebeck_path: str, f: list, n_iter: int = 1) -> None:
+def run_ml_models(poly_paths: list, seebeck_path: str, f: list, is_temp: Union[bool, int], n_iter: int = 1) -> None:
     for i, poly in enumerate(poly_paths):
         print(f'File: {poly}')
-        train, test = split_data_for_models(poly, seebeck_path)
-
-        train_y, test_y = train['Seebeck coefficient'], test['Seebeck coefficient']
-
-        train_x = train.drop(columns=['Seebeck coefficient', 'Formula', 'phase_id', 'temperature'])
-        test_x = test.drop(columns=['Seebeck coefficient', 'Formula'])
-
-        poly_elements_df = pd.DataFrame(train_x['poly_elements'].tolist())
-        poly_type_df = pd.DataFrame(train_x['poly_type'].tolist())
-        if len(f[i]) == 2:
-            train_x = pd.concat([poly_elements_df, poly_type_df], axis=1)
-        else:
-            poly_v = pd.DataFrame(train_x['poly_vertex'].tolist())
-            train_x = pd.concat([poly_elements_df, poly_type_df, poly_v], axis=1)
-
-        poly_elements_df = pd.DataFrame(test_x['poly_elements'].tolist())
-        poly_type_df = pd.DataFrame(test_x['poly_type'].tolist())
-        if len(f[i]) == 2:
-            test_x = pd.concat([poly_elements_df, poly_type_df], axis=1)
-        else:
-            poly_v = pd.DataFrame(test_x['poly_vertex'].tolist())
-            test_x = pd.concat([poly_elements_df, poly_type_df, poly_v], axis=1)
+        data = load_data(poly, seebeck_path)
+        train_x, train_y, test_x, test_y = make_descriptors(data, f, i, is_temp)
 
         run_linear_regression(train_x, train_y, test_x, test_y, n_iter)
         run_decision_tree(train_x, train_y, test_x, test_y, n_iter)
@@ -110,19 +133,21 @@ def run_linear_regression(X_train, y_train, X_test, y_test, n_iter):
         random_state=42
     )
     ridge_search.fit(X_train, y_train)
-    print("Best parms for Ridge:", ridge_search.best_params_)
-    score = ridge_search.score(X_test, y_test)
-    print("R2:", score)
+    pred = ridge_search.predict(X_test)
+    r2, mae, evs, tur = compute_metrics(torch.from_numpy(pred), torch.tensor(y_test.values))
 
-    return ridge_search.best_params_
+    print("Best parms for Ridge:", ridge_search.best_params_)
+    print(f"r2: {r2}, mae: {mae}, evs: {evs}, tur: {tur}")
 
 
 def run_boosted_trees(X_train, y_train, X_test, y_test, n_iter):
     gbm = GradientBoostingRegressor()
     gbm_param_distributions = {
-        'n_estimators': randint(1, 200),
+        'n_estimators': randint(1, 10),
         'learning_rate': np.random.uniform(0.000001, 0.5, size=100000),
-        'max_depth': randint(3, 100)
+        'max_depth': randint(3, 10),
+        'min_samples_leaf': randint(1, 10),
+        'min_samples_split': randint(1, 10)
     }
 
     gbm_search = RandomizedSearchCV(
@@ -135,19 +160,19 @@ def run_boosted_trees(X_train, y_train, X_test, y_test, n_iter):
         random_state=42
     )
     gbm_search.fit(X_train, y_train)
-    print("Best parms for Gradient Boosting:", gbm_search.best_params_)
-    score = gbm_search.score(X_test, y_test)
-    print("R2:", score)
+    pred = gbm_search.predict(X_test)
+    r2, mae, evs, tur = compute_metrics(torch.from_numpy(pred), torch.tensor(y_test.values))
 
-    return gbm_search.best_params_
+    print("Best parms for Gradient Boosting:", gbm_search.best_params_)
+    print(f"r2: {r2}, mae: {mae}, evs: {evs}, tur: {tur}")
 
 
 def run_decision_tree(X_train, y_train, X_test, y_test, n_iter):
     decision_tree = DecisionTreeRegressor()
     param_distributions = {
-        'max_depth': randint(5, 150),
-        'min_samples_split': randint(1, 100),
-        'min_samples_leaf': randint(1, 100)
+        'max_depth': randint(1, 6),
+        'min_samples_split': randint(1, 10),
+        'min_samples_leaf': randint(1, 10)
     }
 
     random_search = RandomizedSearchCV(
@@ -161,21 +186,19 @@ def run_decision_tree(X_train, y_train, X_test, y_test, n_iter):
     )
 
     random_search.fit(X_train, y_train)
+    pred = random_search.predict(X_test)
+    r2, mae, evs, tur = compute_metrics(torch.from_numpy(pred), torch.tensor(y_test.values))
 
-    best_params = random_search.best_params_
-    print("Best parms for DecisionTree:", best_params)
-    score = random_search.score(X_test, y_test)
-    print("R2:", score)
-
-    return best_params
+    print("Best parms for DecisionTree:", random_search.best_params_)
+    print(f"r2: {r2}, mae: {mae}, evs: {evs}, tur: {tur}")
 
 
 def run_random_forest(X_train, y_train, X_test, y_test, n_iter):
     rf = RandomForestRegressor()
     rf_param_distributions = {
-        'n_estimators': randint(1, 100),
-        'max_depth': randint(1, 100),
-        'min_samples_split': randint(2, 100)
+        'n_estimators': randint(1, 10),
+        'max_depth': randint(1, 10),
+        'min_samples_split': randint(2, 10)
     }
 
     rf_search = RandomizedSearchCV(
@@ -189,13 +212,12 @@ def run_random_forest(X_train, y_train, X_test, y_test, n_iter):
     )
     rf_search.fit(X_train, y_train)
 
-    best_params = rf_search.best_params_
-    print("Best parms for Random Forest:", best_params)
-    score = rf_search.score(X_test, y_test)
-    print("R2:", score)
+    pred = rf_search.predict(X_test)
+    r2, mae, evs, tur = compute_metrics(torch.from_numpy(pred), torch.tensor(y_test.values))
 
-    return best_params
+    print("Best parms for Random Forest:", rf_search.best_params_)
+    print(f"r2: {r2}, mae: {mae}, evs: {evs}, tur: {tur}")
 
 
 if __name__ == "__main__":
-    poly_paths, seebeck_path, features = main()
+    main()
