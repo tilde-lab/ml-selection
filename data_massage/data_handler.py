@@ -7,13 +7,15 @@ from ase.data import chemical_symbols
 from polars import DataFrame
 
 from data.mendeleev_table import periodic_numbers
-from data_massage.create_polyheadra import (get_int_poly_type,
-                                            get_poly_elements,
-                                            size_customization)
+from data_massage.create_polyheadra import (
+    get_int_poly_type,
+    get_poly_elements,
+    size_customization,
+)
 from data_massage.database_handlers.MPDS.request_to_mpds import RequestMPDS
+
 # change path if another
-from metis_backend.metis_backend.structures.struct_utils import \
-    order_disordered
+from metis_backend.metis_backend.structures.struct_utils import order_disordered
 
 
 class DataHandler:
@@ -42,11 +44,11 @@ class DataHandler:
 
         if is_MPDS:
             self.client_handler = RequestMPDS(dtype=dtype, api_key=self.api_key)
-            self.db = 'MPDS'
+            self.db = "MPDS"
         else:
             self.client_handler = None
-            self.db = 'MP'
-        self.available_dtypes = [1, 4]
+            self.db = "MP"
+        self.available_dtypes = [1]
         self.dtype = dtype
 
     def just_seebeck(
@@ -102,10 +104,14 @@ class DataHandler:
         Return polars Dataframe with ordered structures
         """
         # get disordered structures from db, save random structure for specific 'phase_id'
-        all_data_df = pl.from_pandas(self.cleaning_trash_data(
-            self.client_handler.make_request(is_structure=True, phases=phases),
-            idx_check=5,
-        ).to_pandas().drop_duplicates(subset=["formula", "sg_n"])).drop("formula")
+        all_data_df = pl.from_pandas(
+            self.cleaning_trash_data(
+                self.client_handler.make_request(is_structure=True, phases=phases),
+                idx_check=5,
+            )
+            .to_pandas()
+            .drop_duplicates(subset=["formula", "sg_n"])
+        ).drop("formula")
         if is_uniq_phase_id:
             all_data_df = self.just_uniq_phase_id(all_data_df)
 
@@ -124,8 +130,8 @@ class DataHandler:
                 "basis_noneq",
                 "els_noneq",
                 "entry",
-                "temperature"
-            ]
+                "temperature",
+            ],
         )
 
         result_list = []
@@ -199,7 +205,7 @@ class DataHandler:
     def add_seebeck_by_phase_id(
         self, seebeck_df: DataFrame, structures_or_sg__df: DataFrame
     ) -> DataFrame:
-        if self.db == 'MPDS':
+        if self.db == "MPDS":
             try:
                 seebeck_df = seebeck_df.rename({"Phase": "phase_id"})
             except:
@@ -245,10 +251,7 @@ class DataHandler:
                 data_res.append(row)
             else:
                 print("Removed garbage data:", row)
-        data = pl.DataFrame(
-            data_res,
-            schema=df.columns
-        )
+        data = pl.DataFrame(data_res, schema=df.columns)
         return data
 
     def combine_data(self, data_f: DataFrame, data_s: DataFrame) -> DataFrame:
@@ -605,18 +608,22 @@ class DataHandler:
         """
         identifier, seebeck, formula = [], [], []
         for row in mp_data:
-            identifier.append(row['identifier'])
-            seebeck.append(row['data']['S'])
-            formula.append(row['formula'])
-        return pl.DataFrame({"identifier": identifier, "formula": formula, "Seebeck coefficient": seebeck},
-                            schema=["identifier", "formula", "Seebeck coefficient"])
+            identifier.append(row["identifier"])
+            seebeck.append(row["data"]["S"])
+            formula.append(row["formula"])
+        return pl.DataFrame(
+            {
+                "identifier": identifier,
+                "formula": formula,
+                "Seebeck coefficient": seebeck,
+            },
+            schema=["identifier", "formula", "Seebeck coefficient"],
+        )
 
 
 if __name__ == "__main__":
-    with open('/root/projects/ml-selection/data/mp_database/space_group_mp.json', "r") as f:
+    with open(
+        "/root/projects/ml-selection/data/mp_database/space_group_mp.json", "r"
+    ) as f:
         data = f.read()
     handler = DataHandler(True)
-
-
-
-

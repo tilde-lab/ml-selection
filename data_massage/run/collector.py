@@ -23,6 +23,7 @@ def get_structures_and_seebeck(
     raw_str_path: str = None,
     path_to_save: str = None,
     just_mp: bool = False,
+    just_mpds: bool = True
 ) -> DataFrame:
     """
     Get all available Seebeck values from -150 to 200. For each 'phase_id', calculate
@@ -42,14 +43,17 @@ def get_structures_and_seebeck(
         'raw_seebeck_path' and 'raw_str_path'
     just_mp: bool
         if yes, then Seebeck's data will be obtained only from Materials Project
+    just_mpds: bool
+        if yes, then Seebeck's data will be obtained only from MPDS
     """
     # get seebeck from MP
-    RequestMP(CONF).run_requests()
-    phase_id_mp = MPDS_MP_Adapter().run_match_mp_mpds_data()
+    if not just_mpds:
+        RequestMP(CONF).run_requests()
+        phase_id_mp = MPDS_MP_Adapter().run_match_mp_mpds_data()
 
     if not just_mp:
         if not raw_seebeck_path:
-            # get Seebeck for PEER_REV and AB_INITIO from MPDS
+            # get Seebeck for PEER_REV from MPDS
             seebeck_dfrm_mpds = handler.just_seebeck(
                 max_value=200, min_value=-150, is_uniq_phase_id=False
             )
@@ -58,17 +62,24 @@ def get_structures_and_seebeck(
         else:
             seebeck_dfrm_mpds = pl.read_json(raw_seebeck_path)
 
-        # change direction of columns for stack 2 dfrm
-        phase_id_mp = phase_id_mp.select(seebeck_dfrm_mpds.columns)
-        phases = list(set(seebeck_dfrm_mpds["Phase"])) + list(set(phase_id_mp["Phase"]))
+        if not just_mpds:
+            # change direction of columns for stack 2 dfrm
+            phase_id_mp = phase_id_mp.select(seebeck_dfrm_mpds.columns)
+            phases = list(set(seebeck_dfrm_mpds["Phase"])) + list(set(phase_id_mp["Phase"]))
 
-        # make median Seebeck value
-        median_seebeck = seebeck_median_value(
-            phase_id_mp.vstack(seebeck_dfrm_mpds), phases
-        )
-        file_path = path_to_save + "median_seebeck.json"
+            # make median Seebeck value
+            median_seebeck = seebeck_median_value(
+                phase_id_mp.vstack(seebeck_dfrm_mpds), phases
+            )
+        else:
+            phases = list(set(seebeck_dfrm_mpds["Phase"]))
+            median_seebeck = seebeck_median_value(
+                seebeck_dfrm_mpds, phases
+            )
+        file_path = path_to_save + "median_seebeck_mpds.json"
         median_seebeck.write_json(file_path)
-    else:
+
+    elif not just_mpds:
         phase_id_mp = phase_id_mp.select(["Phase", "Formula", "Seebeck coefficient"])
         phases = list(set(phase_id_mp["Phase"]))
         median_seebeck = phase_id_mp
@@ -81,7 +92,7 @@ def get_structures_and_seebeck(
             structures_dfrm = handler.to_order_disordered_str(
                 phases=phases, is_uniq_phase_id=is_uniq_structure_for_phase
             )
-            file_path = path_to_save + "rep_structures.json"
+            file_path = path_to_save + "rep_structures_mpds.json"
             structures_dfrm.write_json(file_path)
         else:
             try:
@@ -99,7 +110,7 @@ def get_structures_and_seebeck(
     result_dfrm = handler.add_seebeck_by_phase_id(median_seebeck, structures_dfrm)
 
     if path_to_save:
-        csv_file_path = path_to_save + "total.json"
+        csv_file_path = path_to_save + "total_mpds.json"
         result_dfrm.write_json(csv_file_path)
 
     return result_dfrm
@@ -153,10 +164,11 @@ def main():
     get_structures_and_seebeck(
         handler,
         is_uniq_structure_for_phase,
-        raw_seebeck_path=raw_path + "seebeck.json",
-        raw_str_path=raw_path + "rep_structures.json",
+        # if you dont need to download again
+        # raw_seebeck_path=raw_path + "seebeck.json",
+        # raw_str_path=raw_path + "rep_structures.json",
         path_to_save=raw_path,
-        just_mp=False
+        just_mpds=True
     )
     run_processing_polyhedra.main(True)
 
