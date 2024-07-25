@@ -6,8 +6,7 @@ import polars as pd
 import torch
 import torch.utils.data as data
 
-from models.neural_network_models.transformer.transformer_reg import \
-    TransformerModel
+from models.neural_network_models.transformer.transformer_reg import TransformerModel
 
 poly = pd.read_csv(
     f"/root/projects/ml-selection/data/processed_data/poly/2_features.csv",

@@ -7,7 +7,7 @@ from torcheval.metrics import R2Score
 from torchmetrics import MeanAbsoluteError, MeanAbsolutePercentageError
 from tqdm import tqdm
 from sklearn.metrics import explained_variance_score
-from data_massage.metrics.statistic_metrics import theils_u
+from metrics.statistic_metrics import theils_u
 from datasets.poly_graph_dataset import PolyGraphDataset
 from data.poly_store import get_poly_info
 import pickle
@@ -125,7 +125,7 @@ class GAT(torch.nn.Module):
         model,
         test_dataloader: DataLoader,
         device: torch.device,
-        save_dir="./gat.pth"
+        save_dir="./gat.pth",
     ) -> torch.Tensor:
         """Test model"""
         (model.eval(), r2.reset(), mae.reset())

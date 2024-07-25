@@ -1,0 +1,172 @@
+"""
+Selection of hyperparameters by OPTUNA for ml-models.
+"""
+
+import optuna
+import torch
+from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
+from sklearn.linear_model import Ridge
+from sklearn.tree import DecisionTreeRegressor
+
+from metrics.compute_metrics import compute_metrics
+
+BEST_R2 = -100
+
+
+def make_study(n_trials, objective_func):
+    study = optuna.create_study(
+        sampler=optuna.samplers.TPESampler(), direction="maximize"
+    )
+    study.optimize(objective_func, n_trials=n_trials)
+
+    res = [study.best_trial]
+
+    print("Number of finished trials: ", len(study.trials))
+    print("Best trial:")
+    trial = study.best_trial
+
+    print("  R2: ", trial.values)
+    print("  Params: ")
+
+    parms = []
+    for key, value in trial.params.items():
+        print(f"    {key}: {value}")
+        parms.append([key, value])
+    res.append(parms)
+    return res
+
+
+def run_tune_linear_regression(X_train, y_train, X_test, y_test, n_trials=1):
+    def objective(trial) -> int:
+        """Search of hyperparameters"""
+        global BEST_R2
+
+        alpha = trial.suggest_float("alpha", 0.0000001, 100.0)
+
+        model = Ridge(alpha)
+
+        # train and test
+        model.fit(X_train, y_train)
+        pred = model.predict(X_test)
+        r2, mae, evs, tur = compute_metrics(
+            torch.from_numpy(pred), torch.tensor(y_test.values)
+        )
+
+        print("-------------Ridge-------------")
+        print(f"r2: {r2}, mae: {mae}, evs: {evs}, tur: {tur}")
+
+        if r2 > BEST_R2:
+            BEST_R2 = r2
+
+        return r2
+
+    res = make_study(n_trials, objective)
+    return res
+
+
+def run_tune_boosted_trees(X_train, y_train, X_test, y_test, n_trials=1):
+    def objective(trial) -> int:
+        """Search of hyperparameters"""
+        global BEST_R2
+
+        n_estimators = trial.suggest_int("n_estimators", 1, 100)
+        max_depth = trial.suggest_int("max_depth", 3, 100)
+        learning_rate = trial.suggest_float("learning_rate", 0.0001, 0.01)
+        min_samples_leaf = trial.suggest_int("min_samples_leaf", 3, 100)
+        min_samples_split = trial.suggest_int("min_samples_split", 3, 100)
+
+        model = GradientBoostingRegressor(
+            n_estimators=n_estimators,
+            max_depth=max_depth,
+            learning_rate=learning_rate,
+            min_samples_leaf=min_samples_leaf,
+            min_samples_split=min_samples_split,
+        )
+
+        # train and test
+        model.fit(X_train, y_train)
+        pred = model.predict(X_test)
+        r2, mae, evs, tur = compute_metrics(
+            torch.from_numpy(pred), torch.tensor(y_test.values)
+        )
+
+        print("-------------GradientBoostingRegressor-------------")
+        print(f"r2: {r2}, mae: {mae}, evs: {evs}, tur: {tur}")
+
+        if r2 > BEST_R2:
+            BEST_R2 = r2
+
+        return r2
+
+    res = make_study(n_trials, objective)
+    return res
+
+
+def run_tune_decision_tree(X_train, y_train, X_test, y_test, n_trials=1):
+    def objective(trial) -> int:
+        """Search of hyperparameters"""
+        global BEST_R2
+
+        max_depth = trial.suggest_int("max_depth", 3, 100)
+        min_samples_leaf = trial.suggest_int("min_samples_leaf", 3, 100)
+        min_samples_split = trial.suggest_int("min_samples_split", 3, 100)
+
+        model = DecisionTreeRegressor(
+            max_depth=max_depth,
+            min_samples_leaf=min_samples_leaf,
+            min_samples_split=min_samples_split,
+        )
+
+        # train and test
+        model.fit(X_train, y_train)
+        pred = model.predict(X_test)
+        r2, mae, evs, tur = compute_metrics(
+            torch.from_numpy(pred), torch.tensor(y_test.values)
+        )
+
+        print("-------------DecisionTreeRegressor-------------")
+        print(f"r2: {r2}, mae: {mae}, evs: {evs}, tur: {tur}")
+
+        if r2 > BEST_R2:
+            BEST_R2 = r2
+
+        return r2
+
+    res = make_study(n_trials, objective)
+    return res
+
+
+def run_tune_random_forest(X_train, y_train, X_test, y_test, n_trials=1):
+    def objective(trial) -> int:
+        """Search of hyperparameters"""
+        global BEST_R2
+
+        max_depth = trial.suggest_int("max_depth", 3, 100)
+        n_estimators = trial.suggest_int("n_estimators", 1, 100)
+        min_samples_leaf = trial.suggest_int("min_samples_leaf", 3, 100)
+        min_samples_split = trial.suggest_int("min_samples_split", 3, 100)
+
+        model = RandomForestRegressor(
+            n_estimators=n_estimators,
+            max_depth=max_depth,
+            min_samples_leaf=min_samples_leaf,
+            min_samples_split=min_samples_split,
+        )
+
+        # train and test
+        model.fit(X_train, y_train)
+        pred = model.predict(X_test)
+        r2, mae, evs, tur = compute_metrics(
+            torch.from_numpy(pred), torch.tensor(y_test.values)
+        )
+
+        print("-------------RandomForestRegressor-------------")
+        print(f"r2: {r2}, mae: {mae}, evs: {evs}, tur: {tur}")
+
+        if r2 > BEST_R2:
+            BEST_R2 = r2
+
+        return r2
+
+    res = make_study(n_trials, objective)
+    return res

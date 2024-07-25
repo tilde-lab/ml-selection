@@ -7,8 +7,7 @@ import torch
 from torch_geometric.loader import DataLoader
 
 from datasets.point_cloud_dataset import PointCloudDataset
-from models.neural_network_models.PointNet.pointnet_model import (PointNet,
-                                                                  train, val)
+from models.neural_network_models.PointNet.pointnet_model import PointNet, train, val
 
 BEST_WEIGHTS = None
 BEST_R2 = -100

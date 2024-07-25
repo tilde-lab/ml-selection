@@ -6,7 +6,7 @@ from torch_geometric.nn import MessagePassing, global_max_pool
 from torcheval.metrics import R2Score
 from torchmetrics import MeanAbsoluteError, MeanAbsolutePercentageError
 from sklearn.metrics import explained_variance_score
-from data_massage.metrics.statistic_metrics import theils_u
+from metrics.statistic_metrics import theils_u
 import yaml
 
 from datasets.point_cloud_dataset import PointCloudDataset
@@ -100,13 +100,14 @@ def train(model, ep, train_loader, optimizer):
             optimizer.step()
             total_loss += float(loss) * data.num_graphs
             mape.update(logits.reshape(-1), y)
-        print(f"--------Mean loss for epoch {e} is {total_loss / len(train_loader.dataset)}--------")
+        print(
+            f"--------Mean loss for epoch {e} is {total_loss / len(train_loader.dataset)}--------"
+        )
     return total_loss / len(train_loader.dataset)
 
 
 def val(model, test_loader, save_dir):
     model.eval(), r2.reset(), mae.reset()
-
 
     preds = None
     with torch.no_grad():
@@ -145,14 +146,13 @@ def val(model, test_loader, save_dir):
     return r2_res, mae_result
 
 
-def main(epoch: int = 20, batch_size: int = 2, name_to_save='w_pn', just_mp: bool = False):
+def main(
+    epoch: int = 20, batch_size: int = 2, name_to_save="w_pn", just_mp: bool = False
+):
     features = [3, 4]
 
     for f in features:
-        path_to_w = (
-                WEIGHTS_DIR
-                + f"pointnet_{name_to_save}_{f}.pth"
-        )
+        path_to_w = WEIGHTS_DIR + f"pointnet_{name_to_save}_{f}.pth"
         dataset = PointCloudDataset(features=f, just_mp=just_mp)
 
         train_size = int(0.9 * len(dataset))
@@ -163,21 +163,25 @@ def main(epoch: int = 20, batch_size: int = 2, name_to_save='w_pn', just_mp: boo
             dataset, range(train_size, train_size + test_size)
         )
 
-        train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True, num_workers=0)
-        test_loader = DataLoader(test_data, batch_size=batch_size, shuffle=False, num_workers=0)
+        train_loader = DataLoader(
+            train_data, batch_size=batch_size, shuffle=True, num_workers=0
+        )
+        test_loader = DataLoader(
+            test_data, batch_size=batch_size, shuffle=False, num_workers=0
+        )
 
         model = PointNet(f)
         optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
         try:
             model.load_state_dict(torch.load(path_to_w))
-            print('Successfully loaded pretrained weights to PointNet')
+            print("Successfully loaded pretrained weights to PointNet")
         except:
-            print('No pretrained weights found for PointNet')
+            print("No pretrained weights found for PointNet")
 
         _ = train(model, epoch, train_loader, optimizer)
         _ = val(model, test_loader, save_dir=path_to_w)
 
 
 if __name__ == "__main__":
-    main(name_to_save='31_05', just_mp=True)
+    main(name_to_save="31_05", just_mp=True)

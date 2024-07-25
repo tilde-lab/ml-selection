@@ -1,5 +1,6 @@
 import yaml
 
+
 def get_poly_info():
     with open("/root/projects/ml-selection/configs/config.yaml", "r") as yamlfile:
         yaml_f = yaml.load(yamlfile, Loader=yaml.FullLoader)
@@ -23,4 +24,10 @@ def get_poly_info():
         ["poly_elements", "poly_type", "temperature"],
     ]
 
-    return poly_dir_path, poly_path, poly_just_graph_models, poly_features, poly_temperature_features
+    return (
+        poly_dir_path,
+        poly_path,
+        poly_just_graph_models,
+        poly_features,
+        poly_temperature_features,
+    )
