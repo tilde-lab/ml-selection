@@ -170,7 +170,7 @@ def main():
         path_to_save=raw_path,
         just_mpds=True
     )
-    run_processing_polyhedra.main(True)
+    run_processing_polyhedra.main(just_mpds=True)
 
 
 if __name__ == "__main__":

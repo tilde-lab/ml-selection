@@ -16,13 +16,16 @@ with open(CONF, "r") as yamlfile:
     processed_data = conf["polyhedra_path"]
 
 
-def combine_structure_and_poly(just_mp: bool) -> None:
+def combine_structure_and_poly(just_mp: bool, just_mpds: bool) -> None:
     """
     Combine structures and polyhedra by entry
     """
     if just_mp:
         dfrm = hand.add_polyhedra(raw_data + "mp_structures.json")
         dfrm.write_json(raw_data + "large_poly_mp.json")
+    elif just_mpds:
+        dfrm = hand.add_polyhedra(raw_data + "rep_structures_mpds.json")
+        dfrm.write_json(raw_data + "large_poly.json")
     else:
         dfrm = hand.add_polyhedra(raw_data + "rep_structures.json")
         dfrm.write_json(raw_data + "large_poly.json")
@@ -85,7 +88,7 @@ def get_different_descriptors(
     )
 
 
-def main(just_mp: bool):
+def main(just_mp: bool = False, just_mpds: bool = False):
     """
     Run total collection
 
@@ -93,10 +96,12 @@ def main(just_mp: bool):
     ----------
     just_mp: bool, optional
         If yes, then data was obtained only from Materials Project, save with name '..._mp.json'
+    just_mpds: bool, optional
+        If yes, then data was obtained only from MPDS, load from 'rep_structures_mpds.json'
     """
-    combine_structure_and_poly(just_mp=just_mp)
+    combine_structure_and_poly(just_mp=just_mp, just_mpds=just_mpds)
     get_different_descriptors(just_mp=just_mp)
 
 
 if __name__ == "__main__":
-    main(True)
+    main(just_mpds=True)
