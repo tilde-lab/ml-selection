@@ -46,8 +46,8 @@ def run_tune_linear_regression(X_train, y_train, X_test, y_test, n_trials=1):
         model = Ridge(alpha)
 
         # train and test
-        model.fit(X_train, y_train)
-        pred = model.predict(X_test)
+        model.fit(X_train.to_numpy(), y_train.to_numpy())
+        pred = model.predict(X_test.to_numpy())
         r2, mae, evs, tur = compute_metrics(
             torch.from_numpy(pred), torch.tensor(y_test.values)
         )

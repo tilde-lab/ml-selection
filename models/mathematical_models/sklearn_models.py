@@ -96,7 +96,7 @@ def run_ml_models(
     seebeck_path: str,
     f: list,
     is_temp: Union[bool, int],
-    n_iter: int = 1,
+    n_iter: int = 1000,
 ) -> None:
     for i, poly in enumerate(poly_paths):
         data = load_data(poly, seebeck_path)
