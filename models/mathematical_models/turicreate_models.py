@@ -1,6 +1,7 @@
 """
 Any of the below regression models can be used for predicting Seebeck Coefficient values of binary compounds.
 """
+from scipy.stats import randint
 
 import pandas as pd
 import polars as pl
@@ -11,7 +12,7 @@ from torcheval.metrics import R2Score
 from torchmetrics import MeanAbsoluteError, MeanAbsolutePercentageError
 from turicreate import SFrame
 from sklearn.metrics import explained_variance_score
-from data_massage.metrics.statistic_metrics import theils_u
+from metrics.statistic_metrics import theils_u
 from data.poly_store import get_poly_info
 
 
@@ -47,6 +48,13 @@ def split_data_for_turi_models(poly_path: str, seebeck_path: str) -> pd.DataFram
 def run_linear_regression(train, test, features):
     # LINEAR REGRESSION MODEL
     train_r, test_r = SFrame(train), SFrame(test)
+    param_distributions = {
+        'n_estimators': randint(10, 200),
+        'max_depth': randint(1, 20),
+        'min_samples_split': randint(2, 20),
+        'min_samples_leaf': randint(1, 20)
+    }
+
     model_linear = tc.linear_regression.create(
         train_r, target="Seebeck coefficient", features=features, validation_set=test_r
     )
@@ -76,6 +84,33 @@ def run_linear_regression(train, test, features):
 def run_decision_tree(train, test, features):
     # DECISION TREE MODEL
     train_d, test_d = SFrame(train), SFrame(test)
+
+    param_distributions = {
+        'max_depth': randint(1, 200),
+        'min_child_weight': randint(0.0, 1.0),
+        'min_loss_reduction': randint(0.0, 1.0)
+    }
+    random_search = RandomizedSearchCV(
+        estimator=model,
+        param_distributions=param_distributions,
+        n_iter=100,
+        scoring='accuracy',
+        n_jobs=-1,
+        cv=5,
+        verbose=1,
+        random_state=42
+    )
+    # Обучение модели
+    random_search.fit(X_train, y_train)
+
+    # Лучшие гиперпараметры
+    best_params = random_search.best_params_
+    print("Лучшие гиперпараметры:", best_params)
+
+    # Оценка модели на тестовых данных
+    score = random_search.score(X_test, y_test)
+    print("Точность на тестовых данных:", score)
+
     model_decision = tc.decision_tree_regression.create(
         train_d, target="Seebeck coefficient", features=features, validation_set=test_d
     )
@@ -224,4 +259,4 @@ def main(just_mp: bool = False):
 
 
 if __name__ == "__main__":
-    main(just_mp=True)
+    main(just_mp=False)

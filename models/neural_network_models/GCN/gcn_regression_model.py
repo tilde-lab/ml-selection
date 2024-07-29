@@ -12,7 +12,7 @@ import yaml
 import numpy as np
 
 from data.poly_store import get_poly_info
-from data_massage.metrics.statistic_metrics import theils_u
+from metrics.statistic_metrics import theils_u
 from datasets.poly_graph_dataset import PolyGraphDataset
 
 r2 = R2Score()
@@ -74,7 +74,7 @@ class GCN(torch.nn.Module):
         train_dataloader: DataLoader,
         device: torch.device,
         lr=0.005,
-        save_dir="./gcn.pth"
+        save_dir="./gcn.pth",
     ):
         """Train model"""
         optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=5e-4)
@@ -91,31 +91,33 @@ class GCN(torch.nn.Module):
                 loss.backward()
                 optimizer.step()
                 mean_loss += loss
-            print(
-                f"--------Mean loss for epoch {epoch} is {mean_loss / cnt}--------"
-            )
+            print(f"--------Mean loss for epoch {epoch} is {mean_loss / cnt}--------")
             if epoch % 5 == 0:
-                torch.save(
-                    model.state_dict(), save_dir)
+                torch.save(model.state_dict(), save_dir)
 
     def val(
         self,
         model,
         test_dataloader: DataLoader,
         device: torch.device,
-        save_dir="./gcn.pth"
+        save_dir="./gcn.pth",
     ) -> torch.Tensor:
         """Test model"""
         (model.eval(), r2.reset(), mae.reset())
 
         preds = None
-        with open(f'{PATH_SC}scalerSeebeck coefficient.pkl', 'rb') as file:
+        with open(f"{PATH_SC}scalerSeebeck coefficient.pkl", "rb") as file:
             scaler = pickle.load(file)
 
         with torch.no_grad():
             for data, y in test_dataloader:
                 pred = model(data.to(device))
-                pred, y = torch.tensor(scaler.inverse_transform(np.array(pred.cpu()))), torch.tensor(scaler.inverse_transform(np.array(y.cpu()).reshape(-1, 1)))
+                pred, y = (
+                    torch.tensor(scaler.inverse_transform(np.array(pred.cpu()))),
+                    torch.tensor(
+                        scaler.inverse_transform(np.array(y.cpu()).reshape(-1, 1))
+                    ),
+                )
 
                 if preds != None:
                     preds = torch.cat((preds, pred), dim=0)
@@ -178,7 +180,7 @@ def main(epoch=5, device="cpu", name_to_save="w_gcn", batch_size=2, just_mp=Fals
 
     if just_mp:
         for i in range(len(poly_path)):
-            poly_path[i] = poly_path[i].replace('.json', '_mp.json')
+            poly_path[i] = poly_path[i].replace(".json", "_mp.json")
 
     total_features = []
     (
@@ -193,8 +195,8 @@ def main(epoch=5, device="cpu", name_to_save="w_gcn", batch_size=2, just_mp=Fals
             temperature = False
         for idx, path in enumerate(poly_path):
             path_to_w = (
-                    WEIGHTS_DIR
-                    + f"gcn_{name_to_save}_{len(features[idx])}_{temperature}.pth"
+                WEIGHTS_DIR
+                + f"gcn_{name_to_save}_{len(features[idx])}_{temperature}.pth"
             )
             train_dataloader, test_dataloader = get_ds(
                 path, len(features[idx]), temperature
@@ -204,9 +206,9 @@ def main(epoch=5, device="cpu", name_to_save="w_gcn", batch_size=2, just_mp=Fals
             model = GCN(len(features[idx]), 16, 32, "tanh").to(device)
             try:
                 model.load_state_dict(torch.load(path_to_w))
-                print('Successfully loaded pretrained weights to GCN')
+                print("Successfully loaded pretrained weights to GCN")
             except:
-                print('No pretrained weights found for GCN')
+                print("No pretrained weights found for GCN")
 
             model.fit(
                 model,
@@ -214,14 +216,9 @@ def main(epoch=5, device="cpu", name_to_save="w_gcn", batch_size=2, just_mp=Fals
                 train_dataloader,
                 device,
                 lr=0.008598391737229157,
-                save_dir=path_to_w
+                save_dir=path_to_w,
             )
-            model.val(
-                model,
-                test_dataloader,
-                device,
-                save_dir=path_to_w
-            )
+            model.val(model, test_dataloader, device, save_dir=path_to_w)
 
 
 if __name__ == "__main__":

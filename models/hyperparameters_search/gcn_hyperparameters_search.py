@@ -13,7 +13,9 @@ BEST_WEIGHTS = None
 BEST_R2 = -100
 
 
-def main(path: str, features: int, ds: int, temperature: bool, n_trials=3, epoch=[3, 4]):
+def main(
+    path: str, features: int, ds: int, temperature: bool, n_trials=3, epoch=[3, 4]
+):
     def objective(trial) -> int:
         """Search of hyperparameters"""
         global BEST_WEIGHTS, BEST_R2

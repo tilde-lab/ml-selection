@@ -19,17 +19,23 @@ def make_normalization(
     with open("/root/projects/ml-selection/configs/config.yaml", "r") as yamlfile:
         yaml_f = yaml.load(yamlfile, Loader=yaml.FullLoader)
         path = yaml_f["scaler_path"]
-    exceptions_col = ['phase_id', 'Phase', 'Formula']
+    exceptions_col = ["phase_id", "Phase", "Formula"]
     for column_name in data.columns:
         scaler = MinMaxScaler(feature_range=(-1, 1))
         if column_name not in exceptions_col:
             try:
                 scaler.fit(np.array([list(i) for i in list(data[column_name])]))
-                d = scaler.transform(np.array([list(i) for i in list(data[column_name])]))
+                d = scaler.transform(
+                    np.array([list(i) for i in list(data[column_name])])
+                )
                 data = data.with_columns(pl.Series(column_name, d.tolist()))
             except:
-                scaler.fit(np.array([i for i in list(data[column_name])]).reshape(-1, 1))
-                d = scaler.transform(np.array([i for i in list(data[column_name])]).reshape(-1, 1))
+                scaler.fit(
+                    np.array([i for i in list(data[column_name])]).reshape(-1, 1)
+                )
+                d = scaler.transform(
+                    np.array([i for i in list(data[column_name])]).reshape(-1, 1)
+                )
                 d = [i[0] for i in d]
                 data = data.with_columns(pl.Series(column_name, d))
             with open(path + scaler_name + column_name + ".pkl", "wb") as f:

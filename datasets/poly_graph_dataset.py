@@ -15,7 +15,11 @@ class PolyGraphDataset(Dataset):
     """
 
     def __init__(
-        self, poly_path, features_type: int = 3, add_temperature: bool = False, just_mp: bool = False
+        self,
+        poly_path,
+        features_type: int = 3,
+        add_temperature: bool = False,
+        just_mp: bool = False,
     ):
         """
         Parameters
@@ -41,7 +45,9 @@ class PolyGraphDataset(Dataset):
             self.seebeck = pl.read_json(f"{path_mpds}mp_seebeck.json")
         else:
             self.seebeck = pl.read_json(f"{path_mpds}median_seebeck.json")
-        data = make_normalization(self.seebeck.join(self.poly, on="phase_id", how="inner"))
+        data = make_normalization(
+            self.seebeck.join(self.poly, on="phase_id", how="inner")
+        )
         self.data = [list(data.row(i)) for i in range(len(data))][:40]
 
     def __len__(self):

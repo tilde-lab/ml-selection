@@ -6,14 +6,15 @@ import optuna
 import polars as pl
 import torch
 
-from models.neural_network_models.transformer.transformer_reg import \
-    TransformerModel
+from models.neural_network_models.transformer.transformer_reg import TransformerModel
 
 BEST_WEIGHTS = None
 BEST_R2 = -100
 
 
-def main(poly_path: str, features: int, ds: int, temperature: bool, n_trials=3, epoch=[3, 4]):
+def main(
+    poly_path: str, features: int, ds: int, temperature: bool, n_trials=3, epoch=[3, 4]
+):
     poly = pl.read_json(poly_path)
     seebeck = pl.read_json(
         "/root/projects/ml-selection/data/raw_mpds/median_seebeck.json"
@@ -29,9 +30,7 @@ def main(poly_path: str, features: int, ds: int, temperature: bool, n_trials=3, 
     test_size = len(dataset) - train_size
 
     train_data = torch.utils.data.Subset(dataset, test_size)
-    test_data = torch.utils.data.Subset(
-        dataset, range(test_size, train_size)
-    )
+    test_data = torch.utils.data.Subset(dataset, range(test_size, train_size))
 
     def objective(trial) -> int:
         """Search of hyperparameters"""

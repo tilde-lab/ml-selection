@@ -21,7 +21,7 @@ import yaml
 import numpy as np
 
 from data.poly_store import get_poly_info
-from data_massage.metrics.statistic_metrics import theils_u
+from metrics.statistic_metrics import theils_u
 
 
 CONF = "/root/projects/ml-selection/configs/config.yaml"
