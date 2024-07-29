@@ -1,5 +1,5 @@
 """
-Ml-models from sklearn with tuning hyperparameters by RandomizedSearchCV.
+Ml-models from sklearn with tuning hyperparameters by Optuna.
 """
 
 from typing import Union
@@ -16,7 +16,7 @@ from models.hyperparameters_search.optuna_ml import (
 
 def main(just_mp: bool = False):
     """Run pipeline"""
-    with open("/root/projects/ml-selection/configs/config.yaml", "r") as yamlfile:
+    with open("/configs/config.yaml", "r") as yamlfile:
         yaml_f = yaml.load(yamlfile, Loader=yaml.FullLoader)
         raw_mpds = yaml_f["raw_mpds"]
 
@@ -36,8 +36,9 @@ def main(just_mp: bool = False):
         for i in range(len(poly_path)):
             poly_path[i] = poly_path[i].replace(".json", "_mp.parquet")
 
-    for cnt, f in enumerate([poly_features, poly_temperature_features]):
+    for cnt, f in enumerate([poly_temperature_features]):
         print(f"\n\nSTART with descriptor: {f}\n")
+        cnt = 1
         if not just_mp:
             run_ml_models(poly_path, raw_mpds + "median_seebeck.parquet", f, cnt)
         else:
@@ -96,7 +97,7 @@ def run_ml_models(
     seebeck_path: str,
     f: list,
     is_temp: Union[bool, int],
-    n_iter: int = 1000,
+    n_iter: int = 100,
 ) -> None:
     for i, poly in enumerate(poly_paths):
         data = load_data(poly, seebeck_path)

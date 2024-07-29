@@ -6,7 +6,7 @@ from sklearn.linear_model import Ridge
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.tree import DecisionTreeRegressor
 
-from models.mathematical_models.sklearn_models import compute_metrics
+from models.mathematical_models.skl_models_tune_optuna import compute_metrics
 
 
 def run_tune_linear_regression(X_train, y_train, X_test, y_test, n_iter):

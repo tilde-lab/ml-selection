@@ -48,7 +48,7 @@ class DataHandler:
         else:
             self.client_handler = None
             self.db = "MP"
-        self.available_dtypes = [1]
+        self.available_dtypes = [1, 4]
         self.dtype = dtype
 
     def just_seebeck(
