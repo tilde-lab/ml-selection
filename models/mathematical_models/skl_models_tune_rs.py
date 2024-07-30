@@ -6,13 +6,13 @@ from typing import Union
 from models.hyperparameters_search.randomized_search_ml import (
     run_tune_boosted_trees, run_tune_decision_tree, run_tune_linear_regression,
     run_tune_random_forest)
-from models.mathematical_models.skl_models_tune_optuna import main, load_data, make_descriptors
+from skl_models_tune_optuna import load_data, make_descriptors
 from data.poly_store import get_poly_info
 
 
 def main(just_mp: bool = False):
     """Run tune hyp-parameters """
-    with open("/configs/config.yaml", "r") as yamlfile:
+    with open("/root/projects/ml-selection/configs/config.yaml", "r") as yamlfile:
         yaml_f = yaml.load(yamlfile, Loader=yaml.FullLoader)
         raw_mpds = yaml_f["raw_mpds"]
 
@@ -33,8 +33,8 @@ def main(just_mp: bool = False):
             poly_path[i] = poly_path[i].replace(".json", "_mp.parquet")
 
     for cnt, f in enumerate([poly_temperature_features]):
-        print(f"\n\nSTART with descriptor: {f}\n")
         cnt = 1
+        print(f"\n\nSTART with descriptor: {f}\n")
         if not just_mp:
             run_ml_models(poly_path, raw_mpds + "median_seebeck.parquet", f, cnt)
         else:
@@ -45,9 +45,11 @@ def run_ml_models(
     seebeck_path: str,
     f: list,
     is_temp: Union[bool, int],
-    n_iter: int = 100,
+    n_iter: int = 400,
 ) -> None:
     for i, poly in enumerate(poly_paths):
+        if i != 1:
+            continue
         data = load_data(poly, seebeck_path)
         train_x, train_y, test_x, test_y = make_descriptors(data, f, i, is_temp)
 

@@ -16,7 +16,7 @@ from models.hyperparameters_search.optuna_ml import (
 
 def main(just_mp: bool = False):
     """Run pipeline"""
-    with open("/configs/config.yaml", "r") as yamlfile:
+    with open("/root/projects/ml-selection/configs/config.yaml", "r") as yamlfile:
         yaml_f = yaml.load(yamlfile, Loader=yaml.FullLoader)
         raw_mpds = yaml_f["raw_mpds"]
 
@@ -97,9 +97,11 @@ def run_ml_models(
     seebeck_path: str,
     f: list,
     is_temp: Union[bool, int],
-    n_iter: int = 100,
+    n_iter: int = 300,
 ) -> None:
     for i, poly in enumerate(poly_paths):
+        if i != 1:
+            continue
         data = load_data(poly, seebeck_path)
         train_x, train_y, test_x, test_y = make_descriptors(data, f, i, is_temp)
 
