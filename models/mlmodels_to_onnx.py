@@ -1,7 +1,6 @@
 """Convert skl models to ONNX"""
 
 import pandas as pd
-from skl2onnx import to_onnx
 import numpy as np
 import yaml
 import onnxruntime as rt
@@ -27,11 +26,12 @@ def run_ml_model(
     """Get dataset, train model, make predict"""
     data = load_data(poly_paths, seebeck_path)
     train_x, train_y, test_x, test_y = make_descriptors(data, f[1], 1, is_temp)
+    r2 = 0
 
     model = RandomForestRegressor(
-        max_depth=230, n_estimators=112,
-        min_samples_leaf=2, min_samples_split=0.00010948659349158227,
-        max_features=391
+        n_estimators=259, max_depth=184,
+        min_samples_leaf=2, min_samples_split=0.0008226399734106349,
+        max_features=285
     )
     model.fit(train_x.to_numpy().astype(np.float32), train_y.to_numpy().astype(np.float32))
 
@@ -54,16 +54,16 @@ def convert_to_onnx(model: RandomForestRegressor) -> None:
     model : RandomForestRegressor
         Trained model
     """
-    initial_type = [('float_input', FloatTensorType([None, 103]))]
+    initial_type = [('input', FloatTensorType([None, 103]))]
     onx = convert_sklearn(model, initial_types=initial_type, target_opset=10)
-    onnx_model_path = "random_forest_2.onnx"
+    onnx_model_path = "random_forest.onnx"
     onnx.save(onx, onnx_model_path)
 
 
 def check_metrics_in_onnx(test_x: pd.DataFrame, test_y: pd.DataFrame):
     """Сheck metrics for ONNX model"""
-    sess = rt.InferenceSession("random_forest_2.onnx", providers=rt.get_available_providers())
-    pred_ort = sess.run(None, {"float_input": test_x.to_numpy().astype(np.float32)})
+    sess = rt.InferenceSession("random_forest.onnx", providers=rt.get_available_providers())
+    pred_ort = sess.run(None, {"input": test_x.to_numpy().astype(np.float32)})
     r2, mae, evs, tur = compute_metrics(
         torch.tensor(pred_ort).squeeze(-1).squeeze(-2), torch.tensor(test_y.values)
     )
