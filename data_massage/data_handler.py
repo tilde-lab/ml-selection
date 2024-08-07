@@ -48,11 +48,13 @@ class DataHandler:
         else:
             self.client_handler = None
             self.db = "MP"
-        self.available_dtypes = [1, 4]
+        # ab_initio or peer_rev
+        self.available_dtypes = [1]
         self.dtype = dtype
 
-    def just_seebeck(
-        self, max_value: int, min_value: int, is_uniq_phase_id: bool = False
+    def just_phys_prop(
+        self, max_value: int, min_value: int, is_uniq_phase_id: bool = False,
+            phys_prop: str = 'Seebeck coefficient'
     ) -> DataFrame:
         """
         Get Seebeck coefficient from db
@@ -72,18 +74,18 @@ class DataHandler:
         res_dfrm : DataFrame
             Seebeck coefficients in DataFrame format
         """
-        res_dfrm = pl.DataFrame({"Phase": [], "Formula": [], "Seebeck coefficient": []})
+        res_dfrm = pl.DataFrame({"Phase": [], "Formula": [], phys_prop: []})
 
         for data_type in self.available_dtypes:
             self.client_handler = RequestMPDS(dtype=data_type, api_key=self.api_key)
 
-            dfrm = self.client_handler.make_request(is_seebeck=True)
+            dfrm = self.client_handler.make_request(is_phys_prop=True, phys_prop=phys_prop)
 
-            # remove outliers in value of Seebeck coefficient
+            # remove outliers in value
             if max_value:
                 dfrm = dfrm.filter(
-                    (pl.col("Seebeck coefficient") >= min_value)
-                    & (pl.col("Seebeck coefficient") <= max_value)
+                    (pl.col(phys_prop) >= min_value)
+                    & (pl.col(phys_prop) <= max_value)
                 )
             if len(res_dfrm) == 0:
                 res_dfrm = dfrm
@@ -202,23 +204,23 @@ class DataHandler:
 
         return result_df
 
-    def add_seebeck_by_phase_id(
-        self, seebeck_df: DataFrame, structures_or_sg__df: DataFrame
+    def add_phys_prop_by_phase_id(
+        self, phys_prop_df: DataFrame, structures_or_sg__df: DataFrame
     ) -> DataFrame:
         if self.db == "MPDS":
             try:
-                seebeck_df = seebeck_df.rename({"Phase": "phase_id"})
+                phys_prop_df = phys_prop_df.rename({"Phase": "phase_id"})
             except:
                 pass
             dfrm = pd.merge(
-                seebeck_df.to_pandas(),
+                phys_prop_df.to_pandas(),
                 structures_or_sg__df.to_pandas(),
                 on="phase_id",
                 how="inner",
             )
         else:
             dfrm = pd.merge(
-                seebeck_df.to_pandas(),
+                phys_prop_df.to_pandas(),
                 structures_or_sg__df.to_pandas(),
                 on="identifier",
                 how="inner",

@@ -27,13 +27,14 @@ class RequestMPDS:
 
     def make_request(
         self,
-        is_seebeck: bool = False,
+        is_phys_prop: bool = False,
         is_structure: bool = False,
         is_phase: bool = False,
         phases: list = None,
         formulas: list = None,
         sg: list = None,
         mp_ids: list = None,
+        phys_prop: str = None
     ) -> pl.DataFrame:
         """
         Requests data from the MplS according to the input parameters
@@ -54,14 +55,14 @@ class RequestMPDS:
             "els_noneq", "entry", "temperature"
             If is_seebeck -> "Phase", "Formula", "Seebeck coefficient"
         """
-        if is_seebeck:
+        if is_phys_prop:
             # because .get_dataframe return pd.Dataframe
             dfrm = pd.DataFrame(
-                self.client.get_dataframe({"props": "Seebeck coefficient"})
+                self.client.get_dataframe({"props": phys_prop})
             )
             dfrm = pl.from_pandas(dfrm)
             dfrm = dfrm.filter(pl.col("Phase").is_finite())
-            dfrm = dfrm.rename({"Value": "Seebeck coefficient"})
+            dfrm = dfrm.rename({"Value": phys_prop})
             columns_to_drop = [dfrm.columns[i] for i in [2, 3, 4, 5]]
             dfrm = dfrm.drop(columns_to_drop)
             return dfrm

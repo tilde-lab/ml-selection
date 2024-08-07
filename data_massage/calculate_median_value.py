@@ -43,7 +43,7 @@ def seebeck_median_value(data: pl.DataFrame, phases: list) -> DataFrame:
         new_data_list.append(new_data_for_phase)
 
     dfrm = pl.DataFrame(
-        new_data_list, schema=["phase_id", "Formula", "Seebeck coefficient"]
+        new_data_list, schema=data.columns
     )
 
     return dfrm

@@ -16,14 +16,17 @@ from data_massage.database_handlers.MaterialsProject.request_to_mp import Reques
 CONF = "/root/projects/ml-selection/configs/config.yaml"
 
 
-def get_structures_and_seebeck(
+def get_structures_and_phys_prop(
     handler: DataHandler,
     is_uniq_structure_for_phase: bool,
+    phys_prop: str = 'Seebeck coefficient',
     raw_seebeck_path: str = None,
     raw_str_path: str = None,
     path_to_save: str = None,
     just_mp: bool = False,
-    just_mpds: bool = True
+    just_mpds: bool = True,
+    min_value: int = None,
+    max_value: int = None
 ) -> DataFrame:
     """
     Get all available Seebeck values from -150 to 200. For each 'phase_id', calculate
@@ -54,37 +57,44 @@ def get_structures_and_seebeck(
     if not just_mp:
         if not raw_seebeck_path:
             # get Seebeck for PEER_REV from MPDS
-            seebeck_dfrm_mpds = handler.just_seebeck(
-                max_value=200, min_value=-150, is_uniq_phase_id=False
+            phys_prop_dfrm_mpds = handler.just_phys_prop(
+                max_value=max_value, min_value=min_value, is_uniq_phase_id=False, phys_prop=phys_prop
             )
-            file_path = path_to_save + "seebeck.json"
-            seebeck_dfrm_mpds.write_json(file_path)
+            if phys_prop == "Seebeck coefficient":
+                file_path = path_to_save + "seebeck.json"
+            else:
+                file_path = path_to_save + "conductivity.json"
+            phys_prop_dfrm_mpds.write_json(file_path)
         else:
-            seebeck_dfrm_mpds = pl.read_json(raw_seebeck_path)
+            phys_prop_dfrm_mpds = pl.read_json(raw_seebeck_path)
 
         if not just_mpds:
             # change direction of columns for stack 2 dfrm
-            phase_id_mp = phase_id_mp.select(seebeck_dfrm_mpds.columns)
-            phases = list(set(seebeck_dfrm_mpds["Phase"])) + list(set(phase_id_mp["Phase"]))
+            phase_id_mp = phase_id_mp.select(phys_prop_dfrm_mpds.columns)
+            phases = list(set(phys_prop_dfrm_mpds["Phase"])) + list(set(phase_id_mp["Phase"]))
 
-            # make median Seebeck value
-            median_seebeck = seebeck_median_value(
-                phase_id_mp.vstack(seebeck_dfrm_mpds), phases
+            # make median value for property
+            median_phys_prop = seebeck_median_value(
+                phase_id_mp.vstack(phys_prop_dfrm_mpds), phases
             )
         else:
-            phases = list(set(seebeck_dfrm_mpds["Phase"]))
-            median_seebeck = seebeck_median_value(
-                seebeck_dfrm_mpds, phases
+            phases = list(set(phys_prop_dfrm_mpds["Phase"]))
+            median_phys_prop = seebeck_median_value(
+                phys_prop_dfrm_mpds, phases
             )
-        file_path = path_to_save + "median_seebeck_mpds.json"
-        median_seebeck.write_json(file_path)
+        if phys_prop == "Seebeck coefficient":
+            file_path = path_to_save + "median_seebeck_mpds.json"
+        else:
+            file_path = path_to_save + "median_conductivity.json"
+        median_phys_prop.write_json(file_path)
 
     elif not just_mpds:
+        # NOT IMPLEMENTED for 'conductivity'
         phase_id_mp = phase_id_mp.select(["Phase", "Formula", "Seebeck coefficient"])
         phases = list(set(phase_id_mp["Phase"]))
-        median_seebeck = phase_id_mp
+        median_phys_prop = phase_id_mp
         file_path = path_to_save + "mp_seebeck.json"
-        median_seebeck.write_json(file_path)
+        median_phys_prop.write_json(file_path)
 
     if not raw_str_path:
         # get structure and make it ordered
@@ -107,7 +117,7 @@ def get_structures_and_seebeck(
     else:
         structures_dfrm = pl.read_json(raw_str_path)
 
-    result_dfrm = handler.add_seebeck_by_phase_id(median_seebeck, structures_dfrm)
+    result_dfrm = handler.add_phys_prop_by_phase_id(median_phys_prop, structures_dfrm)
 
     if path_to_save:
         csv_file_path = path_to_save + "total_mpds.json"
@@ -161,14 +171,12 @@ def main():
     is_uniq_structure_for_phase = False
     handler = DataHandler(True, api_key)
 
-    get_structures_and_seebeck(
+    get_structures_and_phys_prop(
         handler,
         is_uniq_structure_for_phase,
-        # if you dont need to download again
-        # raw_seebeck_path=raw_path + "seebeck.json",
-        # raw_str_path=raw_path + "rep_structures.json",
         path_to_save=raw_path,
-        just_mpds=True
+        just_mpds=True,
+        phys_prop='thermal conductivity'
     )
     run_processing_polyhedra.main(just_mpds=True)
 
