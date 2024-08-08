@@ -1,6 +1,6 @@
 """
 Run with command:
-$ python PATH_TO_SCRIPT PATH_TO_PROJECT PATH_TO_MODEL_IN_ONNX_FORMAT PATH_TO_TXT_FILE
+$ python PATH_TO_SCRIPT PATH_TO_PROJECT PATH_TO_MODEL_IN_ONNX_FORMAT PATH_TO_TXT_FILE OUTPUT_PATH
 
 File for input must consist of: "poly_elements", "poly_type", "temperature".
 All data is separate by comma.
@@ -19,6 +19,7 @@ import onnxruntime as rt
 
 path_to_project = sys.argv[1]
 model_path = sys.argv[2]
+output_path = sys.argv[4]
 sys.path.append(os.path.abspath(path_to_project))
 
 
@@ -50,6 +51,10 @@ for structure in structures:
     inputs.append(elements_large + [vertex] + [p_type] + [temperature])
 
 output = run_predict(np.array(inputs))
+
+with open(output_path, 'w') as output_file:
+    for i, out in enumerate(output):
+        output_file.write(str(output[i][0]) + '\n')
 
 [print(i) for i in structures]
 print("=" * 100)
