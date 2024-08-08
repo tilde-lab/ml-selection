@@ -4,25 +4,25 @@ import polars as pl
 from polars import DataFrame
 
 
-def seebeck_median_value(data: pl.DataFrame, phases: list) -> DataFrame:
+def phys_prop_median_value(data: pl.DataFrame, phases: list) -> DataFrame:
     """
-    Calculates the median value of Seebeck coefficient from samples with the same 'phase_id'
+    Calculates the median value of property from samples with the same 'phase_id'
 
     Parameters
     ----------
     data : polars DataFrame
-        DataFrame with next columns: 'Phase', 'Formula', 'Seebeck coefficient'
+        DataFrame with next columns: 'Phase', 'Formula', 'NAME_OF_PROPERTY'
     phases : list
         Set of phases
 
     Returns
     -------
-        DataFrame with median values of Seebeck coefficient
+        DataFrame with median values of physical property values
     """
     new_data_list = []
 
     for phase in phases:
-        seebeck = []
+        property = []
         data_for_phase = data.filter(pl.col("Phase") == phase)
         data_for_phase_list = [
             list(data_for_phase.row(i)) for i in range(len(data_for_phase))
@@ -33,12 +33,12 @@ def seebeck_median_value(data: pl.DataFrame, phases: list) -> DataFrame:
             continue
 
         for value in data_for_phase_list:
-            seebeck.append(value[2])
+            property.append(value[2])
 
-        median_seebeck = statistics.median(seebeck)
+        median_property = statistics.median(property)
 
         new_data_for_phase = data_for_phase_list[0]
-        new_data_for_phase[2] = median_seebeck
+        new_data_for_phase[2] = median_property
 
         new_data_list.append(new_data_for_phase)
 

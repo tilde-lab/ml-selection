@@ -45,7 +45,7 @@ def run_ml_model(
     return (model, train_x, train_y, test_x, test_y)
 
 
-def convert_to_onnx(model: RandomForestRegressor) -> None:
+def convert_to_onnx(model: RandomForestRegressor, num: str) -> None:
     """
     Convert model into ONNX format. Save in current folder.
 
@@ -56,7 +56,7 @@ def convert_to_onnx(model: RandomForestRegressor) -> None:
     """
     initial_type = [('input', FloatTensorType([None, 103]))]
     onx = convert_sklearn(model, initial_types=initial_type, target_opset=10)
-    onnx_model_path = "random_forest.onnx"
+    onnx_model_path = f"random_forest_conductivity_{num}.onnx"
     onnx.save(onx, onnx_model_path)
 
 

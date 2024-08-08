@@ -99,7 +99,7 @@ def run_tune_random_forest(X_train, y_train, X_test, y_test, n_iter):
         "n_estimators": randint(1, 200),
         "max_depth": randint(1, 200),
         "min_samples_split": randint(3, 200),
-        "min_weight_fraction_leaf": np.random.uniform(0.0, 1.0, size=100000),
+        "min_weight_fraction_leaf": np.random.uniform(0.0, 0.5, size=100000),
         "max_features": np.random.uniform(0.00001, 1.0, size=100000)
     }
 
@@ -114,7 +114,7 @@ def run_tune_random_forest(X_train, y_train, X_test, y_test, n_iter):
     )
     rf_search.fit(X_train.to_numpy(), y_train.to_numpy())
 
-    pred = rf_search.predict(X_test.to_numpy)
+    pred = rf_search.predict(X_test.to_numpy())
     r2, mae, evs, tur = compute_metrics(
         torch.from_numpy(pred), torch.tensor(y_test.values)
     )

@@ -7,7 +7,7 @@ import polars as pl
 from polars import DataFrame
 import yaml
 
-from data_massage.calculate_median_value import seebeck_median_value
+from data_massage.calculate_median_value import phys_prop_median_value
 from data_massage.data_handler import DataHandler
 from scripts.launch import run_processing_polyhedra
 from data_massage.database_handlers.adapter import MPDS_MP_Adapter
@@ -86,12 +86,12 @@ def get_structures_and_phys_prop(
             phases = list(set(phys_prop_dfrm_mpds["Phase"])) + list(set(phase_id_mp["Phase"]))
 
             # make median value for property
-            median_phys_prop = seebeck_median_value(
+            median_phys_prop = phys_prop_median_value(
                 phase_id_mp.vstack(phys_prop_dfrm_mpds), phases
             )
         else:
             phases = list(set(phys_prop_dfrm_mpds["Phase"]))
-            median_phys_prop = seebeck_median_value(
+            median_phys_prop = phys_prop_median_value(
                 phys_prop_dfrm_mpds, phases
             )
         if phys_prop == "Seebeck coefficient":
@@ -184,15 +184,15 @@ def main():
     is_uniq_structure_for_phase = False
     handler = DataHandler(True, api_key)
 
-    get_structures_and_phys_prop(
-        handler,
-        is_uniq_structure_for_phase,
-        path_to_save=raw_path,
-        just_mpds=True,
-        phys_prop='thermal conductivity',
-        raw_str_path='/root/projects/ml-selection/data/raw_mpds/rep_structures_mpds.json',
-        raw_prop_path='/root/projects/ml-selection/data/raw_mpds/conductivity.json'
-    )
+    # get_structures_and_phys_prop(
+    #     handler,
+    #     is_uniq_structure_for_phase,
+    #     path_to_save=raw_path,
+    #     just_mpds=True,
+    #     phys_prop='thermal conductivity',
+    #     raw_str_path='/root/projects/ml-selection/data/raw_mpds/rep_structures_mpds.json',
+    #     raw_prop_path='/root/projects/ml-selection/data/raw_mpds/conductivity.json'
+    # )
     run_processing_polyhedra.main(just_mpds=True)
 
 

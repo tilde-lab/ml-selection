@@ -99,12 +99,17 @@ class DataHandler:
         return res_dfrm
 
     def to_order_disordered_str(
-        self, phases: list, is_uniq_phase_id: bool = True
+        self, phases: list, is_uniq_phase_id: bool = True, return_not_clean_not_ordered: bool = False
     ) -> DataFrame:
         """
         Make order in disordered structures.
         Return polars Dataframe with ordered structures
         """
+        if return_not_clean_not_ordered:
+            dfrm = pl.from_pandas(self.client_handler.make_request(
+                is_structure=True, phases=phases
+            ).to_pandas().drop("formula", axis=1))
+            return dfrm
         # get disordered structures from db, save random structure for specific 'phase_id'
         all_data_df = pl.from_pandas(
             self.cleaning_trash_data(
@@ -466,7 +471,9 @@ class DataHandler:
         Parameters
         ----------
         crystals_json_path : str
-            Path to json file with structures
+            Path to json file with structures with next columns:
+            'phase_id', 'occs_noneq', 'cell_abc', 'sg_n', 'basis_noneq', 'els_noneq',
+            'entry', 'temperature', 'Site', 'Type', 'Composition'
         features : int
             If 2 -> features: elements, poly (number of vertex + number of type poly)
             If 3 -> features: elements, number of vertex in poly, type of poly
@@ -532,7 +539,7 @@ class DataHandler:
             # replay protection
             if [elements_large, poly_type_large] not in descriptor_store:
                 descriptor_store.append([elements_large, poly_type_large])
-                temperature = poly[6]
+                temperature = poly[3]
                 if features == 2 or features == 0 or is_one_hot:
                     poly_store.append(
                         [poly[0], elements_large, poly_type_large, temperature]
