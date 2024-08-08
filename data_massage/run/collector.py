@@ -1,5 +1,5 @@
 """
-Main file that starts collecting data for training models. Get median value for Seebeck and structures.
+Main file that starts collecting data for training models. Get median value for properties and structures.
 1 phase_id <-> 1 Seebeck <-> many structures.
 """
 
@@ -20,34 +20,46 @@ def get_structures_and_phys_prop(
     handler: DataHandler,
     is_uniq_structure_for_phase: bool,
     phys_prop: str = 'Seebeck coefficient',
-    raw_seebeck_path: str = None,
+    raw_prop_path: str = None,
     raw_str_path: str = None,
     path_to_save: str = None,
     just_mp: bool = False,
     just_mpds: bool = True,
     min_value: int = None,
-    max_value: int = None
+    max_value: int = None,
+    not_clean_not_ordered_str: bool = True
 ) -> DataFrame:
     """
-    Get all available Seebeck values from -150 to 200. For each 'phase_id', calculate
-    median Seebeck value. Query all available structures for these 'phase_id'.
+    Get all available properties. For each 'phase_id', calculate
+    median value. Query all available structures for these 'phase_id'.
+    Available getting values for Seebeck coefficient, thermal conductivity. MPDS supports both properties,
+    MP just conductivity.
+
+
     Parameters
     ----------
     handler : DataHandler
         class instance
     is_uniq_structure_for_phase : bool
         if True, only 1 Seebeck value is store per 1 structure per 1 'phase_id'
-    raw_seebeck_path : str, optional
-        Path to file with not processed data for Seebeck value
+    phys_prop : str
+        Property name (available: Seebeck coefficient, thermal conductivity)
+    raw_prop_path : str, optional
+        Path to file with not processed data for property
     raw_str_path : str, optional
         Path to file with not processed data for structures
     path_to_save : str, optional
         Path to folder, where raw data save, appropriate only in the absence
         'raw_seebeck_path' and 'raw_str_path'
     just_mp: bool
-        if yes, then Seebeck's data will be obtained only from Materials Project
+        if yes, then Seebeck's data (available for Seebeck coefficient)
+        will be obtained only from Materials Project
     just_mpds: bool
-        if yes, then Seebeck's data will be obtained only from MPDS
+        if yes, then properties (Seebeck coefficient, thermal conductivity)
+        will be obtained only from MPDS
+    not_clean_not_ordered_str: bool
+        Return not clean and not ordered structures. Can be useful if the structures
+        themselves are not needed, but an entry is needed to connect property with polyhedra.
     """
     # get seebeck from MP
     if not just_mpds:
@@ -55,8 +67,8 @@ def get_structures_and_phys_prop(
         phase_id_mp = MPDS_MP_Adapter().run_match_mp_mpds_data()
 
     if not just_mp:
-        if not raw_seebeck_path:
-            # get Seebeck for PEER_REV from MPDS
+        if not raw_prop_path:
+            # get property for PEER_REV from MPDS
             phys_prop_dfrm_mpds = handler.just_phys_prop(
                 max_value=max_value, min_value=min_value, is_uniq_phase_id=False, phys_prop=phys_prop
             )
@@ -66,7 +78,7 @@ def get_structures_and_phys_prop(
                 file_path = path_to_save + "conductivity.json"
             phys_prop_dfrm_mpds.write_json(file_path)
         else:
-            phys_prop_dfrm_mpds = pl.read_json(raw_seebeck_path)
+            phys_prop_dfrm_mpds = pl.read_json(raw_prop_path)
 
         if not just_mpds:
             # change direction of columns for stack 2 dfrm
@@ -89,7 +101,7 @@ def get_structures_and_phys_prop(
         median_phys_prop.write_json(file_path)
 
     elif not just_mpds:
-        # NOT IMPLEMENTED for 'conductivity'
+        # NOT SUPPORT for conductivity, just for seebeck
         phase_id_mp = phase_id_mp.select(["Phase", "Formula", "Seebeck coefficient"])
         phases = list(set(phase_id_mp["Phase"]))
         median_phys_prop = phase_id_mp
@@ -97,10 +109,11 @@ def get_structures_and_phys_prop(
         median_phys_prop.write_json(file_path)
 
     if not raw_str_path:
-        # get structure and make it ordered
+        # get structure and make it ordered (if needed)
         if not just_mp:
             structures_dfrm = handler.to_order_disordered_str(
-                phases=phases, is_uniq_phase_id=is_uniq_structure_for_phase
+                phases=phases, is_uniq_phase_id=is_uniq_structure_for_phase,
+                return_not_clean_not_ordered=not_clean_not_ordered_str
             )
             file_path = path_to_save + "rep_structures_mpds.json"
             structures_dfrm.write_json(file_path)
@@ -176,7 +189,9 @@ def main():
         is_uniq_structure_for_phase,
         path_to_save=raw_path,
         just_mpds=True,
-        phys_prop='thermal conductivity'
+        phys_prop='thermal conductivity',
+        raw_str_path='/root/projects/ml-selection/data/raw_mpds/rep_structures_mpds.json',
+        raw_prop_path='/root/projects/ml-selection/data/raw_mpds/conductivity.json'
     )
     run_processing_polyhedra.main(just_mpds=True)
 
