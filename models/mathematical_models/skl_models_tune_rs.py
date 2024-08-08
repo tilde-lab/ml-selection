@@ -3,9 +3,7 @@ Ml-models from sklearn with tuning hyperparameters by RandomizedSearchCV.
 """
 import yaml
 from typing import Union
-from models.hyperparameters_search.randomized_search_ml import (
-    run_tune_boosted_trees, run_tune_decision_tree, run_tune_linear_regression,
-    run_tune_random_forest)
+from models.hyperparameters_search.randomized_search_ml import run_tune_random_forest
 from skl_models_tune_optuna import load_data, make_descriptors
 from data.poly_store import get_poly_info
 
@@ -45,7 +43,7 @@ def run_ml_models(
     seebeck_path: str,
     f: list,
     is_temp: Union[bool, int],
-    n_iter: int = 400,
+    n_iter: int = 1500,
 ) -> None:
     for i, poly in enumerate(poly_paths):
         if i != 1:
@@ -53,9 +51,6 @@ def run_ml_models(
         data = load_data(poly, seebeck_path)
         train_x, train_y, test_x, test_y = make_descriptors(data, f, i, is_temp)
 
-        run_tune_linear_regression(train_x, train_y, test_x, test_y, n_iter)
-        run_tune_decision_tree(train_x, train_y, test_x, test_y, n_iter)
-        run_tune_boosted_trees(train_x, train_y, test_x, test_y, n_iter)
         run_tune_random_forest(train_x, train_y, test_x, test_y, n_iter)
 
 
