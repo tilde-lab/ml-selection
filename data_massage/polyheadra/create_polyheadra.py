@@ -3,7 +3,7 @@ import re
 from data.mendeleev_table import get_periodic_number
 
 
-def get_poly_elements(poly: list) -> list:
+def get_poly_elements(poly: list, idx: int = 10) -> list:
     """
     Get periodic element number for each atom in a polyhedra
 
@@ -11,15 +11,17 @@ def get_poly_elements(poly: list) -> list:
     ----------
     poly : list
         Data with atoms name
+    idx: int
+        Number of index with elements info
 
     Returns
     -------
     elements  : list
          Periodic numbers of elements
     """
-    if poly[10] == None:
+    if poly[idx] == None:
         return [None]
-    formula = re.sub(r"(?<=\w)([A-Z])", r" \1", poly[10])
+    formula = re.sub(r"(?<=\w)([A-Z])", r" \1", poly[idx])
     composition = formula.replace("<sub>", " ").replace("</sub>", " ").split(" ")
     elements = []
 
@@ -38,7 +40,7 @@ def get_poly_elements(poly: list) -> list:
     return elements
 
 
-def get_int_poly_type(poly: list) -> int:
+def get_int_poly_type(poly: list, idx: int = 9) -> int:
     """
     Get type of polyhedra
 
@@ -46,8 +48,10 @@ def get_int_poly_type(poly: list) -> int:
     ----------
     poly  : list
         Data consist of name polyhedra and number of vertex
+    idx : int
+        Number of index with poly type data
     """
-    values = poly[9].replace("-", " ").replace("#", " ").split(" ")
+    values = poly[idx].replace("-", " ").replace("#", " ").split(" ")
     vertex = int(values[0])
     type = ord(values[1]) - ord("a") + 1
 
