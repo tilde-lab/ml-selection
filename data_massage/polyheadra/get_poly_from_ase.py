@@ -51,7 +51,7 @@ def find_metal(atom=None, coord=None):
     return total_metal, atom_metal, coord_metal
 
 
-def extract_poly(atom=None, coord=None, metal=1, cutoff_metal_ligand=2.8, number_of_atoms=1):
+def extract_poly(atom=None, coord=None, n_center=1, cutoff_ligand=2.8, number_of_atoms=1):
     """
     Search the polyhedron structure in complex and return atoms and coordinates.
 
@@ -61,12 +61,12 @@ def extract_poly(atom=None, coord=None, metal=1, cutoff_metal_ligand=2.8, number
         Full atomic labels of complex.
     coord : array_like
         Full atomic coordinates of complex.
-    metal : int
+    n_center : int
         Number of metal atom that will be taken as center atom for
         finding atomic coordinates of polyhedron structure of interest.
         Default value is 1.
-    cutoff_metal_ligand : float, optional
-        Cutoff distance for screening metal-ligand bond.
+    cutoff_ligand : float, optional
+        Cutoff distance for screening ligand bond.
         Default value is 2.8.
     number_of_atoms : int, optional
         Number of atoms in polyhedron
@@ -79,24 +79,24 @@ def extract_poly(atom=None, coord=None, metal=1, cutoff_metal_ligand=2.8, number
         Atomic coordinates of polyhedron structure.
     """
     if atom is None or coord is None:
-        raise TypeError("find_metal needs two arguments: atom and coord")
+        raise TypeError("needs two arguments: atom and coord")
 
     # Count the number of metal center atom
     total_metal, atom_metal, coord_metal = find_metal(atom, coord)
 
-    if metal <= 0:
+    if n_center <= 0:
         raise ValueError("index of metal must be positive integer")
 
-    elif metal > total_metal:
+    elif n_center > total_metal:
         raise ValueError("user-defined index of metal is greater than "
                          "the total metal in complex.")
 
-    metal_index = metal - 1
+    metal_index = n_center - 1
     dist_list = []
 
     for i in range(len(list(atom))):
         dist = distance.euclidean(coord_metal[metal_index], coord[i])
-        if dist <= cutoff_metal_ligand:
+        if dist <= cutoff_ligand:
             dist_list.append([atom[i], coord[i], dist])
 
     # sort list of tuples by distance in ascending order
