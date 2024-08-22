@@ -3,7 +3,7 @@ import re
 from data.mendeleev_table import get_periodic_number
 
 
-def get_poly_elements(poly: list, idx: int = 10) -> list:
+def get_poly_elements(poly: list, idx: int = 9) -> list:
     """
     Get periodic element number for each atom in a polyhedra
 
@@ -38,24 +38,6 @@ def get_poly_elements(poly: list, idx: int = 10) -> list:
                 elements.append(elements[-1])
 
     return elements
-
-
-def get_int_poly_type(poly: list, idx: int = 9) -> int:
-    """
-    Get type of polyhedra
-
-    Parameters
-    ----------
-    poly  : list
-        Data consist of name polyhedra and number of vertex
-    idx : int
-        Number of index with poly type data
-    """
-    values = poly[idx].replace("-", " ").replace("#", " ").split(" ")
-    vertex = int(values[0])
-    type = ord(values[1]) - ord("a") + 1
-
-    return [vertex * 10, type]
 
 
 def size_customization(elements: list, size_v: int = 100) -> list:

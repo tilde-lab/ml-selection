@@ -115,7 +115,10 @@ def get_structures_and_phys_prop(
                 phases=phases, is_uniq_phase_id=is_uniq_structure_for_phase,
                 return_not_clean_not_ordered=not_clean_not_ordered_str
             )
-            file_path = path_to_save + "rep_structures_mpds.json"
+            if phys_prop == 'Seebeck coefficient':
+                file_path = path_to_save + "rep_structures_mpds_seeb_not_clean.json"
+            else:
+                file_path = path_to_save + "rep_structures_mpds_conductivity.json"
             structures_dfrm.write_json(file_path)
         else:
             try:
@@ -184,15 +187,21 @@ def main():
     is_uniq_structure_for_phase = False
     handler = DataHandler(True, api_key)
 
-    # get_structures_and_phys_prop(
-    #     handler,
-    #     is_uniq_structure_for_phase,
-    #     path_to_save=raw_path,
-    #     just_mpds=True,
-    #     phys_prop='thermal conductivity',
-    #     raw_str_path='/root/projects/ml-selection/data/raw_mpds/rep_structures_mpds.json',
-    #     raw_prop_path='/root/projects/ml-selection/data/raw_mpds/conductivity.json'
-    # )
+    get_structures_and_phys_prop(
+        handler,
+        is_uniq_structure_for_phase,
+        path_to_save=raw_path,
+        just_mpds=True,
+        phys_prop='Seebeck coefficient',
+        # # ! uncomment if you want to use not ordered structure (for getting poly)
+        # raw_str_path='/root/projects/ml-selection/data/raw_mpds/rep_structures_mpds_seeb_not_clean.json',
+
+        # will use ordered structures for getting poly (by 'entry')
+        raw_str_path='/root/projects/ml-selection/data/raw_mpds/rep_structures_mpds_seeb.json',
+        raw_prop_path='/root/projects/ml-selection/data/raw_mpds/seebeck.json',
+        min_value=-150,
+        max_value=200
+    )
     run_processing_polyhedra.main(just_mpds=True)
 
 

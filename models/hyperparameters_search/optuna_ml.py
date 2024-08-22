@@ -153,11 +153,11 @@ def run_tune_random_forest(X_train, y_train, X_test, y_test, n_trials=1, num=1):
         """Search of hyperparameters"""
         global BEST_R2, BEST_model
 
-        max_depth = trial.suggest_int("max_depth", 3, 400)
-        n_estimators = trial.suggest_int("n_estimators", 1, 300)
-        min_samples_leaf = trial.suggest_int("min_samples_leaf", 2, 400)
+        max_depth = trial.suggest_int("max_depth", 3, 450)
+        n_estimators = trial.suggest_int("n_estimators", 1, 350)
+        min_samples_leaf = trial.suggest_int("min_samples_leaf", 2, 450)
         min_samples_split = trial.suggest_float("min_samples_split", 0.0, 1.0)
-        max_features = trial.suggest_int("max_features", 1, 400)
+        max_features = trial.suggest_int("max_features", 1, 450)
 
         model = RandomForestRegressor(
             n_estimators=n_estimators,
@@ -169,19 +169,20 @@ def run_tune_random_forest(X_train, y_train, X_test, y_test, n_trials=1, num=1):
 
         # train and test
         model.fit(X_train.to_numpy().astype(np.float32), y_train.to_numpy().astype(np.float32))
+        print("-------------RandomForestRegressor-------------")
+
         pred = model.predict(X_test.to_numpy().astype(np.float32))
         r2, mae, evs, tur = compute_metrics(
             torch.from_numpy(pred), torch.tensor(y_test.values)
         )
 
-        print("-------------RandomForestRegressor-------------")
         print(f"r2: {r2}, mae: {mae}, evs: {evs}, tur: {tur}")
 
         if r2 > BEST_R2:
             BEST_R2 = r2
             BEST_model = model
             onx = convert_sklearn(model, initial_types=[('input', FloatTensorType([None, 103]))], target_opset=10)
-            onnx.save(onx, f"rf_conductivity_{num}.onnx")
+            onnx.save(onx, f"rf_conductivity_2_{num}.onnx")
 
         return r2
 

@@ -114,7 +114,7 @@ def extract_poly(atom=None, coord=None, n_center=1, cutoff_ligand=2.8, number_of
 
 def get_poly_info(ase_obj):
     atoms_poly, coord_poly = extract_poly(
-        [chemical_symbols[i] for i in ase_obj.numbers], ase_obj.positions, number_of_atoms=1
+        [chemical_symbols[i] for i in ase_obj.numbers], ase_obj.positions, number_of_atoms=16
     )
     print(atoms_poly)
 

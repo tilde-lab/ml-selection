@@ -13,9 +13,24 @@ def compute_metrics(y_pred: torch.Tensor, y_true: torch.Tensor) -> tuple:
     mae.update(y_pred, y_true)
     r2.update(y_pred, y_true)
 
-    mae_result = mae.compute()
-    r2_res = r2.compute()
-    evs = explained_variance_score(y_pred, y_true)
-    theils_u_res = theils_u(y_pred, y_true)
+    try:
+        mae_result = mae.compute()
+    except:
+        mae_result = None
+
+    try:
+        r2_res = r2.compute()
+    except:
+        r2_res = None
+
+    try:
+        evs = explained_variance_score(y_pred, y_true)
+    except:
+        evs = None
+
+    try:
+        theils_u_res = theils_u(y_pred, y_true)
+    except:
+        theils_u_res = None
 
     return (r2_res, mae_result, evs, theils_u_res)

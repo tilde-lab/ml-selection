@@ -7,8 +7,7 @@ from ase.data import chemical_symbols
 from polars import DataFrame
 
 from data.mendeleev_table import periodic_numbers
-from data_massage.create_polyheadra import (
-    get_int_poly_type,
+from data_massage.polyhedra.create_polyheadra import (
     get_poly_elements,
     size_customization,
 )
@@ -463,7 +462,7 @@ class DataHandler:
 
     @classmethod
     def process_polyhedra(
-        cls, crystals_json_path: str, features: int = 2, is_one_hot: bool = False
+        cls, crystals_json_path: str
     ) -> DataFrame:
         """
         Create descriptor from polyhedra
@@ -474,88 +473,34 @@ class DataHandler:
             Path to json file with structures with next columns:
             'phase_id', 'occs_noneq', 'cell_abc', 'sg_n', 'basis_noneq', 'els_noneq',
             'entry', 'temperature', 'Site', 'Type', 'Composition'
-        features : int
-            If 2 -> features: elements, poly (number of vertex + number of type poly)
-            If 3 -> features: elements, number of vertex in poly, type of poly
-            If 0 -> features: elements without size customization (data just for graph models), type of poly
-        is_one_hot : bool, optional
-            Present elements in vectors of count, where periodic number of element is index in vector
 
         Returns
         -------
         dfrm : DataFrame
            Table with next columns:
-           'phase_id', 'poly_elements', 'poly_vertex', 'poly_type', 'temperature'
-           or 'phase_id', 'poly_elements', 'poly_type', 'temperature'
+           "phase_id", "poly_elements", "poly_type"
         """
         crystals = pl.read_json(crystals_json_path)
         crystals = [list(crystals.row(i)) for i in range(len(crystals))]
-        poly_store = []
         descriptor_store = []
 
-        if features == 3 and not (is_one_hot):
-            columns = [
-                "phase_id",
-                "poly_elements",
-                "poly_vertex",
-                "poly_type",
-                "temperature",
-            ]
-        else:
-            columns = ["phase_id", "poly_elements", "poly_type", "temperature"]
+        columns = ["phase_id", "poly_elements", "poly_type"]
 
         for poly in crystals:
             elements = get_poly_elements(poly)
 
             if elements == [None]:
                 continue
-            if is_one_hot:
-                elements = cls.vectors_count_elements(elements)
 
-            vertex, p_type = get_int_poly_type(poly)
-
-            # features: elements, poly (number of vertex + number of type poly)
-            if features == 2 and not (is_one_hot):
-                poly_type = vertex + p_type
-                poly_type_large = [poly_type] * 100
-
-            # features: elements, number of vertex in poly, type of poly (+t if is_temperature==True)
-            elif features == 3 and not (is_one_hot):
-                vertex_large, p_type_large = [vertex] * 100, [p_type] * 100
-                poly_type_large = [vertex_large, p_type_large]
-
-            elif features == 0 or is_one_hot:
-                poly_type_large = [p_type] * 100
-            else:
-                return None
-
-            if features != 0 and not (is_one_hot):
-                elements_large = size_customization(elements)
-
-            # elements without size customization (just for graph models)
-            else:
-                elements_large = elements
+            # features: elements, number of atoms
+            poly_type = len(elements) * 100
+            elements_large = size_customization(elements)
 
             # replay protection
-            if [elements_large, poly_type_large] not in descriptor_store:
-                descriptor_store.append([elements_large, poly_type_large])
-                temperature = poly[3]
-                if features == 2 or features == 0 or is_one_hot:
-                    poly_store.append(
-                        [poly[0], elements_large, poly_type_large, temperature]
-                    )
-                elif features == 3:
-                    poly_store.append(
-                        [
-                            poly[0],
-                            elements_large,
-                            vertex_large,
-                            p_type_large,
-                            temperature,
-                        ]
-                    )
+            if [poly[0], elements_large, poly_type] not in descriptor_store:
+                descriptor_store.append([poly[0], elements_large, poly_type])
 
-        return pl.DataFrame(poly_store, schema=columns)
+        return pl.DataFrame(descriptor_store, schema=columns)
 
     def choose_temperature(self, dfrm: DataFrame) -> DataFrame:
         """
