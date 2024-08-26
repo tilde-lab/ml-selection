@@ -181,8 +181,8 @@ def run_tune_random_forest(X_train, y_train, X_test, y_test, n_trials=1, num=1):
         if r2 > BEST_R2:
             BEST_R2 = r2
             BEST_model = model
-            onx = convert_sklearn(model, initial_types=[('input', FloatTensorType([None, 103]))], target_opset=10)
-            onnx.save(onx, f"rf_conductivity_2_{num}.onnx")
+            onx = convert_sklearn(model, initial_types=[('input', FloatTensorType([None, 101]))], target_opset=10)
+            onnx.save(onx, f"rf_seebeck_2_{num}.onnx")
 
         return r2
 
