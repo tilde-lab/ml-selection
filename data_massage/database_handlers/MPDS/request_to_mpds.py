@@ -9,6 +9,8 @@ import requests
 import yaml
 from bs4 import BeautifulSoup
 import time
+from typing import Union
+
 
 CONF = "configs/config.yaml"
             
@@ -189,7 +191,7 @@ class RequestMPDS:
             return pl.DataFrame(phase_ids, schema=["phase_id", "identifier"])
         
     @staticmethod
-    def make_request_polyhedra(sid: str, entrys: list, phases: list) -> pd.DataFrame:
+    def request_polyhedra(sid: str, entrys: list) -> list:
         """
         Requests information about polyhedra type by https
         Parameters
@@ -198,11 +200,10 @@ class RequestMPDS:
             Sid from browser console (needed authentication)
         entrys : list
             Set with entry value for needed structures
-        phases : list
-            Phases of structure, should be the same size as entry list
+
         Returns
         -------
-            Answer from MPDS
+            list
         """
         # means pages without table Atomic environments
         loss_data = 0
@@ -225,7 +226,7 @@ class RequestMPDS:
                     continue
 
                 rows = atomic_table.find_all("tr")[1:]
-                atomic_data.append([phases[i], entry, []])
+                atomic_data.append([entry, []])
                 for row in rows:
                     cells = row.find_all("td")
                     try:
@@ -241,8 +242,23 @@ class RequestMPDS:
                 time.sleep(0.1)
             else:
                 loss_data += 1
-        update_res = [i for i in atomic_data if len(i) == 3]
-        res = pd.DataFrame(update_res, columns=["phase_id", "entry", "polyhedra"])
+        update_res = [i for i in atomic_data if len(i) == 2]
         print(f"Answers without table Atomic environments: {loss_data}")
 
-        return res
+        return update_res
+    
+    @staticmethod
+    def request_cif(sid: str, entry: str) -> Union[BeautifulSoup, None]:
+        query = f"https://api.mpds.io/v0/download/s?q={entry}&fmt=cif&export=1&sid={sid}"
+
+        response = requests.get(query)
+
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.text, "html.parser")
+            return soup
+        
+        
+        
+        
+        
+        
