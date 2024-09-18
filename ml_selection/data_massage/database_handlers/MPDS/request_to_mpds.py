@@ -230,7 +230,7 @@ class RequestMPDS:
                 for row in rows:
                     cells = row.find_all("td")
                     try:
-                        atomic_data[i - loss_data][2].append(
+                        atomic_data[i - loss_data][1].append(
                             [
                                 cells[1].text.strip(),
                                 cells[2].text.strip(),

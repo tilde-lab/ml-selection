@@ -1,6 +1,6 @@
-from metis_backend.metis_backend.datasources.fmt import detect_format
-from metis_backend.metis_backend.structures.cif_utils import cif_to_ase
-from metis_backend.metis_backend.structures.struct_utils import poscar_to_ase, optimade_to_ase
+from ml_selection.metis_backend.metis_backend.datasources.fmt import detect_format
+from ml_selection.metis_backend.metis_backend.structures.cif_utils import cif_to_ase
+from ml_selection.metis_backend.metis_backend.structures.struct_utils import poscar_to_ase, optimade_to_ase
 
 from ase.neighborlist import NeighborList
 from os import listdir
@@ -45,7 +45,7 @@ def extract_poly(crystal_obj=None, cutoff=None) -> list[dict]:
     Returns
     -------
     polyhedrons : list[dict]
-        List of dictionaries containing atomic labels and coordinates of polyhedrons
+        List of dictionaries containing center atom, atoms of poly, distance
     """
     # atomic cut-off radius
     cutoff = radius[sg_to_crystal_system(crystal_obj.info['spacegroup'].no)]
@@ -66,15 +66,6 @@ def extract_poly(crystal_obj=None, cutoff=None) -> list[dict]:
         distances = np.linalg.norm(neighbor_coords - crystal_obj.positions[i], axis=1)
 
         if len(indices) > 0:  # if found neighbors
-            polyhedron = {
-                "center_atom": center_atom,
-                "center_coord": crystal_obj.positions[i],
-                "atoms": [center_atom] + [crystal_obj.symbols[j] for j in indices],
-                "coords": [crystal_obj.positions[i].tolist()] + neighbor_coords.tolist(),
-                "distances": [0.0] + distances.tolist()  # 0.0 for central atom
-            }
-            polyhedrons.append(polyhedron)
-
             elements = set([crystal_obj.symbols[j] for j in indices])
             comp = {}
 
@@ -83,28 +74,40 @@ def extract_poly(crystal_obj=None, cutoff=None) -> list[dict]:
 
             if (center_atom, comp) not in polyhedrons:
                 print(center_atom, comp)
+                
                 type_poly = sg_to_crystal_system(crystal_obj.info['spacegroup'].no)
                 print(f'Type pf poly is: {type_poly}')
+                
                 polyhedrons.append((center_atom, comp))
+                polyhedron = {
+                    "center_atom": center_atom,
+                    "neighbors": comp,
+                    "distances": [0.0] + distances.tolist()  # 0.0 for central atom
+                }
+                polyhedrons.append(polyhedron)
 
     return polyhedrons
 
 
-def get_polyhedrons(path_structures: str) -> list[tuple]:
+def get_polyhedrons(path_structures: str = None, structures: str = None) -> list[tuple]:
     """
     Open structure in file, convert to ASE object and run getting polyhedrons.
     
     Parameters
     ----------
-    path_structures : str
+    path_structures : str, optional
         Path to structure in next format: CIF, POSCAR, OPTIMIDE
+    structures : str, optional
+        Structure in cif, poscar, optimade format
         
     Returns
     -------
     poly: list[tuple]
         Polyhedrons - centr atom, components
     """
-    structures = open(path_structures).read()
+    if not(structures):
+        structures = open(path_structures).read()
+    
     fmt = detect_format(structures)
 
     if fmt == "cif":
@@ -124,6 +127,8 @@ def get_polyhedrons(path_structures: str) -> list[tuple]:
 
     poly = extract_poly(atoms)
     return poly
+
+
 
 
 if __name__ == "__main__":

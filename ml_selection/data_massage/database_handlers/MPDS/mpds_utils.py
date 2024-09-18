@@ -1,8 +1,8 @@
 from random import randrange
-from request_to_mpds import RequestMPDS
+from ml_selection.data_massage.database_handlers.MPDS.request_to_mpds import RequestMPDS
 
 
-def get_random_s_entry(sid: str, file_with_entry: str = 'structures_props/raw_mpds/s_entries_all.txt') -> tuple:
+def get_random_s_entry(sid: str, file_with_entry: str = 'ml_selection/structures_props/raw_mpds/s_entries_all.txt') -> tuple:
     """Return random entry with CIF structure and polyhedron
     
     Parameters
@@ -30,6 +30,13 @@ def get_random_s_entry(sid: str, file_with_entry: str = 'structures_props/raw_mp
         
         if poly == []:
             continue
+        elif len(poly) > 0:
+            if poly[0][1] == []:
+                continue
+            else:
+                cif = RequestMPDS.request_cif(sid, entry.replace(' ', ''))
+                if str(cif) != '{"error":"Unknown entry type"}' and cif != None:
+                    succes = True
         else:
             cif = RequestMPDS.request_cif(sid, entry.replace(' ', ''))
             if str(cif) != '{"error":"Unknown entry type"}' and cif != None:

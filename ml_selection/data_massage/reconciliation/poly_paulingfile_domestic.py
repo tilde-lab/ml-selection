@@ -1,6 +1,6 @@
 
 import polars as pl
-from data_massage.polyhedra.polyheadra_processing import get_poly_elements, get_periodic_number
+from ml_selection.data_massage.polyhedra import get_poly_elements, get_periodic_number
 
 
 def element_counter(elements: list) -> dict:
