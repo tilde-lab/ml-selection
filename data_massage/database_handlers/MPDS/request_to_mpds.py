@@ -5,10 +5,13 @@ import polars as pl
 from mpds_client import MPDSDataRetrieval, MPDSDataTypes
 import yaml
 from yaml import Loader
+import requests
+import yaml
+from bs4 import BeautifulSoup
+import time
 
-CONF = "/root/projects/ml-selection/configs/config.yaml"
-
-
+CONF = "configs/config.yaml"
+            
 class RequestMPDS:
     """
     Make requests to MPDS database
@@ -17,9 +20,14 @@ class RequestMPDS:
     def __init__(self, dtype: int = 1, api_key: str = None) -> None:
         conf = open(CONF, "r")
         self.conf = yaml.load(conf, Loader)
+        
+        self.sid = self.conf["sid"]
+        print("Sid is read successful")
+
         if api_key == None:
             api_key = self.conf["api_key"]
         self.raw_mpds = self.conf["raw_mpds"]
+        
         self.client = MPDSDataRetrieval(dtype=dtype, api_key=api_key)
         self.client.chillouttime = 1
         self.dtype = dtype
@@ -179,3 +187,62 @@ class RequestMPDS:
 
             print("Matches by formula and Space group found:", found)
             return pl.DataFrame(phase_ids, schema=["phase_id", "identifier"])
+        
+    @staticmethod
+    def make_request_polyhedra(sid: str, entrys: list, phases: list) -> pd.DataFrame:
+        """
+        Requests information about polyhedra type by https
+        Parameters
+        ----------
+        sid : str
+            Sid from browser console (needed authentication)
+        entrys : list
+            Set with entry value for needed structures
+        phases : list
+            Phases of structure, should be the same size as entry list
+        Returns
+        -------
+            Answer from MPDS
+        """
+        # means pages without table Atomic environments
+        loss_data = 0
+        atomic_data = []
+
+        for i, entry in enumerate(entrys):
+            query = f"https://api.mpds.io/v0/download/s?q={entry}&fmt=pdf&sid={sid}"
+
+            response = requests.get(query)
+
+            if response.status_code == 200:
+                soup = BeautifulSoup(response.text, "html.parser")
+
+                try:
+                    atomic_table = soup.find(
+                        "h3", text="Atomic environments"
+                    ).find_next("table")
+                except:
+                    loss_data += 1
+                    continue
+
+                rows = atomic_table.find_all("tr")[1:]
+                atomic_data.append([phases[i], entry, []])
+                for row in rows:
+                    cells = row.find_all("td")
+                    try:
+                        atomic_data[i - loss_data][2].append(
+                            [
+                                cells[1].text.strip(),
+                                cells[2].text.strip(),
+                                cells[3].text.strip(),
+                            ]
+                        )
+                    except:
+                        continue
+                time.sleep(0.1)
+            else:
+                loss_data += 1
+        update_res = [i for i in atomic_data if len(i) == 3]
+        res = pd.DataFrame(update_res, columns=["phase_id", "entry", "polyhedra"])
+        print(f"Answers without table Atomic environments: {loss_data}")
+
+        return res

@@ -8,3 +8,4 @@ raw_polyhedra_path: PATH_TO_RAW_POLY
 polyhedra_path: PATH_TO_PROCESSED_POLY
 scaler_path: PATH_TO_SCALERS
 weights: PATH_TO_WEIGHTS
+sid: SID_FROM_MPDS_ACCOUNT
