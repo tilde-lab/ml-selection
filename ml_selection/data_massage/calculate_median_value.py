@@ -42,8 +42,6 @@ def phys_prop_median_value(data: pl.DataFrame, phases: list) -> DataFrame:
 
         new_data_list.append(new_data_for_phase)
 
-    dfrm = pl.DataFrame(
-        new_data_list, schema=data.columns
-    )
+    dfrm = pl.DataFrame(new_data_list, schema=data.columns)
 
     return dfrm

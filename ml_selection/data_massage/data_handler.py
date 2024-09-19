@@ -52,8 +52,11 @@ class DataHandler:
         self.dtype = dtype
 
     def just_phys_prop(
-        self, max_value: int, min_value: int, is_uniq_phase_id: bool = False,
-            phys_prop: str = 'Seebeck coefficient'
+        self,
+        max_value: int,
+        min_value: int,
+        is_uniq_phase_id: bool = False,
+        phys_prop: str = "Seebeck coefficient",
     ) -> DataFrame:
         """
         Get Seebeck coefficient from db
@@ -78,13 +81,14 @@ class DataHandler:
         for data_type in self.available_dtypes:
             self.client_handler = RequestMPDS(dtype=data_type, api_key=self.api_key)
 
-            dfrm = self.client_handler.make_request(is_phys_prop=True, phys_prop=phys_prop)
+            dfrm = self.client_handler.make_request(
+                is_phys_prop=True, phys_prop=phys_prop
+            )
 
             # remove outliers in value
             if max_value:
                 dfrm = dfrm.filter(
-                    (pl.col(phys_prop) >= min_value)
-                    & (pl.col(phys_prop) <= max_value)
+                    (pl.col(phys_prop) >= min_value) & (pl.col(phys_prop) <= max_value)
                 )
             if len(res_dfrm) == 0:
                 res_dfrm = dfrm
@@ -98,16 +102,21 @@ class DataHandler:
         return res_dfrm
 
     def to_order_disordered_str(
-        self, phases: list, is_uniq_phase_id: bool = True, return_not_clean_not_ordered: bool = False
+        self,
+        phases: list,
+        is_uniq_phase_id: bool = True,
+        return_not_clean_not_ordered: bool = False,
     ) -> DataFrame:
         """
         Make order in disordered structures.
         Return polars Dataframe with ordered structures
         """
         if return_not_clean_not_ordered:
-            dfrm = pl.from_pandas(self.client_handler.make_request(
-                is_structure=True, phases=phases
-            ).to_pandas().drop("formula", axis=1))
+            dfrm = pl.from_pandas(
+                self.client_handler.make_request(is_structure=True, phases=phases)
+                .to_pandas()
+                .drop("formula", axis=1)
+            )
             return dfrm
         # get disordered structures from db, save random structure for specific 'phase_id'
         all_data_df = pl.from_pandas(
@@ -461,9 +470,7 @@ class DataHandler:
         return count_el
 
     @classmethod
-    def process_polyhedra(
-        cls, crystals_json_path: str
-    ) -> DataFrame:
+    def process_polyhedra(cls, crystals_json_path: str) -> DataFrame:
         """
         Create descriptor from polyhedra
 

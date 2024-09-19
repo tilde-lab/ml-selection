@@ -1,4 +1,3 @@
-
 import polars as pl
 from ml_selection.data_massage.polyhedra import get_poly_elements, get_periodic_number
 
@@ -32,7 +31,9 @@ def compare_to_pauling(poly_for_compare: list, pauling_poly: pl.DataFrame):
                 elements = pauling_line[-1]
 
                 elements_pauling = element_counter(get_poly_elements([elements], idx=0))
-                current_elements = element_counter([get_periodic_number(el) for el in current_poly[2]])
+                current_elements = element_counter(
+                    [get_periodic_number(el) for el in current_poly[2]]
+                )
 
                 if elements_pauling == current_elements:
                     found += 1
@@ -48,7 +49,7 @@ def compare_to_pauling(poly_for_compare: list, pauling_poly: pl.DataFrame):
     elif len(poly_for_compare) == found:
         return True
     else:
-        print('Not correct poly')
+        print("Not correct poly")
 
 
 def comparison_of_polyhedra(path_pauling: str, path_domestic: str):
@@ -74,19 +75,14 @@ def comparison_of_polyhedra(path_pauling: str, path_domestic: str):
 
             if compare_to_pauling(temp_poly_store, pauling_poly):
                 match += 1
-                print('Values coincided: ', match, ' From: ', i)
+                print("Values coincided: ", match, " From: ", i)
 
             last_entry = poly[1]
             temp_poly_store = []
 
 
 if __name__ == "__main__":
-    path_pauling = 'ml-selection/data/raw_mpds/large_poly.json'
-    path_domestic = 'ml-selection/data/poly/poly_4_seeb_test.json'
+    path_pauling = "ml-selection/data/raw_mpds/large_poly.json"
+    path_domestic = "ml-selection/data/poly/poly_4_seeb_test.json"
 
     comparison_of_polyhedra(path_pauling, path_domestic)
-
-
-
-
-

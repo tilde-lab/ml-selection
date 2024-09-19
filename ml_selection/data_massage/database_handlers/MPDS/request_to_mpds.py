@@ -13,7 +13,8 @@ from typing import Union
 
 
 CONF = "configs/config.yaml"
-            
+
+
 class RequestMPDS:
     """
     Make requests to MPDS database
@@ -22,14 +23,14 @@ class RequestMPDS:
     def __init__(self, dtype: int = 1, api_key: str = None) -> None:
         conf = open(CONF, "r")
         self.conf = yaml.load(conf, Loader)
-        
+
         self.sid = self.conf["sid"]
         print("Sid is read successful")
 
         if api_key == None:
             api_key = self.conf["api_key"]
         self.raw_mpds = self.conf["raw_mpds"]
-        
+
         self.client = MPDSDataRetrieval(dtype=dtype, api_key=api_key)
         self.client.chillouttime = 1
         self.dtype = dtype
@@ -44,7 +45,7 @@ class RequestMPDS:
         formulas: list = None,
         sg: list = None,
         mp_ids: list = None,
-        phys_prop: str = None
+        phys_prop: str = None,
     ) -> pl.DataFrame:
         """
         Requests data from the MplS according to the input parameters
@@ -67,9 +68,7 @@ class RequestMPDS:
         """
         if is_phys_prop:
             # because .get_dataframe return pd.Dataframe
-            dfrm = pd.DataFrame(
-                self.client.get_dataframe({"props": phys_prop})
-            )
+            dfrm = pd.DataFrame(self.client.get_dataframe({"props": phys_prop}))
             dfrm = pl.from_pandas(dfrm)
             dfrm = dfrm.filter(pl.col("Phase").is_finite())
             dfrm = dfrm.rename({"Value": phys_prop})
@@ -189,7 +188,7 @@ class RequestMPDS:
 
             print("Matches by formula and Space group found:", found)
             return pl.DataFrame(phase_ids, schema=["phase_id", "identifier"])
-        
+
     @staticmethod
     def request_polyhedra(sid: str, entrys: list) -> list:
         """
@@ -246,19 +245,15 @@ class RequestMPDS:
         print(f"Answers without table Atomic environments: {loss_data}")
 
         return update_res
-    
+
     @staticmethod
     def request_cif(sid: str, entry: str) -> Union[BeautifulSoup, None]:
-        query = f"https://api.mpds.io/v0/download/s?q={entry}&fmt=cif&export=1&sid={sid}"
+        query = (
+            f"https://api.mpds.io/v0/download/s?q={entry}&fmt=cif&export=1&sid={sid}"
+        )
 
         response = requests.get(query)
 
         if response.status_code == 200:
             soup = BeautifulSoup(response.text, "html.parser")
             return soup
-        
-        
-        
-        
-        
-        

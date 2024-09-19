@@ -19,7 +19,7 @@ CONF = "/root/projects/ml-selection/configs/config.yaml"
 def get_structures_and_phys_prop(
     handler: DataHandler,
     is_uniq_structure_for_phase: bool,
-    phys_prop: str = 'Seebeck coefficient',
+    phys_prop: str = "Seebeck coefficient",
     raw_prop_path: str = None,
     raw_str_path: str = None,
     path_to_save: str = None,
@@ -27,7 +27,7 @@ def get_structures_and_phys_prop(
     just_mpds: bool = True,
     min_value: int = None,
     max_value: int = None,
-    not_clean_not_ordered_str: bool = True
+    not_clean_not_ordered_str: bool = True,
 ) -> DataFrame:
     """
     Get all available properties. For each 'phase_id', calculate
@@ -70,7 +70,10 @@ def get_structures_and_phys_prop(
         if not raw_prop_path:
             # get property for PEER_REV from MPDS
             phys_prop_dfrm_mpds = handler.just_phys_prop(
-                max_value=max_value, min_value=min_value, is_uniq_phase_id=False, phys_prop=phys_prop
+                max_value=max_value,
+                min_value=min_value,
+                is_uniq_phase_id=False,
+                phys_prop=phys_prop,
             )
             if phys_prop == "Seebeck coefficient":
                 file_path = path_to_save + "seebeck.json"
@@ -83,7 +86,9 @@ def get_structures_and_phys_prop(
         if not just_mpds:
             # change direction of columns for stack 2 dfrm
             phase_id_mp = phase_id_mp.select(phys_prop_dfrm_mpds.columns)
-            phases = list(set(phys_prop_dfrm_mpds["Phase"])) + list(set(phase_id_mp["Phase"]))
+            phases = list(set(phys_prop_dfrm_mpds["Phase"])) + list(
+                set(phase_id_mp["Phase"])
+            )
 
             # make median value for property
             median_phys_prop = phys_prop_median_value(
@@ -91,9 +96,7 @@ def get_structures_and_phys_prop(
             )
         else:
             phases = list(set(phys_prop_dfrm_mpds["Phase"]))
-            median_phys_prop = phys_prop_median_value(
-                phys_prop_dfrm_mpds, phases
-            )
+            median_phys_prop = phys_prop_median_value(phys_prop_dfrm_mpds, phases)
         if phys_prop == "Seebeck coefficient":
             file_path = path_to_save + "median_seebeck_mpds.json"
         else:
@@ -112,10 +115,11 @@ def get_structures_and_phys_prop(
         # get structure and make it ordered (if needed)
         if not just_mp:
             structures_dfrm = handler.to_order_disordered_str(
-                phases=phases, is_uniq_phase_id=is_uniq_structure_for_phase,
-                return_not_clean_not_ordered=not_clean_not_ordered_str
+                phases=phases,
+                is_uniq_phase_id=is_uniq_structure_for_phase,
+                return_not_clean_not_ordered=not_clean_not_ordered_str,
             )
-            if phys_prop == 'Seebeck coefficient':
+            if phys_prop == "Seebeck coefficient":
                 file_path = path_to_save + "rep_structures_mpds_seeb_not_clean.json"
             else:
                 file_path = path_to_save + "rep_structures_mpds_conductivity.json"
@@ -192,15 +196,14 @@ def main():
         is_uniq_structure_for_phase,
         path_to_save=raw_path,
         just_mpds=True,
-        phys_prop='Seebeck coefficient',
+        phys_prop="Seebeck coefficient",
         # # ! uncomment if you want to use not ordered structure (for getting poly)
         # raw_str_path='/root/projects/ml-selection/data/raw_mpds/rep_structures_mpds_seeb_not_clean.json',
-
         # will use ordered structures for getting poly (by 'entry')
-        raw_str_path='/root/projects/ml-selection/data/raw_mpds/rep_structures_mpds_seeb.json',
-        raw_prop_path='/root/projects/ml-selection/data/raw_mpds/seebeck.json',
+        raw_str_path="/root/projects/ml-selection/data/raw_mpds/rep_structures_mpds_seeb.json",
+        raw_prop_path="/root/projects/ml-selection/data/raw_mpds/seebeck.json",
         min_value=-150,
-        max_value=200
+        max_value=200,
     )
     run_processing_polyhedra.main(just_mpds=True)
 
