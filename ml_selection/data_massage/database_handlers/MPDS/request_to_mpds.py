@@ -10,6 +10,7 @@ import yaml
 from bs4 import BeautifulSoup
 import time
 from typing import Union
+import httplib2
 
 
 CONF = "configs/config.yaml"
@@ -211,9 +212,12 @@ class RequestMPDS:
         for i, entry in enumerate(entrys):
             query = f"https://api.mpds.io/v0/download/s?q={entry}&fmt=pdf&sid={sid}"
 
+            time.sleep(5)
             response = requests.get(query)
-
-            if response.status_code == 200:
+            if response.status_code == 429:
+                time.sleep(10)
+                print('Too many requests - 429 error')
+            elif response.status_code == 200:
                 soup = BeautifulSoup(response.text, "html.parser")
 
                 try:
@@ -238,7 +242,6 @@ class RequestMPDS:
                         )
                     except:
                         continue
-                time.sleep(0.1)
             else:
                 loss_data += 1
         update_res = [i for i in atomic_data if len(i) == 2]
@@ -247,13 +250,18 @@ class RequestMPDS:
         return update_res
 
     @staticmethod
-    def request_cif(sid: str, entry: str) -> Union[BeautifulSoup, None]:
-        query = (
-            f"https://api.mpds.io/v0/download/s?q={entry}&fmt=cif&export=1&sid={sid}"
+    def request_cif(api_key: str, entry: str) -> Union[BeautifulSoup, None]:
+        req = httplib2.Http()
+                
+        response, content = req.request(
+            uri=f"https://api.mpds.io/v0/download/s?q={entry}&fmt=cif",
+            method='GET', headers={'Key': api_key}
         )
-
-        response = requests.get(query)
-
-        if response.status_code == 200:
-            soup = BeautifulSoup(response.text, "html.parser")
+        
+        if response.status == 429:
+            time.sleep(10)
+            print('Too many requests - 429 error')
+            
+        elif response.status == 200:
+            soup = BeautifulSoup(content, "html.parser")
             return soup

@@ -1,9 +1,10 @@
 from random import randrange
 from ml_selection.data_massage.database_handlers.MPDS.request_to_mpds import RequestMPDS
+import time
 
 
 def get_random_s_entry() -> str:
-    """Return a random existing entry"""
+    """Return a random existing entry from MPDS"""
     range_d = [['250138', '250943'], ['251736', '252180'], ['260286', '260628'], 
                ['261106', '261443'], ['261484', '262017'], ['300780', '301002'], 
                ['301193', '301568'], ['301631', '301930'], ['303020', '303266'], 

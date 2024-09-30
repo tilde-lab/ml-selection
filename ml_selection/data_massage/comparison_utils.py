@@ -3,17 +3,17 @@ from ml_selection.data_massage.database_handlers.MPDS.mpds_utils import (
 )
 from ml_selection.data_massage.polyhedra.get_poly_from_ase import get_polyhedrons
 import chemparse
-import time
 
-def compare_poly(sid: str, num: int):
+
+def compare_poly(api_key: str, num: int):
     """
     Runs a matching check between polhedra from MPDS and own polyhedra.
     
     Parameters
     ----------
     
-    sid : str
-        Sid from MPDS account
+    api_key : str
+        Key from MPDS account
     num : int
         Number of structures for check    
     """
@@ -21,9 +21,11 @@ def compare_poly(sid: str, num: int):
     comp_from = 0
 
     for i in range(num):
-        time.sleep(2)
-        poly_true, cif = get_structure_with_exist_poly(sid)
-        poly_domestic = get_polyhedrons(structures=cif)
+        try:
+            poly_true, cif = get_structure_with_exist_poly(api_key)
+            poly_domestic = get_polyhedrons(structures=cif)
+        except:
+            continue
         
         cnt = 0
         total_poly = len(poly_true[0][1])
@@ -42,4 +44,5 @@ def compare_poly(sid: str, num: int):
     print('Correct poly in structure:', comp_poly)
     print('From:', comp_from)
 
-compare_poly("SID", 5)
+compare_poly("KEY", 20)
+

@@ -16,9 +16,9 @@ radius = {
     "hexagonal": 1.5,
     "orthorhombic": 1.5,
     "tetragonal": 1.5,
-    "monoclinic": 0.8,
+    "monoclinic": 0.9,
     "triclinic": 0.9,
-    "trigonal": 0.8,
+    "trigonal": 0.9,
 }
 
 
@@ -92,13 +92,12 @@ def extract_poly(crystal_obj=None, cutoff=None) -> list[dict]:
                 type_poly = sg_to_crystal_system(crystal_obj.info["spacegroup"].no)
                 print(f"Type pf poly is: {type_poly}")
 
-                polyhedrons.append((center_atom, comp))
+                polyhedrons.append(comp)
                 polyhedron = {
                     "center_atom": center_atom,
                     "neighbors": comp,
                     "distances": [0.0] + distances.tolist(),  # 0.0 for central atom
                 }
-                polyhedrons.append(polyhedron)
 
     return polyhedrons
 
