@@ -9,9 +9,15 @@ import requests
 import yaml
 from bs4 import BeautifulSoup
 import time
-from typing import Union
 import httplib2
+import os.path
+import time
+from urllib.parse import urlencode
 
+import ujson as json
+from urllib.parse import urlencode
+
+from mpds_client import MPDSDataRetrieval, MPDSDataTypes
 
 CONF = "configs/config.yaml"
 
@@ -250,18 +256,73 @@ class RequestMPDS:
         return update_res
 
     @staticmethod
-    def request_cif(api_key: str, entry: str) -> Union[BeautifulSoup, None]:
-        req = httplib2.Http()
-                
-        response, content = req.request(
-            uri=f"https://api.mpds.io/v0/download/s?q={entry}&fmt=cif",
-            method='GET', headers={'Key': api_key}
-        )
+    def request_cif(api_key: str):
+        """
+        Request atomic structures and save each in a separate file.
+        """
+        print("---Started receiving: atomic structures")
+
+        output_dir = "ml_selection/cif"
+        os.makedirs(output_dir, exist_ok=True)
+
+        for year in range(1890, 2025):
+            time.sleep(1.0)
+            req = httplib2.Http()
+
+            endpoint = "https://api.mpds.io/v0/download/facet"
+            search = {
+                "props": "atomic structure",
+                "years": str(year)
+            }
+
+            try:
+                response, content = req.request(
+                    uri=endpoint + '?' + urlencode({
+                        'q': json.dumps(search),
+                        'pagesize': 15,
+                        'dtype': 7,
+                        'fmt': 'cif'
+                    }),
+                    method='GET',
+                    headers={'Key': api_key},
+                )
+
+                if response.status != 200:
+                    print(f"Error fetching data for {year}: {response.status}")
+                    continue
+
+                # decode the response content
+                content_str = content.decode('utf-8')
+
+                # split content by 'data_'
+                entries = content_str.split('data_')
+                for entry_content in entries:
+                    if entry_content[0] != 'S':
+                        continue
+                    
+                    entry_content = entry_content.strip()
+                    if not entry_content:
+                        continue
+
+                    # reconstruct full entry
+                    entry_full = 'data_' + entry_content
+
+                    # get the first 6 characters of the entry for the filename
+                    entry_snippet = entry_content[:8].replace('/', '_').replace('\\', '_').replace(' ', '_')
+
+                    # create the filename with year and entry 'S...'
+                    filename = f"{year}_{entry_snippet}.cif"
+                    file_path = os.path.join(output_dir, filename)
+
+                    with open(file_path, 'w') as fp:
+                        fp.write(entry_full)
+
+            except Exception as error:
+                print(f"An error occurred: {error}")
+                continue
+
+        print("---Successfully saved all files")
+
         
-        if response.status == 429:
-            time.sleep(10)
-            print('Too many requests - 429 error')
-            
-        elif response.status == 200:
-            soup = BeautifulSoup(content, "html.parser")
-            return soup
+if __name__ == "__main__":
+    RequestMPDS.request_cif('API_K')
