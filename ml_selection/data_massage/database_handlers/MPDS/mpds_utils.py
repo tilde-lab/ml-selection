@@ -1,5 +1,7 @@
 from random import randrange
 from ml_selection.data_massage.database_handlers.MPDS.request_to_mpds import RequestMPDS
+from os import listdir
+from os.path import isfile, join
 
 
 def get_random_s_entry() -> str:
@@ -128,7 +130,7 @@ def get_random_s_entry() -> str:
     return 'S' + str(entry)
     
 
-def get_structure_with_exist_poly(sid: str, api_key: str) -> tuple:
+def get_structure_with_exist_poly(sid: str, api_key: str, from_dir: bool = False, entry: str = None) -> tuple:
     """Return random entry with CIF structure and polyhedron
     
     Parameters
@@ -143,25 +145,36 @@ def get_structure_with_exist_poly(sid: str, api_key: str) -> tuple:
     """
     succes = False
     
-    while not(succes):
-        entry = get_random_s_entry()
-        
-        poly = RequestMPDS.request_polyhedra(sid, [entry])
-        
-        if poly == []:
-            continue
-        elif len(poly) > 0:
-            if poly[0][1] == []:
+    if not from_dir:
+        while not(succes):
+            entry = get_random_s_entry()
+            
+            poly = RequestMPDS.request_polyhedra(sid, [entry])
+            
+            if poly == []:
                 continue
+            elif len(poly) > 0:
+                if poly[0][1] == []:
+                    continue
+                else:
+                    cif = RequestMPDS.request_cif(api_key, entry.replace(' ', ''))
+                    if str(cif) != '{"error":"Unknown entry type"}' and cif != None:
+                        succes = True
             else:
                 cif = RequestMPDS.request_cif(api_key, entry.replace(' ', ''))
                 if str(cif) != '{"error":"Unknown entry type"}' and cif != None:
                     succes = True
-        else:
-            cif = RequestMPDS.request_cif(api_key, entry.replace(' ', ''))
-            if str(cif) != '{"error":"Unknown entry type"}' and cif != None:
-                succes = True
-    
+    # get cif from local dir, by entry
+    else:
+        onlyfiles = [
+            f for f in listdir("ml_selection/cif") if isfile(join("ml_selection/cif", f))
+        ]
+        for file_name in onlyfiles:
+            if entry in file_name:
+                cif = open(join("ml_selection/cif", file_name), "r").read()
+                
+        poly = RequestMPDS.request_polyhedra(sid, [entry])
+
     return (poly, str(cif))
 
 if __name__ == "__main__":

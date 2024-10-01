@@ -12,7 +12,6 @@ import time
 import httplib2
 import os.path
 import time
-from urllib.parse import urlencode
 
 import ujson as json
 from urllib.parse import urlencode
