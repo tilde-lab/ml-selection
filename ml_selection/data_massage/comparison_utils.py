@@ -2,7 +2,6 @@ from ml_selection.data_massage.database_handlers.MPDS.mpds_utils import (
     get_structure_with_exist_poly
 )
 from ml_selection.data_massage.polyhedra.get_poly_from_ase import get_polyhedrons
-from ml_selection.data_massage.polyhedra.search_poly import search_poly_by_entry
 import chemparse
 from os import listdir
 from os.path import isfile, join
@@ -36,9 +35,11 @@ def compare_poly(sid: str, api_key: str, num: int):
                 sid, api_key, from_dir=True, entry='S' + onlyfiles[i].replace('.cif', '').split('S')[-1]
             )
             # there are no poly
-            if poly_true == []:
+            if poly_true[1] == []:
                 continue
-            poly_domestic = get_polyhedrons(structures=cif)
+            poly_domestic, space_group = get_polyhedrons(structures=cif)
+            print('SPACE GROUP:', space_group.no)
+
         except:
             continue
         
@@ -63,5 +64,6 @@ def compare_poly(sid: str, api_key: str, num: int):
     print('========TOTAL RESULT========')
     print('Correct poly in structure:', comp_poly)
     print('From:', comp_from)
+
 
 

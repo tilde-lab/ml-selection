@@ -1,6 +1,6 @@
-from ml_selection.metis_backend.metis_backend.datasources.fmt import detect_format
-from ml_selection.metis_backend.metis_backend.structures.cif_utils import cif_to_ase
-from ml_selection.metis_backend.metis_backend.structures.struct_utils import (
+from metis_backend.datasources.fmt import detect_format
+from metis_backend.structures.cif_utils import cif_to_ase
+from metis_backend.structures.struct_utils import (
     poscar_to_ase,
     optimade_to_ase,
 )
@@ -64,8 +64,8 @@ def extract_poly(crystal_obj=None, cutoff=None) -> list[dict]:
     # atomic cut-off radius
     cutoff = radius[sg_to_crystal_system(crystal_obj.info["spacegroup"].no)]
     
-    # if sg_to_crystal_system(crystal_obj.info["spacegroup"].no) != "cubic":
-    #     return None
+    if sg_to_crystal_system(crystal_obj.info["spacegroup"].no) != "cubic":
+        return None
     
     cutoffs = [cutoff] * len(crystal_obj)
 
@@ -144,8 +144,9 @@ def get_polyhedrons(path_structures: str = None, structures: str = None) -> list
         if error:
             raise RuntimeError(error)
 
+    spacegroup = atoms.info["spacegroup"]
     poly = extract_poly(atoms)
-    return poly
+    return [poly, spacegroup]
 
 
 if __name__ == "__main__":
