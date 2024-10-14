@@ -2,10 +2,12 @@ from ml_selection.data_massage.database_handlers.MPDS.mpds_utils import (
     get_structure_with_exist_poly
 )
 from ml_selection.data_massage.polyhedra.get_poly_from_ase import get_polyhedrons
+from ml_selection.data_massage.polyhedra.search_poly import search_poly_by_entry
 import chemparse
 from os import listdir
 from os.path import isfile, join
 from random import randrange
+
 
 
 def compare_poly(sid: str, api_key: str, num: int):
@@ -45,10 +47,11 @@ def compare_poly(sid: str, api_key: str, num: int):
             continue
         
         cnt = 0
-        total_poly = len(poly_true[0][1])
+        total_poly = len(poly_true[1])
         
-        for poly_t in poly_true[0][1]:
-            poly_true_comp = chemparse.parse_formula(poly_t[2])
+        for poly_t in poly_true[1]:
+            poly_true_comp = chemparse.parse_formula(poly_t)
+            print(poly_true_comp)
             if poly_true_comp in poly_domestic:
                 cnt+= 1
                 comp_poly += 1
@@ -61,5 +64,4 @@ def compare_poly(sid: str, api_key: str, num: int):
     print('Correct poly in structure:', comp_poly)
     print('From:', comp_from)
 
-compare_poly("sid", "api_key", 40)
 

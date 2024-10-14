@@ -2,6 +2,7 @@ from random import randrange
 from ml_selection.data_massage.database_handlers.MPDS.request_to_mpds import RequestMPDS
 from os import listdir
 from os.path import isfile, join
+from ml_selection.data_massage.polyhedra.search_poly import search_poly_by_entry
 
 
 def get_random_s_entry() -> str:
@@ -173,7 +174,7 @@ def get_structure_with_exist_poly(sid: str, api_key: str, from_dir: bool = False
             if entry in file_name:
                 cif = open(join("ml_selection/cif", file_name), "r").read()
                 
-        poly = RequestMPDS.request_polyhedra(sid, [entry])
+        poly = search_poly_by_entry(entry)
 
     return (poly, str(cif))
 

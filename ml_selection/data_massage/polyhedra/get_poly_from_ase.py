@@ -12,13 +12,15 @@ from os.path import isfile, join
 import numpy as np
 
 radius = {
-    "cubic": 1.5,
-    "hexagonal": 1.5,
-    "orthorhombic": 1.5,
-    "tetragonal": 1.5,
-    "monoclinic": 0.9,
-    "triclinic": 0.9,
-    "trigonal": 0.9,
+    "cubic": 1.3,
+    # can be more
+    "hexagonal": 1.25, 
+    # 1,2 - good; 1,3 - so-so
+    "orthorhombic": 1.2,
+    "tetragonal": 1.0,
+    "monoclinic": 0.8,
+    "triclinic": 0.8,
+    "trigonal": 0.8,
 }
 
 
@@ -61,6 +63,10 @@ def extract_poly(crystal_obj=None, cutoff=None) -> list[dict]:
     """
     # atomic cut-off radius
     cutoff = radius[sg_to_crystal_system(crystal_obj.info["spacegroup"].no)]
+    
+    # if sg_to_crystal_system(crystal_obj.info["spacegroup"].no) != "cubic":
+    #     return None
+    
     cutoffs = [cutoff] * len(crystal_obj)
 
     # make list with all neighbors in current cut-off

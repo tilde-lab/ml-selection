@@ -208,7 +208,8 @@ class RequestMPDS:
 
         Returns
         -------
-            list
+        polyhedra_data : list
+            List in format [entry, [num vertix, type of cell, chemical formula]]
         """
         # means pages without table Atomic environments
         loss_data = 0
@@ -217,7 +218,7 @@ class RequestMPDS:
         for i, entry in enumerate(entrys):
             query = f"https://api.mpds.io/v0/download/s?q={entry}&fmt=pdf&sid={sid}"
 
-            time.sleep(5)
+            time.sleep(7)
             response = requests.get(query)
             if response.status_code == 429:
                 time.sleep(10)
@@ -278,7 +279,7 @@ class RequestMPDS:
                 response, content = req.request(
                     uri=endpoint + '?' + urlencode({
                         'q': json.dumps(search),
-                        'pagesize': 15,
+                        'pagesize': 1000,
                         'dtype': 7,
                         'fmt': 'cif'
                     }),
@@ -324,4 +325,4 @@ class RequestMPDS:
 
         
 if __name__ == "__main__":
-    RequestMPDS.request_cif('API_K')
+    RequestMPDS.request_cif('wkBcobukIiozTs3EpjibV5meOKs3wIDJZEwDtRn4cr9HWgrW')
