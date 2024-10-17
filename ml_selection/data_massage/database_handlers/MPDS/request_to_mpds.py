@@ -18,7 +18,7 @@ from urllib.parse import urlencode
 
 from mpds_client import MPDSDataRetrieval, MPDSDataTypes
 
-CONF = "configs/config.yaml"
+CONF = "ml_selection/configs/config.yaml"
 
 
 class RequestMPDS:

@@ -6,15 +6,15 @@ from ase import Atoms
 from ase.data import chemical_symbols
 from polars import DataFrame
 
-from data.mendeleev_table import periodic_numbers
-from data_massage.polyhedra.create_polyheadra import (
+from ml_selection.structures_props.mendeleev_table import periodic_numbers
+from ml_selection.data_massage.polyhedra.create_polyhedra import (
     get_poly_elements,
-    size_customization,
+    size_customization
 )
-from data_massage.database_handlers.MPDS.request_to_mpds import RequestMPDS
+from ml_selection.data_massage.database_handlers.MPDS.request_to_mpds import RequestMPDS
 
 # change path if another
-from metis_backend.metis_backend.structures.struct_utils import order_disordered
+from metis_backend.structures.struct_utils import order_disordered
 
 
 class DataHandler:
@@ -36,7 +36,7 @@ class DataHandler:
         dtype : int
             Indicates the type of data being requested
         """
-        with open("/root/projects/ml-selection/configs/config.yaml", "r") as yamlfile:
+        with open("ml_selection/configs/config.yaml", "r") as yamlfile:
             yaml_f = yaml.load(yamlfile, Loader=yaml.FullLoader)
             self.api_key = yaml_f["api_key"]
             self.polyheadra_path = yaml_f["raw_polyhedra_path"]

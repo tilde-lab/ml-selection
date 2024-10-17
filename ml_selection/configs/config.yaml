@@ -3,8 +3,8 @@ api_mp: KEY_FROM_MP
 mp_path: PATH_TO_FOLDER_MP_DATA
 mpds_path: PATH_TO_FOLDER_MPDS_DATA
 processed_path: PATH_TO_SAVE
-raw_mpds: PATH_WITH_MPDS_RAW_DATA
-raw_polyhedra_path: PATH_TO_RAW_POLY
+raw_mpds: ml_selection/structures_props/raw_mpds/
+raw_polyhedra_path: ml_selection/structures_props/raw_mpds/large_poly.json
 polyhedra_path: PATH_TO_PROCESSED_POLY
 scaler_path: PATH_TO_SCALERS
 weights: PATH_TO_WEIGHTS

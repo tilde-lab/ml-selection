@@ -2,13 +2,13 @@
 Run add polyhedra to structures by entry, make descriptor
 """
 
-from data_massage.data_handler import DataHandler
+from ml_selection.data_massage.data_handler import DataHandler
 import yaml
 
 
 hand = DataHandler(True)
 
-CONF = "/root/projects/ml-selection/configs/config.yaml"
+CONF = "ml_selection/configs/config.yaml"
 
 with open(CONF, "r") as yamlfile:
     conf = yaml.load(yamlfile, Loader=yaml.FullLoader)
