@@ -3,7 +3,7 @@ import yaml
 from yaml import Loader
 from mpcontribs.client import Client
 from mp_api.client import MPRester
-from data_massage.data_handler import DataHandler
+from ml_selection.data_massage.data_handler import DataHandler
 import json
 import polars as pl
 

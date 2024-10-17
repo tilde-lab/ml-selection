@@ -7,13 +7,13 @@ import polars as pl
 from polars import DataFrame
 import yaml
 
-from data_massage.calculate_median_value import phys_prop_median_value
-from data_massage.data_handler import DataHandler
-from scripts.launch import run_processing_polyhedra
-from data_massage.database_handlers.adapter import MPDS_MP_Adapter
-from data_massage.database_handlers.MaterialsProject.request_to_mp import RequestMP
+from ml_selection.data_massage.calculate_median_value import phys_prop_median_value
+from ml_selection.data_massage.data_handler import DataHandler
+from ml_selection.scripts.launch import run_processing_polyhedra
+from ml_selection.data_massage.database_handlers.adapter import MPDS_MP_Adapter
+from ml_selection.data_massage.database_handlers.MaterialsProject.request_to_mp import RequestMP
 
-CONF = "/root/projects/ml-selection/configs/config.yaml"
+CONF = "ml_selection/configs/config.yaml"
 
 
 def get_structures_and_phys_prop(
@@ -200,8 +200,8 @@ def main():
         # # ! uncomment if you want to use not ordered structure (for getting poly)
         # raw_str_path='/root/projects/ml-selection/data/raw_mpds/rep_structures_mpds_seeb_not_clean.json',
         # will use ordered structures for getting poly (by 'entry')
-        raw_str_path="/root/projects/ml-selection/data/raw_mpds/rep_structures_mpds_seeb.json",
-        raw_prop_path="/root/projects/ml-selection/data/raw_mpds/seebeck.json",
+        raw_str_path="ml_selection/structures_props/raw_mpds/raw_structures.json",
+        raw_prop_path="ml_selection/structures_props/raw_mpds/seebeck.json",
         min_value=-150,
         max_value=200,
     )

@@ -1,7 +1,7 @@
 import yaml
 from yaml import Loader
 import polars as pl
-from data_massage.database_handlers.MPDS.request_to_mpds import RequestMPDS
+from ml_selection.data_massage.database_handlers.MPDS.request_to_mpds import RequestMPDS
 import pandas as pd
 
 CONF = "/root/projects/ml-selection/configs/config.yaml"

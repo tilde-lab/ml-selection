@@ -72,7 +72,7 @@ def get_descriptor(just_mp: bool = False) -> None:
     )
 
 
-def main(just_mp: bool = False, just_mpds: bool = False, mpds_file_name: str = "rep_structures_mpds_seeb"):
+def main(just_mp: bool = False, just_mpds: bool = False, mpds_file_name: str = "raw_structures"):
     """
     Run total collection
 
@@ -85,7 +85,7 @@ def main(just_mp: bool = False, just_mpds: bool = False, mpds_file_name: str = "
     mpds_file_name: str, "rep_structures_mpds_seeb"
         Name of file with needed structures
     """
-    combine_structure_and_poly(just_mp=just_mp, just_mpds=just_mpds, mpds_file_name=mpds_file_name)
+    # combine_structure_and_poly(just_mp=just_mp, just_mpds=just_mpds, mpds_file_name=mpds_file_name)
     get_descriptor(just_mp=just_mp)
 
 

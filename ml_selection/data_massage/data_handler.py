@@ -11,11 +11,26 @@ from ml_selection.data_massage.polyhedra.create_polyhedra import (
     get_poly_elements,
     size_customization
 )
+from ml_selection.structures_props.mendeleev_table import get_periodic_number
+
+from ase.data import atomic_numbers, chemical_symbols
+from ase.spacegroup import crystal
+
 from ml_selection.data_massage.database_handlers.MPDS.request_to_mpds import RequestMPDS
+from ml_selection.data_massage.polyhedra.get_poly_from_ase import sg_to_crystal_system
 
 # change path if another
 from metis_backend.structures.struct_utils import order_disordered
 
+poly_type_map = {
+    "cubic": 120,
+    "hexagonal": 120 + 1,
+    "orthorhombic": 70,
+    "tetragonal": 8,
+    "monoclinic": 80 + 1,
+    "triclinic": 80 + 2,
+    "trigonal": 80 + 3,
+}
 
 class DataHandler:
     """
@@ -478,36 +493,70 @@ class DataHandler:
         ----------
         crystals_json_path : str
             Path to json file with structures with next columns:
-            'phase_id', 'occs_noneq', 'cell_abc', 'sg_n', 'basis_noneq', 'els_noneq',
-            'entry', 'temperature', 'Site', 'Type', 'Composition'
+            'phase_id': float, 'occs_noneq': list[float], 'cell_abc': list[list[float]], 
+            'sg_n': float, 'basis_noneq': list[list[float]], 'els_noneq': list[str],
+            'entry': str, 'temperature': float, 'Site': str, 'Type': str, 'Composition': str
 
         Returns
         -------
         dfrm : DataFrame
            Table with next columns:
            "phase_id", "poly_elements", "poly_type"
+           
+        Examples
+        -------
+        crystals.row(0) = (19763.0, 
+        [8.657, 4.981999999999999, 6.651, 90.0, 90.0, 90.0], 62.0, [[0.033, 0.25, 0.131], [0.18, 0.25, 0.629]],
+        [[0.033, 0.25, 0.131], [0.18, 0.25, 0.629]], ['Ag', 'Ba'], 
+        'S2030002', 298.0, 'Ag', '9-a', 'Ag<sub>2</sub>Ba<sub>7</sub>')
         """
         crystals = pl.read_json(crystals_json_path)
         crystals = [list(crystals.row(i)) for i in range(len(crystals))]
-        descriptor_store = []
 
-        columns = ["phase_id", "poly_elements", "poly_type"]
+        columns = ["phase_id", "entry", "descriptor"]
+        last_entry = crystals[0][5]
+        
+        ready_descriptors = []
+        all_poly_in_structure = []
 
         for poly in crystals:
-            elements = get_poly_elements(poly)
+            # if found polyhedra for current structure (same entry)
+            if last_entry == poly[5]:
+                pass
+            # if now is new structure: add last sample to store
+            else:
+                ready_descriptors.append([poly[0], last_entry, all_poly_in_structure])
+                all_poly_in_structure = []
+                last_entry = poly[5]
+            
+            poly_type = poly_type_map[sg_to_crystal_system(poly[2])]
+            a, b, c, alpha, beta, gamma = poly[1]
+    
+            # Use the crystal function from ASE to create the Atoms object
+            atoms = crystal(
+                symbols=poly[4],
+                basis=poly[3],
+                spacegroup=int(poly[2]), 
+                cellpar=[a, b, c, alpha, beta, gamma]
+            )
+            atomic_numbers = atoms.get_atomic_numbers()
+            atomic_symbols = [chemical_symbols[number] for number in atomic_numbers]
+            atomic_elements_periodic = [get_periodic_number(i) for i in atomic_symbols]
 
-            if elements == [None]:
-                continue
+            distances = atoms.get_distances(int(len(atoms) / 2), range(len(atoms)), mic=True)
+            
+            poly_elements_in_periodic = get_poly_elements(poly)
 
-            # features: elements, number of atoms
-            poly_type = len(elements) * 100
-            elements_large = size_customization(elements)
+            for atom, distance in zip(atomic_elements_periodic, distances):
+                if atom in poly_elements_in_periodic:
+                    # add atom and distance to descriptor
+                    all_poly_in_structure.append(float(atom))
+                    all_poly_in_structure.append(distance)
+                    all_poly_in_structure.append(float(poly_type))
+                    # delete atom from list
+                    poly_elements_in_periodic.remove(atom)
 
-            # replay protection
-            if [poly[0], elements_large, poly_type] not in descriptor_store:
-                descriptor_store.append([poly[0], elements_large, poly_type])
-
-        return pl.DataFrame(descriptor_store, schema=columns)
+        return pl.DataFrame(ready_descriptors, schema=columns)
 
     def choose_temperature(self, dfrm: DataFrame) -> DataFrame:
         """
