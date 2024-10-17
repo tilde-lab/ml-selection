@@ -630,7 +630,7 @@ class DataHandler:
 
 if __name__ == "__main__":
     with open(
-        "/root/projects/ml-selection/data/mp_database/space_group_mp.json", "r"
+        "ml-selection/data/mp_database/space_group_mp.json", "r"
     ) as f:
         data = f.read()
     handler = DataHandler(True)
