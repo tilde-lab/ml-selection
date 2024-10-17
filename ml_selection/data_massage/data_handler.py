@@ -449,7 +449,7 @@ class DataHandler:
         Parameters
         ----------
         structure_path : str
-            Path to json file with structures
+            Path to csv file (aets.csv) with structures
 
         Returns
         -------
@@ -536,25 +536,22 @@ class DataHandler:
             atoms = crystal(
                 symbols=poly[4],
                 basis=poly[3],
-                spacegroup=int(poly[2]), 
+                # spacegroup=int(poly[2]), 
                 cellpar=[a, b, c, alpha, beta, gamma]
             )
             atomic_numbers = atoms.get_atomic_numbers()
             atomic_symbols = [chemical_symbols[number] for number in atomic_numbers]
             atomic_elements_periodic = [get_periodic_number(i) for i in atomic_symbols]
 
-            distances = atoms.get_distances(int(len(atoms) / 2), range(len(atoms)), mic=True)
+            positions = atoms.get_positions()
+            # distance from atoms to the center of the structure
+            distances = np.linalg.norm(positions, axis=1)    
             
-            poly_elements_in_periodic = get_poly_elements(poly)
-
             for atom, distance in zip(atomic_elements_periodic, distances):
-                if atom in poly_elements_in_periodic:
-                    # add atom and distance to descriptor
-                    all_poly_in_structure.append(float(atom))
-                    all_poly_in_structure.append(distance)
-                    all_poly_in_structure.append(float(poly_type))
-                    # delete atom from list
-                    poly_elements_in_periodic.remove(atom)
+                # add atom and distance to descriptor
+                all_poly_in_structure.append(float(atom))
+                all_poly_in_structure.append(distance)
+                all_poly_in_structure.append(float(poly_type))
 
         return pl.DataFrame(ready_descriptors, schema=columns)
 

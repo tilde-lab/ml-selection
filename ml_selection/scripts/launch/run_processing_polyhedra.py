@@ -32,7 +32,7 @@ def combine_structure_and_poly(just_mp: bool, just_mpds: bool, mpds_file_name: s
 
 
 def make_poly_descriptor(
-    file_name: str = "test", is_one_hot: bool = False
+    file_name: str = "test"
 ) -> None:
     """
     Run creating polyhedra descriptor
@@ -41,8 +41,6 @@ def make_poly_descriptor(
     ----------
     file_name : str, optional
         Name for result file
-    is_one_hot : bool, optional
-        If True -> create vector of elements from polyhedra in one-hot format
     """
     descriptor = hand.process_polyhedra(
         raw_data + "large_poly.json"
@@ -61,11 +59,9 @@ def get_descriptor(just_mp: bool = False) -> None:
         If yes, then data was obtained only from Materials Project, save with name '..._mp.json'
     """
     if not just_mp:
-        make_poly_descriptor("101_features")
+        make_poly_descriptor("descriptor_mp")
     else:
-        make_poly_descriptor("101_features_mp")
-
-
+        make_poly_descriptor("descriptor_mpds")
 
     print(
         f"Creating presents of descriptors for PolyDataset are completed"
@@ -90,4 +86,4 @@ def main(just_mp: bool = False, just_mpds: bool = False, mpds_file_name: str = "
 
 
 if __name__ == "__main__":
-    main(just_mpds=True)
+    main(just_mpds=True, mpds_file_name="rep_structures_mpds_seeb")
