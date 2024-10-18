@@ -3,7 +3,7 @@ from sklearn.metrics import explained_variance_score
 from torcheval.metrics import R2Score
 from torchmetrics import MeanAbsoluteError
 
-from metrics.statistic_metrics import theils_u
+from ml_selection.metrics.statistic_metrics import theils_u
 
 
 def compute_metrics(y_pred: torch.Tensor, y_true: torch.Tensor) -> tuple:

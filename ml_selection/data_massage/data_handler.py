@@ -5,6 +5,10 @@ import yaml
 from ase import Atoms
 from ase.data import chemical_symbols
 from polars import DataFrame
+import os
+import sys
+sys.path.append(os.getcwd())
+
 
 from ml_selection.structures_props.mendeleev_table import periodic_numbers
 from ml_selection.data_massage.polyhedra.create_polyhedra import (
@@ -26,6 +30,7 @@ poly_type_map = {
     "cubic": 120,
     "hexagonal": 120 + 1,
     "orthorhombic": 70,
+    # typo... Must be 80 (change in next experiment)
     "tetragonal": 8,
     "monoclinic": 80 + 1,
     "triclinic": 80 + 2,

@@ -1,14 +1,16 @@
 """
 Selection of hyperparameters by OPTUNA for ml-models.
 """
+import os
+import sys
+sys.path.append(os.getcwd())
 
 import optuna
 import torch
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
 from sklearn.linear_model import Ridge
 from sklearn.tree import DecisionTreeRegressor
-import numpy as np
-from metrics.compute_metrics import compute_metrics
+from ml_selection.metrics.compute_metrics import compute_metrics
 from skl2onnx.common.data_types import FloatTensorType
 import onnx
 from skl2onnx import convert_sklearn
@@ -43,17 +45,17 @@ def make_study(n_trials, objective_func):
 def run_tune_linear_regression(X_train, y_train, X_test, y_test, n_trials=1):
     def objective(trial) -> int:
         """Search of hyperparameters"""
-        global BEST_R2
+        global BEST_R2, BEST_model
 
         alpha = trial.suggest_float("alpha", 0.0000001, 100.0)
 
         model = Ridge(alpha)
 
         # train and test
-        model.fit(X_train.to_numpy(), y_train.to_numpy())
-        pred = model.predict(X_test.to_numpy())
+        model.fit(X_train, y_train)
+        pred = model.predict(X_test)
         r2, mae, evs, tur = compute_metrics(
-            torch.from_numpy(pred), torch.tensor(y_test.values)
+            torch.from_numpy(pred), torch.tensor(y_test)
         )
 
         print("-------------Ridge-------------")
@@ -61,6 +63,9 @@ def run_tune_linear_regression(X_train, y_train, X_test, y_test, n_trials=1):
 
         if r2 > BEST_R2:
             BEST_R2 = r2
+            BEST_model = model
+            onx = convert_sklearn(model, initial_types=[('input', FloatTensorType([None, 101]))], target_opset=10)
+            onnx.save(onx, f"lr_seebeck_1000.onnx")
 
         return r2
 
@@ -71,7 +76,7 @@ def run_tune_linear_regression(X_train, y_train, X_test, y_test, n_trials=1):
 def run_tune_boosted_trees(X_train, y_train, X_test, y_test, n_trials=1):
     def objective(trial) -> int:
         """Search of hyperparameters"""
-        global BEST_R2
+        global BEST_R2, BEST_model
 
         n_estimators = trial.suggest_int("n_estimators", 1, 300)
         max_depth = trial.suggest_int("max_depth", 1, 300)
@@ -91,10 +96,10 @@ def run_tune_boosted_trees(X_train, y_train, X_test, y_test, n_trials=1):
         )
 
         # train and test
-        model.fit(X_train.to_numpy(), y_train.to_numpy())
-        pred = model.predict(X_test.to_numpy())
+        model.fit(X_train, y_train)
+        pred = model.predict(X_test)
         r2, mae, evs, tur = compute_metrics(
-            torch.from_numpy(pred), torch.tensor(y_test.values)
+            torch.from_numpy(pred), torch.tensor(y_test)
         )
 
         print("-------------GradientBoostingRegressor-------------")
@@ -102,6 +107,9 @@ def run_tune_boosted_trees(X_train, y_train, X_test, y_test, n_trials=1):
 
         if r2 > BEST_R2:
             BEST_R2 = r2
+            BEST_model = model
+            onx = convert_sklearn(model, initial_types=[('input', FloatTensorType([None, 101]))], target_opset=10)
+            onnx.save(onx, f"gb_seebeck_1000.onnx")
 
         return r2
 
@@ -112,7 +120,7 @@ def run_tune_boosted_trees(X_train, y_train, X_test, y_test, n_trials=1):
 def run_tune_decision_tree(X_train, y_train, X_test, y_test, n_trials=1):
     def objective(trial) -> int:
         """Search of hyperparameters"""
-        global BEST_R2
+        global BEST_R2, BEST_model
 
         max_depth = trial.suggest_int("max_depth", 3, 300)
         min_samples_leaf = trial.suggest_int("min_samples_leaf", 1, 300)
@@ -129,10 +137,10 @@ def run_tune_decision_tree(X_train, y_train, X_test, y_test, n_trials=1):
         )
 
         # train and test
-        model.fit(X_train.to_numpy(), y_train.to_numpy())
-        pred = model.predict(X_test.to_numpy())
+        model.fit(X_train, y_train)
+        pred = model.predict(X_test)
         r2, mae, evs, tur = compute_metrics(
-            torch.from_numpy(pred), torch.tensor(y_test.values)
+            torch.from_numpy(pred), torch.tensor(y_test)
         )
 
         print("-------------DecisionTreeRegressor-------------")
@@ -140,6 +148,9 @@ def run_tune_decision_tree(X_train, y_train, X_test, y_test, n_trials=1):
 
         if r2 > BEST_R2:
             BEST_R2 = r2
+            BEST_model = model
+            onx = convert_sklearn(model, initial_types=[('input', FloatTensorType([None, 101]))], target_opset=10)
+            onnx.save(onx, f"dt_seebeck_1000.onnx")
 
         return r2
 
@@ -148,7 +159,7 @@ def run_tune_decision_tree(X_train, y_train, X_test, y_test, n_trials=1):
     return res
 
 
-def run_tune_random_forest(X_train, y_train, X_test, y_test, n_trials=1, num=1):
+def run_tune_random_forest(X_train, y_train, X_test, y_test, n_trials=1, num=1000):
     def objective(trial) -> int:
         """Search of hyperparameters"""
         global BEST_R2, BEST_model
@@ -157,7 +168,7 @@ def run_tune_random_forest(X_train, y_train, X_test, y_test, n_trials=1, num=1):
         n_estimators = trial.suggest_int("n_estimators", 1, 350)
         min_samples_leaf = trial.suggest_int("min_samples_leaf", 2, 450)
         min_samples_split = trial.suggest_float("min_samples_split", 0.0, 1.0)
-        max_features = trial.suggest_int("max_features", 1, 450)
+        max_features = trial.suggest_int("max_features", 1, 1000)
 
         model = RandomForestRegressor(
             n_estimators=n_estimators,
@@ -168,12 +179,12 @@ def run_tune_random_forest(X_train, y_train, X_test, y_test, n_trials=1, num=1):
         )
 
         # train and test
-        model.fit(X_train.to_numpy().astype(np.float32), y_train.to_numpy().astype(np.float32))
+        model.fit(X_train, y_train)
         print("-------------RandomForestRegressor-------------")
 
-        pred = model.predict(X_test.to_numpy().astype(np.float32))
+        pred = model.predict(X_test)
         r2, mae, evs, tur = compute_metrics(
-            torch.from_numpy(pred), torch.tensor(y_test.values)
+            torch.from_numpy(pred), torch.tensor(y_test)
         )
 
         print(f"r2: {r2}, mae: {mae}, evs: {evs}, tur: {tur}")
@@ -182,7 +193,7 @@ def run_tune_random_forest(X_train, y_train, X_test, y_test, n_trials=1, num=1):
             BEST_R2 = r2
             BEST_model = model
             onx = convert_sklearn(model, initial_types=[('input', FloatTensorType([None, 101]))], target_opset=10)
-            onnx.save(onx, f"rf_seebeck_2_{num}.onnx")
+            onnx.save(onx, f"rf_seebeck_{num}.onnx")
 
         return r2
 

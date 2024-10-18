@@ -1,6 +1,10 @@
 """
 Run add polyhedra to structures by entry, make descriptor
 """
+import os
+import sys
+sys.path.append(os.getcwd())
+
 
 from ml_selection.data_massage.data_handler import DataHandler
 import yaml
