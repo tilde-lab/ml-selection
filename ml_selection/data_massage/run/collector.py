@@ -196,17 +196,22 @@ def main():
         is_uniq_structure_for_phase,
         path_to_save=raw_path,
         just_mpds=True,
-        phys_prop="Seebeck coefficient",
-        # # ! uncomment if you want to use not ordered structure (for getting poly)
-        # raw_str_path='/root/projects/ml-selection/data/raw_mpds/rep_structures_mpds_seeb_not_clean.json',
-        # will use ordered structures for getting poly (by 'entry')
+        phys_prop="Conductivity",
+        # !!!will use ordered structures for getting poly (by 'entry') - SEEBECK COEFFICIENT
+        # phys_prop="Seebeck coefficient",
         # raw_str_path="ml_selection/structures_props/raw_mpds/raw_structures.json",
-        raw_prop_path="ml_selection/structures_props/raw_mpds/seebeck.json",
+        # raw_prop_path="ml_selection/structures_props/raw_mpds/seebeck.json",
         min_value=-150,
         max_value=200,
         not_clean_not_ordered_str=False
     )
-    run_processing_polyhedra.main(just_mpds=True, mpds_file_name='rep_structures_mpds_seeb')
+    run_processing_polyhedra.main(
+        just_mpds=True, 
+        # !!!for Seebeck
+        # mpds_file_name='rep_structures_mpds_seeb',
+        mpds_file_name='rep_structures_mpds_conductivity', 
+        phys_prop="Conductivity"
+    )
 
 
 if __name__ == "__main__":

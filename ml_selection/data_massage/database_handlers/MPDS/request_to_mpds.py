@@ -75,6 +75,11 @@ class RequestMPDS:
         if is_phys_prop:
             # because .get_dataframe return pd.Dataframe
             dfrm = pd.DataFrame(self.client.get_dataframe({"props": phys_prop}))
+            # necessary for Conductivity 
+            try:
+                dfrm['Value'] = pd.to_numeric(dfrm['Value'], errors='coerce')
+            except:
+              pass  
             dfrm = pl.from_pandas(dfrm)
             dfrm = dfrm.filter(pl.col("Phase").is_finite())
             dfrm = dfrm.rename({"Value": phys_prop})

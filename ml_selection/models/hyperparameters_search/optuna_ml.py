@@ -78,11 +78,11 @@ def run_tune_boosted_trees(X_train, y_train, X_test, y_test, n_trials=1):
         """Search of hyperparameters"""
         global BEST_R2, BEST_model
 
-        n_estimators = trial.suggest_int("n_estimators", 1, 300)
-        max_depth = trial.suggest_int("max_depth", 1, 300)
+        n_estimators = trial.suggest_int("n_estimators", 2, 300)
+        max_depth = trial.suggest_int("max_depth", 2, 300)
         learning_rate = trial.suggest_float("learning_rate", 0.00001, 0.05)
-        min_samples_leaf = trial.suggest_int("min_samples_leaf", 1, 300)
-        min_samples_split = trial.suggest_int("min_samples_split", 1, 300)
+        min_samples_leaf = trial.suggest_int("min_samples_leaf", 2, 300)
+        min_samples_split = trial.suggest_int("min_samples_split", 2, 300)
         max_features = trial.suggest_int("max_features", 1, 300)
 
 
@@ -123,8 +123,8 @@ def run_tune_decision_tree(X_train, y_train, X_test, y_test, n_trials=1):
         global BEST_R2, BEST_model
 
         max_depth = trial.suggest_int("max_depth", 3, 300)
-        min_samples_leaf = trial.suggest_int("min_samples_leaf", 1, 300)
-        min_samples_split = trial.suggest_int("min_samples_split", 1, 300)
+        min_samples_leaf = trial.suggest_int("min_samples_leaf", 2, 300)
+        min_samples_split = trial.suggest_int("min_samples_split", 2, 300)
         min_impurity_decrease = trial.suggest_float("min_impurity_decrease", 0.0001, 1.0)
         max_leaf_nodes = trial.suggest_int("max_leaf_nodes", 3, 200)
 

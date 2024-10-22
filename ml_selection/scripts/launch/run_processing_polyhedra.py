@@ -20,23 +20,32 @@ with open(CONF, "r") as yamlfile:
     processed_data = conf["polyhedra_path"]
 
 
-def combine_structure_and_poly(just_mp: bool, just_mpds: bool, mpds_file_name: str) -> None:
+def combine_structure_and_poly(just_mp: bool, just_mpds: bool, file_name_with_structures: str, phys_prop: str) -> None:
     """
     Combine structures and polyhedra by entry
     """
     if just_mp:
-        dfrm = hand.add_polyhedra(raw_data + "mp_structures.json")
-        dfrm.write_json(raw_data + "large_poly_mp.json")
+        dfrm = hand.add_polyhedra(raw_data + f"{file_name_with_structures}.json")
+        if phys_prop == "Conductivity":
+            dfrm = hand.add_polyhedra(raw_data + "large_poly_mp_conductivity.json")
+        else:
+            dfrm.write_json(raw_data + "large_poly_mp_seebeck.json")
     elif just_mpds:
-        dfrm = hand.add_polyhedra(raw_data + f"{mpds_file_name}.json")
-        dfrm.write_json(raw_data + "large_poly.json")
+        dfrm = hand.add_polyhedra(raw_data + f"{file_name_with_structures}.json")
+        if phys_prop == "Conductivity":
+            dfrm = hand.add_polyhedra(raw_data + "large_poly_mpds_conductivity.json")
+        else:
+            dfrm.write_json(raw_data + "large_poly_mpds_seebeck.json")
     else:
-        dfrm = hand.add_polyhedra(raw_data + "rep_structures.json")
-        dfrm.write_json(raw_data + "large_poly.json")
+        dfrm = hand.add_polyhedra(raw_data + f"{file_name_with_structures}.json")
+        if phys_prop == "Conductivity":
+            dfrm = hand.add_polyhedra(raw_data + "large_poly_mpds_mp_conductivity.json")
+        else:
+            dfrm.write_json(raw_data + "large_poly_mpds_mp_seebeck.json")
 
 
 def make_poly_descriptor(
-    file_name: str = "test"
+    file_name: str = "test", phys_prop: str = "Seebeck coefficient"
 ) -> None:
     """
     Run creating polyhedra descriptor
@@ -46,14 +55,21 @@ def make_poly_descriptor(
     file_name : str, optional
         Name for result file
     """
-    descriptor = hand.process_polyhedra(
-        raw_data + "large_poly.json"
-    )
+    # TODO: add another case: 'large_poly_mpds_mp_seebeck', 'large_poly_mpds_mp_conductivity'; (see func combine_structure_and_poly)
+    if phys_prop == "Seebeck coefficient":
+        descriptor = hand.process_polyhedra(
+            raw_data + "large_poly_mpds_seebeck.json"
+        )
+    else:
+        descriptor = hand.process_polyhedra(
+            raw_data + "large_poly_mpds_conductivity.json"
+        )
+    
     descriptor.write_json(processed_data + file_name + ".json")
     descriptor.write_parquet(processed_data + file_name + ".parquet")
 
 
-def get_descriptor(just_mp: bool = False) -> None:
+def get_descriptor(phys_prop: str, just_mp: bool = False) -> None:
     """
     Run getting polyhedra descriptor
 
@@ -62,17 +78,23 @@ def get_descriptor(just_mp: bool = False) -> None:
     just_mp: bool, optional
         If yes, then data was obtained only from Materials Project, save with name '..._mp.json'
     """
-    if not just_mp:
-        make_poly_descriptor("descriptor_mp")
+    if phys_prop == "Conductivity":
+        if not just_mp:
+            make_poly_descriptor("descriptor_mp_conductivity", phys_prop)
+        else:
+            make_poly_descriptor("descriptor_mpds_conductivity", phys_prop)
     else:
-        make_poly_descriptor("descriptor_mpds")
+        if not just_mp:
+            make_poly_descriptor("descriptor_mp_seeb", phys_prop)
+        else:
+            make_poly_descriptor("descriptor_mpds_seeb", phys_prop)
 
     print(
         f"Creating presents of descriptors for PolyDataset are completed"
     )
 
 
-def main(just_mp: bool = False, just_mpds: bool = False, mpds_file_name: str = "raw_structures"):
+def main(just_mp: bool = False, just_mpds: bool = False, mpds_file_name: str = "raw_structures", phys_prop: str = "Conductivity") -> None:
     """
     Run total collection
 
@@ -85,8 +107,8 @@ def main(just_mp: bool = False, just_mpds: bool = False, mpds_file_name: str = "
     mpds_file_name: str, "rep_structures_mpds_seeb"
         Name of file with needed structures
     """
-    # combine_structure_and_poly(just_mp=just_mp, just_mpds=just_mpds, mpds_file_name=mpds_file_name)
-    get_descriptor(just_mp=just_mp)
+    combine_structure_and_poly(just_mp=just_mp, just_mpds=just_mpds, mpds_file_name=mpds_file_name, phys_prop=phys_prop)
+    get_descriptor(just_mp=just_mp, phys_prop=phys_prop)
 
 
 if __name__ == "__main__":
