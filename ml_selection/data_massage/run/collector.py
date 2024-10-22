@@ -146,39 +146,6 @@ def get_structures_and_phys_prop(
     return result_dfrm
 
 
-def convert_structure_to_vectors(
-    handler: DataHandler, dfrm: DataFrame, path_to_save: str = None
-) -> DataFrame:
-    """
-    Converts to a structure in a format of 2 vectors. In the first vector, periodic number of atom is stored,
-    in the second, the distance from the origin of coordinates.
-    Saves only the first 100 atoms falling within a given distance.
-    """
-    dfrm_str, dfrm_seeb = handler.to_cut_vectors_struct(dfrm=dfrm)
-
-    if path_to_save:
-        dfrm_str.write_json(path_to_save + "rep_vect_str.json")
-        dfrm_seeb.write_json(path_to_save + "rep_vect_seebeck.json")
-
-    total = pl.concat((dfrm_str, dfrm_seeb), how="horizontal")
-    total.write_json(path_to_save + "total_str_seeb.json")
-
-    return dfrm_str, dfrm_seeb
-
-
-def get_data_for_vectors_dataset(
-    handler: DataHandler, str_seeb_dfrm: DataFrame, processed_path: str
-):
-    """
-    Get data in format for VectorsGraphDataset
-    """
-    convert_structure_to_vectors(
-        handler,
-        str_seeb_dfrm,
-        path_to_save=processed_path,
-    )
-
-
 def main():
     """
     Launch data collection step by step
@@ -199,8 +166,12 @@ def main():
         phys_prop="Conductivity",
         # !!!will use ordered structures for getting poly (by 'entry') - SEEBECK COEFFICIENT
         # phys_prop="Seebeck coefficient",
-        # raw_str_path="ml_selection/structures_props/raw_mpds/raw_structures.json",
+        # raw_str_path="ml_selection/structures_props/raw_mpds/rep_structures_mpds_seeb.json",
         # raw_prop_path="ml_selection/structures_props/raw_mpds/seebeck.json",
+        
+        # !!!will use for Conductivity
+        raw_str_path="ml_selection/structures_props/raw_mpds/rep_structures_mpds_conductivity.json",
+        raw_prop_path="ml_selection/structures_props/raw_mpds/conductivity.json",
         min_value=-150,
         max_value=200,
         not_clean_not_ordered_str=False
@@ -209,7 +180,7 @@ def main():
         just_mpds=True, 
         # !!!for Seebeck
         # mpds_file_name='rep_structures_mpds_seeb',
-        mpds_file_name='rep_structures_mpds_conductivity', 
+        structure_file_name='rep_structures_mpds_conductivity', 
         phys_prop="Conductivity"
     )
 

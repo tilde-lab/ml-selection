@@ -31,7 +31,7 @@ poly_type_map = {
     "hexagonal": 120 + 1,
     "orthorhombic": 70,
     # typo... Must be 80 (TODO: change in next experiment)
-    "tetragonal": 8,
+    "tetragonal": 80,
     "monoclinic": 80 + 1,
     "triclinic": 80 + 2,
     "trigonal": 80 + 3,

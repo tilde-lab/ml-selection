@@ -22,24 +22,35 @@ with open(CONF, "r") as yamlfile:
 
 def combine_structure_and_poly(just_mp: bool, just_mpds: bool, file_name_with_structures: str, phys_prop: str) -> None:
     """
-    Combine structures and polyhedra by entry
+    Combine structures and polyhedra by entry. Save to file.
+    
+    Parameters
+    ----------
+    just_mp : bool
+        if True, just MP data
+    just_mpds : bool
+        if True, just MPDS data
+    file_name_with_structures : str
+        Name of file with structures
+    phys_prop : str
+        Property name (available: Seebeck coefficient, Conductivity)
     """
     if just_mp:
         dfrm = hand.add_polyhedra(raw_data + f"{file_name_with_structures}.json")
         if phys_prop == "Conductivity":
-            dfrm = hand.add_polyhedra(raw_data + "large_poly_mp_conductivity.json")
+            dfrm.write_json(raw_data + "large_poly_mp_conductivity.json")
         else:
             dfrm.write_json(raw_data + "large_poly_mp_seebeck.json")
     elif just_mpds:
         dfrm = hand.add_polyhedra(raw_data + f"{file_name_with_structures}.json")
         if phys_prop == "Conductivity":
-            dfrm = hand.add_polyhedra(raw_data + "large_poly_mpds_conductivity.json")
+            dfrm.write_json(raw_data + "large_poly_mpds_conductivity.json")
         else:
             dfrm.write_json(raw_data + "large_poly_mpds_seebeck.json")
     else:
         dfrm = hand.add_polyhedra(raw_data + f"{file_name_with_structures}.json")
         if phys_prop == "Conductivity":
-            dfrm = hand.add_polyhedra(raw_data + "large_poly_mpds_mp_conductivity.json")
+            dfrm.write_json(raw_data + "large_poly_mpds_mp_conductivity.json")
         else:
             dfrm.write_json(raw_data + "large_poly_mpds_mp_seebeck.json")
 
@@ -54,8 +65,10 @@ def make_poly_descriptor(
     ----------
     file_name : str, optional
         Name for result file
+    phys_prop : str, optional
+        Physical property to create a poly_descriptor
     """
-    # TODO: add another case: 'large_poly_mpds_mp_seebeck', 'large_poly_mpds_mp_conductivity'; (see func combine_structure_and_poly)
+    # TODO: add another case: 'large_poly_mpds_mp_seebeck''; (see func combine_structure_and_poly)
     if phys_prop == "Seebeck coefficient":
         descriptor = hand.process_polyhedra(
             raw_data + "large_poly_mpds_seebeck.json"
@@ -75,7 +88,9 @@ def get_descriptor(phys_prop: str, just_mp: bool = False) -> None:
 
     Parameters
     ----------
-    just_mp: bool, optional
+    phys_prop : str
+        Physical property to create a poly_descriptor
+    just_mp : bool, optional
         If yes, then data was obtained only from Materials Project, save with name '..._mp.json'
     """
     if phys_prop == "Conductivity":
@@ -94,9 +109,9 @@ def get_descriptor(phys_prop: str, just_mp: bool = False) -> None:
     )
 
 
-def main(just_mp: bool = False, just_mpds: bool = False, mpds_file_name: str = "raw_structures", phys_prop: str = "Conductivity") -> None:
+def main(just_mp: bool = False, just_mpds: bool = False, structure_file_name: str = "raw_structures", phys_prop: str = "Conductivity") -> None:
     """
-    Run total collection
+    Run total collection. Run getting physical properties, structures from database, make polyhedra descriptor.
 
     Parameters
     ----------
@@ -104,10 +119,10 @@ def main(just_mp: bool = False, just_mpds: bool = False, mpds_file_name: str = "
         If yes, then data was obtained only from Materials Project, save with name '..._mp.json'
     just_mpds: bool, optional
         If yes, then data was obtained only from MPDS, load from 'rep_structures_mpds.json'
-    mpds_file_name: str, "rep_structures_mpds_seeb"
-        Name of file with needed structures
+    structure_file_name: str, "rep_structures_mpds_seeb"
+        Name of file with structures
     """
-    combine_structure_and_poly(just_mp=just_mp, just_mpds=just_mpds, mpds_file_name=mpds_file_name, phys_prop=phys_prop)
+    combine_structure_and_poly(just_mp=just_mp, just_mpds=just_mpds, file_name_with_structures=structure_file_name, phys_prop=phys_prop)
     get_descriptor(just_mp=just_mp, phys_prop=phys_prop)
 
 
