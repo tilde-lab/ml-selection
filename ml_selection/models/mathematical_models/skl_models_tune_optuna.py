@@ -1,22 +1,16 @@
 """
 Ml-models from sklearn with tuning hyperparameters by Optuna.
 """
-
 import os
 import sys
-
 sys.path.append(os.getcwd())
 
 import pandas as pd
 import polars as pl
 import yaml
 
-from ml_selection.models.hyperparameters_search.optuna_ml import (
-    run_tune_boosted_trees,
-    run_tune_decision_tree,
-    run_tune_linear_regression,
-    run_tune_random_forest,
-)
+from ml_selection.models.hyperparameters_search.optuna_ml import \
+run_tune_random_forest, run_tune_boosted_trees, run_tune_decision_tree, run_tune_linear_regression
 
 
 def main(poly_path: str, just_mp: bool = False, phys_prop: str = "Seebeck coefficient"):
@@ -28,7 +22,7 @@ def main(poly_path: str, just_mp: bool = False, phys_prop: str = "Seebeck coeffi
     # change json on parquet
     poly_path = poly_path.replace(".json", ".parquet")
 
-    if phys_prop == "Seebeck coefficient":
+    if phys_prop == 'Seebeck coefficient':
         if not just_mp:
             run_ml_models(poly_path, raw_mpds + "median_seebeck_mpds.json")
         else:
@@ -54,12 +48,11 @@ def load_data(poly_path: str, property_path: str) -> pd.DataFrame:
 
 def make_descriptors(data: pd.DataFrame):
     """Create descriptor with same len"""
-
     def repeat_to_length(lst, length=250):
         while len(lst) < length:
             lst += lst
         return lst[:length]
-
+    
     descriptor = [list(i) for i in data["descriptor"]]
     x = [repeat_to_length(i) for i in descriptor]
     indexes_to_remove = []
@@ -70,9 +63,9 @@ def make_descriptors(data: pd.DataFrame):
         y = list(data["Conductivity"])
         # filter by value
         for idx, value in enumerate(y):
-            if 25 < value:
+            if  25 < value:
                 indexes_to_remove.append(idx)
-
+                
         y = [item for i, item in enumerate(y) if i not in indexes_to_remove]
         x = [item for i, item in enumerate(x) if i not in indexes_to_remove]
 
@@ -99,11 +92,6 @@ def run_ml_models(
 
 if __name__ == "__main__":
     # path to file with next column: phase_id, entry, descriptor
-    # ml_selection/structures_props/processed_data/descriptor_mpds_seeb.json
+    main("ml_selection/structures_props/processed_data/descriptor_mpds_seeb.json", False, phys_prop='Seebeck coefficient')
+    main("ml_selection/structures_props/processed_data/descriptor_mpds_conductivity.json", False, phys_prop='Conductivity')
 
-    # main("ml_selection/structures_props/processed_data/descriptor_mpds_seeb.json", False, phys_prop='Seebeck coefficient')
-    main(
-        "ml_selection/structures_props/processed_data/descriptor_mpds_conductivity.json",
-        False,
-        phys_prop="Conductivity",
-    )
