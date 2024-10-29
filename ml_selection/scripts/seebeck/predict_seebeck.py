@@ -23,9 +23,11 @@ output_path = sys.argv[4]
 sys.path.append(os.path.abspath(path_to_project))
 
 
-from data_massage.create_polyheadra import (get_int_poly_type,
-                                            get_poly_elements,
-                                            size_customization)
+from data_massage.create_polyheadra import (
+    get_int_poly_type,
+    get_poly_elements,
+    size_customization,
+)
 
 
 def run_predict(input: np.array):
@@ -52,9 +54,9 @@ for structure in structures:
 
 output = run_predict(np.array(inputs))
 
-with open(output_path, 'w') as output_file:
+with open(output_path, "w") as output_file:
     for i, out in enumerate(output):
-        output_file.write(str(output[i][0]) + '\n')
+        output_file.write(str(output[i][0]) + "\n")
 
 [print(i) for i in structures]
 print("=" * 100)

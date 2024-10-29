@@ -4,10 +4,9 @@ Selection of hyperparameters for GCN.
 
 import optuna
 import torch
-from torch_geometric.loader import DataLoader
-
 from datasets.poly_graph_dataset import PolyGraphDataset
 from models.neural_network_models.GCN.gcn_regression_model import GCN
+from torch_geometric.loader import DataLoader
 
 BEST_WEIGHTS = None
 BEST_R2 = -100
@@ -84,7 +83,7 @@ def main(
 
 
 if __name__ == "__main__":
-    path = "/root/projects/ml-selection/data/processed_data/poly/0_features.json"
+    path = "ml_selection/data/processed_data/poly/0_features.json"
     features = 2
     temperature = False
     main(path, features, 1, temperature)

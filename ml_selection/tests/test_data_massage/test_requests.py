@@ -6,13 +6,12 @@ import unittest
 
 import polars as pl
 import yaml
-
 from data_massage.database_handlers.MPDS.request_to_mpds import RequestMPDS
 
 
 class TestRequestMPDS(unittest.TestCase):
     def setUp(self):
-        with open("/root/projects/ml-selection/configs/config.yaml", "r") as yamlfile:
+        with open("ml_selection/configs/config.yaml", "r") as yamlfile:
             self.key = yaml.load(yamlfile, Loader=yaml.FullLoader)["api_key"]
         self.client_handler = RequestMPDS(dtype=1, api_key=self.key)
         self.seebeck_columns = ["Phase", "Formula", "Seebeck coefficient"]

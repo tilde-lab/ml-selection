@@ -1,14 +1,16 @@
 """
 Run add polyhedra to structures by entry, make descriptor
 """
+
 import os
 import sys
+
 sys.path.append(os.getcwd())
 
 
-from ml_selection.data_massage.data_handler import DataHandler
 import yaml
 
+from ml_selection.data_massage.data_handler import DataHandler
 
 hand = DataHandler(True)
 
@@ -20,10 +22,12 @@ with open(CONF, "r") as yamlfile:
     processed_data = conf["polyhedra_path"]
 
 
-def combine_structure_and_poly(just_mp: bool, just_mpds: bool, file_name_with_structures: str, phys_prop: str) -> None:
+def combine_structure_and_poly(
+    just_mp: bool, just_mpds: bool, file_name_with_structures: str, phys_prop: str
+) -> None:
     """
     Combine structures and polyhedra by entry. Save to file.
-    
+
     Parameters
     ----------
     just_mp : bool
@@ -77,7 +81,7 @@ def make_poly_descriptor(
         descriptor = hand.process_polyhedra_descriptor(
             raw_data + "large_poly_mpds_conductivity.json"
         )
-    
+
     descriptor.write_json(processed_data + file_name + ".json")
     descriptor.write_parquet(processed_data + file_name + ".parquet")
 
@@ -104,12 +108,15 @@ def get_descriptor(phys_prop: str, just_mp: bool = False) -> None:
         else:
             make_poly_descriptor("descriptor_mp_seeb", phys_prop)
 
-    print(
-        f"Creating presents of descriptors for PolyDataset are completed"
-    )
+    print(f"Creating presents of descriptors for PolyDataset are completed")
 
 
-def main(just_mp: bool = False, just_mpds: bool = False, structure_file_name: str = "raw_structures", phys_prop: str = "Conductivity") -> None:
+def main(
+    just_mp: bool = False,
+    just_mpds: bool = False,
+    structure_file_name: str = "raw_structures",
+    phys_prop: str = "Conductivity",
+) -> None:
     """
     Run total collection. Run getting physical properties, structures from database, make polyhedra descriptor.
 
@@ -129,4 +136,8 @@ def main(just_mp: bool = False, just_mpds: bool = False, structure_file_name: st
 
 
 if __name__ == "__main__":
-    main(just_mpds=True, structure_file_name="rep_structures_mpds_seeb", phys_prop="Seebeck coefficient")
+    main(
+        just_mpds=True,
+        structure_file_name="rep_structures_mpds_conductivity",
+        phys_prop="Conductivity",
+    )

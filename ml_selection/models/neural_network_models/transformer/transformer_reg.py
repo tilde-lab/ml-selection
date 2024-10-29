@@ -5,26 +5,25 @@ Transformer made from encoder (without decoder). Uses token-vector to represent 
 Tensor of tokens is fed to fully connected layer. Next, loss is calculated as in standard models.
 """
 
-from data_massage.normalization.normalization import make_normalization
+import pickle
+
+import numpy as np
 import polars as pl
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.utils.data as data
+import yaml
+from ml_selection.structures_props.poly_store import get_poly_info
+from data_massage.normalization.normalization import make_normalization
+from metrics.statistic_metrics import theils_u
 from sklearn.metrics import explained_variance_score
 from torch.utils.data import Subset
 from torcheval.metrics import R2Score
 from torchmetrics import MeanAbsoluteError, MeanAbsolutePercentageError
 from tqdm import tqdm
-import pickle
-import yaml
-import numpy as np
 
-from data.poly_store import get_poly_info
-from metrics.statistic_metrics import theils_u
-
-
-CONF = "/root/projects/ml-selection/configs/config.yaml"
+CONF = "ml_selectionn/configs/config.yaml"
 
 with open(CONF, "r") as yamlfile:
     yaml_f = yaml.load(yamlfile, Loader=yaml.FullLoader)

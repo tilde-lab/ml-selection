@@ -4,14 +4,16 @@ Main file that starts collecting data for training models. Get median value for 
 """
 
 import polars as pl
-from polars import DataFrame
 import yaml
+from polars import DataFrame
 
 from ml_selection.data_massage.calculate_median_value import phys_prop_median_value
 from ml_selection.data_massage.data_handler import DataHandler
-from ml_selection.scripts.launch import run_processing_polyhedra
 from ml_selection.data_massage.database_handlers.adapter import MPDS_MP_Adapter
-from ml_selection.data_massage.database_handlers.MaterialsProject.request_to_mp import RequestMP
+from ml_selection.data_massage.database_handlers.MaterialsProject.request_to_mp import (
+    RequestMP,
+)
+from ml_selection.scripts.launch import run_processing_polyhedra
 
 CONF = "ml_selection/configs/config.yaml"
 
@@ -168,20 +170,19 @@ def main():
         # phys_prop="Seebeck coefficient",
         # raw_str_path="ml_selection/structures_props/raw_mpds/rep_structures_mpds_seeb.json",
         # raw_prop_path="ml_selection/structures_props/raw_mpds/seebeck.json",
-        
         # !!!will use for Conductivity
         raw_str_path="ml_selection/structures_props/raw_mpds/rep_structures_mpds_conductivity.json",
         raw_prop_path="ml_selection/structures_props/raw_mpds/conductivity.json",
         min_value=-150,
         max_value=200,
-        not_clean_not_ordered_str=False
+        not_clean_not_ordered_str=False,
     )
     run_processing_polyhedra.main(
-        just_mpds=True, 
+        just_mpds=True,
         # !!!for Seebeck
         # mpds_file_name='rep_structures_mpds_seeb',
-        structure_file_name='rep_structures_mpds_conductivity', 
-        phys_prop="Conductivity"
+        structure_file_name="rep_structures_mpds_conductivity",
+        phys_prop="Conductivity",
     )
 
 

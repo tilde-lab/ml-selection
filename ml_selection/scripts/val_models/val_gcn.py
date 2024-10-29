@@ -3,10 +3,9 @@ Test GCN on CrystalGraphVectorsDataset
 """
 
 import torch
-from torch_geometric.loader import DataLoader
-
 from datasets.vectors_graph_dataset import CrystalGraphVectorsDataset
 from models.neural_network_models.GCN.gcn_regression_model import GCN
+from torch_geometric.loader import DataLoader
 
 dataset = CrystalGraphVectorsDataset()
 
@@ -22,7 +21,7 @@ model = GCN(13, 16, "relu").to(device)
 
 model.load_state_dict(
     torch.load(
-        r"/root/projects/ml-selection/models/neural_network_models/GCN/weights/01.pth"
+        r"ml_selection/models/neural_network_models/GCN/weights/01.pth"
     )
 )
 

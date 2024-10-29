@@ -3,12 +3,11 @@ Test GAT on CrystalGraphVectorsDataset
 """
 
 import torch
-from torch_geometric.loader import DataLoader
-
 from datasets.poly_graph_dataset import PolyGraphDataset
 from models.neural_network_models.GAT.gat_regression_model import GAT
+from torch_geometric.loader import DataLoader
 
-path = "/root/projects/ml-selection/data/processed_data/poly/0_features.json"
+path = "ml_selection/data/processed_data/poly/0_features.json"
 n_features = 2
 temperature = False
 
@@ -26,7 +25,7 @@ model = GAT(features=n_features).to(device)
 
 model.load_state_dict(
     torch.load(
-        r"/root/projects/ml-selection/models/neural_network_models/GAT/weights/20_01.pth"
+        r"ml_selection/models/neural_network_models/GAT/weights/20_01.pth"
     )
 )
 

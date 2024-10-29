@@ -1,35 +1,41 @@
 """
 Ml-models from sklearn with tuning hyperparameters by Optuna.
 """
+
 import os
 import sys
+
 sys.path.append(os.getcwd())
 
 import pandas as pd
 import polars as pl
 import yaml
 
-from ml_selection.models.hyperparameters_search.optuna_ml import \
-run_tune_random_forest, run_tune_boosted_trees, run_tune_decision_tree, run_tune_linear_regression
+from ml_selection.models.hyperparameters_search.optuna_ml import (
+    run_tune_boosted_trees,
+    run_tune_decision_tree,
+    run_tune_linear_regression,
+    run_tune_random_forest,
+)
 
 
-def main(poly_path: str, just_mp: bool = False,):
+def main(poly_path: str, just_mp: bool = False, phys_prop: str = "Seebeck coefficient"):
     """Run pipeline"""
     with open("ml_selection/configs/config.yaml", "r") as yamlfile:
         yaml_f = yaml.load(yamlfile, Loader=yaml.FullLoader)
         raw_mpds = yaml_f["raw_mpds"]
 
     # change json on parquet
-    if not just_mp:
-        poly_path= poly_path.replace(".json", ".parquet")
-    else:
-        poly_path= poly_path.replace(".json", ".parquet")
+    poly_path = poly_path.replace(".json", ".parquet")
 
-    if not just_mp:
-        run_ml_models(poly_path, raw_mpds + "median_seebeck_mpds.json")
+    if phys_prop == "Seebeck coefficient":
+        if not just_mp:
+            run_ml_models(poly_path, raw_mpds + "median_seebeck_mpds.json")
+        else:
+            # just for seebeck
+            run_ml_models(poly_path, raw_mpds + "mp_seebeck.parquet")
     else:
-        # just for seebeck
-        run_ml_models(poly_path, raw_mpds + "mp_seebeck.parquet")
+        run_ml_models(poly_path, raw_mpds + "median_conductivity.json")
 
 
 def load_data(poly_path: str, property_path: str) -> pd.DataFrame:
@@ -48,17 +54,29 @@ def load_data(poly_path: str, property_path: str) -> pd.DataFrame:
 
 def make_descriptors(data: pd.DataFrame):
     """Create descriptor with same len"""
-    def repeat_to_length(lst, length=1000):
+
+    def repeat_to_length(lst, length=250):
         while len(lst) < length:
             lst += lst
         return lst[:length]
-    
+
     descriptor = [list(i) for i in data["descriptor"]]
     x = [repeat_to_length(i) for i in descriptor]
+    indexes_to_remove = []
 
-    y = list(data["Seebeck coefficient"])
+    try:
+        y = list(data["Seebeck coefficient"])
+    except:
+        y = list(data["Conductivity"])
+        # filter by value
+        for idx, value in enumerate(y):
+            if 25 < value:
+                indexes_to_remove.append(idx)
 
-    train_size = int(0.9 * len(data))
+        y = [item for i, item in enumerate(y) if i not in indexes_to_remove]
+        x = [item for i, item in enumerate(x) if i not in indexes_to_remove]
+
+    train_size = int(0.9 * len(x))
     train_x, test_x = x[:train_size], x[train_size:]
     train_y, test_y = y[:train_size], y[train_size:]
 
@@ -68,7 +86,7 @@ def make_descriptors(data: pd.DataFrame):
 def run_ml_models(
     poly_path: list,
     phys_prop_path: str,
-    n_iter: int = 300,
+    n_iter: int = 400,
 ) -> None:
     data = load_data(poly_path, phys_prop_path)
     train_x, train_y, test_x, test_y = make_descriptors(data)
@@ -82,4 +100,10 @@ def run_ml_models(
 if __name__ == "__main__":
     # path to file with next column: phase_id, entry, descriptor
     # ml_selection/structures_props/processed_data/descriptor_mpds_seeb.json
-    main("ml_selection/structures_props/processed_data/descriptor_mpds_seeb.json", False)
+
+    # main("ml_selection/structures_props/processed_data/descriptor_mpds_seeb.json", False, phys_prop='Seebeck coefficient')
+    main(
+        "ml_selection/structures_props/processed_data/descriptor_mpds_conductivity.json",
+        False,
+        phys_prop="Conductivity",
+    )

@@ -1,13 +1,11 @@
 import polars as pl
 import torch
+import yaml
+from data.mendeleev_table import get_periodic_number
 from torch.utils.data import Dataset
 from torch_geometric.data import Data
-import yaml
 
-from data.mendeleev_table import get_periodic_number
-
-
-CONF = "/root/projects/ml-selection/configs/config.yaml"
+CONF = "ml_selection/configs/config.yaml"
 
 
 class PointCloudDataset(Dataset):

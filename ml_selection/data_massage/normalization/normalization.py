@@ -1,10 +1,10 @@
 import pickle
 
+import numpy as np
 import polars as pl
+import yaml
 from polars import DataFrame
 from sklearn.preprocessing import MinMaxScaler
-import numpy as np
-import yaml
 
 
 def make_normalization(
@@ -16,7 +16,7 @@ def make_normalization(
     Data for normalization is specified as the name of a specific column from the dataframe.
     Return dataframe.
     """
-    with open("/root/projects/ml-selection/configs/config.yaml", "r") as yamlfile:
+    with open("ml_selection/configs/config.yaml", "r") as yamlfile:
         yaml_f = yaml.load(yamlfile, Loader=yaml.FullLoader)
         path = yaml_f["scaler_path"]
     exceptions_col = ["phase_id", "Phase", "Formula"]

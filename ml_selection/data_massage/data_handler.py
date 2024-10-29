@@ -1,3 +1,6 @@
+import os
+import sys
+
 import numpy as np
 import pandas as pd
 import polars as pl
@@ -5,22 +8,22 @@ import yaml
 from ase import Atoms
 from ase.data import chemical_symbols
 from polars import DataFrame
-import os
-import sys
+
 sys.path.append(os.getcwd())
 
 
-from ml_selection.structures_props.mendeleev_table import periodic_numbers
-from ml_selection.structures_props.mendeleev_table import get_periodic_number
-from ml_selection.data_massage.polyhedra.create_polyhedra import get_poly_elements
 from ase.data import atomic_numbers, chemical_symbols
 from ase.spacegroup import crystal
 
-from ml_selection.data_massage.database_handlers.MPDS.request_to_mpds import RequestMPDS
-from ml_selection.data_massage.polyhedra.get_poly_from_ase import sg_to_crystal_system
-
 # change path if another
 from metis_backend.structures.struct_utils import order_disordered
+from ml_selection.data_massage.database_handlers.MPDS.request_to_mpds import RequestMPDS
+from ml_selection.data_massage.polyhedra.create_polyhedra import get_poly_elements
+from ml_selection.data_massage.polyhedra.get_poly_from_ase import sg_to_crystal_system
+from ml_selection.structures_props.mendeleev_table import (
+    get_periodic_number,
+    periodic_numbers,
+)
 
 cell_map = {
     "cubic": 1,
@@ -31,6 +34,7 @@ cell_map = {
     "triclinic": 6,
     "trigonal": 7,
 }
+
 
 class DataHandler:
     """
@@ -493,7 +497,7 @@ class DataHandler:
         ----------
         crystals_json_path : str
             Path to json file with structures with next columns:
-            'phase_id': float, 'occs_noneq': list[float], 'cell_abc': list[list[float]], 
+            'phase_id': float, 'occs_noneq': list[float], 'cell_abc': list[list[float]],
             'sg_n': float, 'basis_noneq': list[list[float]], 'els_noneq': list[str],
             'entry': str, 'temperature': float, 'Site': str, 'Type': str, 'Composition': str
 
@@ -502,12 +506,12 @@ class DataHandler:
         dfrm : DataFrame
            Table with next columns:
            "phase_id", "entry", "descriptor"
-           
+
         Examples
         -------
-        crystals.row(0) = (19763.0, 
+        crystals.row(0) = (19763.0,
         [8.657, 4.981999999999999, 6.651, 90.0, 90.0, 90.0], 62.0, [[0.033, 0.25, 0.131], [0.18, 0.25, 0.629]],
-        [[0.033, 0.25, 0.131], [0.18, 0.25, 0.629]], ['Ag', 'Ba'], 
+        [[0.033, 0.25, 0.131], [0.18, 0.25, 0.629]], ['Ag', 'Ba'],
         'S2030002', 298.0, 'Ag', '9-a', 'Ag<sub>2</sub>Ba<sub>7</sub>')
         """
         crystals = pl.read_json(crystals_json_path)
@@ -515,7 +519,7 @@ class DataHandler:
 
         columns = ["phase_id", "entry", "descriptor"]
         last_entry = crystals[0][5]
-        
+
         ready_descriptors = []
         all_poly_in_structure = []
 
@@ -528,32 +532,36 @@ class DataHandler:
                 ready_descriptors.append([poly[0], last_entry, all_poly_in_structure])
                 all_poly_in_structure = []
                 last_entry = poly[5]
-            
+
             cell_type = cell_map[sg_to_crystal_system(poly[2])]
             num_poly_vertex = len(get_poly_elements(poly[-1]))
-            
+
             for i in range(0, 10):
-                poly[-3] = poly[-3].replace(str(i), '')
-                
+                poly[-3] = poly[-3].replace(str(i), "")
+
             try:
                 center_poly = get_periodic_number(poly[-3])
             except:
                 # for M, T, M(O) and other case
                 center_poly = 119
-            
+
             # split type of poly by '-' or '#'
             # for example: '38#z' to ['38', 'z']. Next -> 38 * 100 + (122 - 26) = 3826
-            poly_type = int(poly[-2].replace('#', ',').replace('-', ',').split(',')[0]) * 100 + ord(poly[-2].replace('#', ',').replace('-', ',').split(',')[1]) - 96
-            
+            poly_type = (
+                int(poly[-2].replace("#", ",").replace("-", ",").split(",")[0]) * 100
+                + ord(poly[-2].replace("#", ",").replace("-", ",").split(",")[1])
+                - 96
+            )
+
             cell_feature = 1000000 * cell_type
-            poly_feature = num_poly_vertex * 1000 + center_poly + poly_type + cell_feature
-            
+            poly_feature = (
+                num_poly_vertex * 1000 + center_poly + poly_type + cell_feature
+            )
+
             a, b, c, alpha, beta, gamma = poly[1]
             # Use the crystal function from ASE to create the Atoms object
             atoms = crystal(
-                symbols=poly[4],
-                basis=poly[3],
-                cellpar=[a, b, c, alpha, beta, gamma]
+                symbols=poly[4], basis=poly[3], cellpar=[a, b, c, alpha, beta, gamma]
             )
             atomic_numbers = atoms.get_atomic_numbers()
             atomic_symbols = [chemical_symbols[number] for number in atomic_numbers]
@@ -561,8 +569,8 @@ class DataHandler:
 
             positions = atoms.get_positions()
             # distance from atoms to the center of the structure
-            distances = np.linalg.norm(positions, axis=1)    
-            
+            distances = np.linalg.norm(positions, axis=1)
+
             for atom, distance in zip(atomic_elements_periodic, distances):
                 # add atom, poly and distance to descriptor
                 all_poly_in_structure.append(float(atom))
@@ -645,8 +653,6 @@ class DataHandler:
 
 
 if __name__ == "__main__":
-    with open(
-        "ml-selection/data/mp_database/space_group_mp.json", "r"
-    ) as f:
+    with open("ml-selection/data/mp_database/space_group_mp.json", "r") as f:
         data = f.read()
     handler = DataHandler(True)

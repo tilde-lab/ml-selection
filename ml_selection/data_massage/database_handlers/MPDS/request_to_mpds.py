@@ -1,22 +1,17 @@
 import json
-
-import pandas as pd
-import polars as pl
-from mpds_client import MPDSDataRetrieval, MPDSDataTypes
-import yaml
-from yaml import Loader
-import requests
-import yaml
-from bs4 import BeautifulSoup
-import time
-import httplib2
 import os.path
 import time
-
-import ujson as json
 from urllib.parse import urlencode
 
+import httplib2
+import pandas as pd
+import polars as pl
+import requests
+import ujson as json
+import yaml
+from bs4 import BeautifulSoup
 from mpds_client import MPDSDataRetrieval, MPDSDataTypes
+from yaml import Loader
 
 CONF = "ml_selection/configs/config.yaml"
 
@@ -75,11 +70,11 @@ class RequestMPDS:
         if is_phys_prop:
             # because .get_dataframe return pd.Dataframe
             dfrm = pd.DataFrame(self.client.get_dataframe({"props": phys_prop}))
-            # necessary for Conductivity 
+            # necessary for Conductivity
             try:
-                dfrm['Value'] = pd.to_numeric(dfrm['Value'], errors='coerce')
+                dfrm["Value"] = pd.to_numeric(dfrm["Value"], errors="coerce")
             except:
-              pass  
+                pass
             dfrm = pl.from_pandas(dfrm)
             dfrm = dfrm.filter(pl.col("Phase").is_finite())
             dfrm = dfrm.rename({"Value": phys_prop})
@@ -227,7 +222,7 @@ class RequestMPDS:
             response = requests.get(query)
             if response.status_code == 429:
                 time.sleep(10)
-                print('Too many requests - 429 error')
+                print("Too many requests - 429 error")
             elif response.status_code == 200:
                 soup = BeautifulSoup(response.text, "html.parser")
 
@@ -275,21 +270,22 @@ class RequestMPDS:
             req = httplib2.Http()
 
             endpoint = "https://api.mpds.io/v0/download/facet"
-            search = {
-                "props": "atomic structure",
-                "years": str(year)
-            }
+            search = {"props": "atomic structure", "years": str(year)}
 
             try:
                 response, content = req.request(
-                    uri=endpoint + '?' + urlencode({
-                        'q': json.dumps(search),
-                        'pagesize': 1000,
-                        'dtype': 7,
-                        'fmt': 'cif'
-                    }),
-                    method='GET',
-                    headers={'Key': api_key},
+                    uri=endpoint
+                    + "?"
+                    + urlencode(
+                        {
+                            "q": json.dumps(search),
+                            "pagesize": 1000,
+                            "dtype": 7,
+                            "fmt": "cif",
+                        }
+                    ),
+                    method="GET",
+                    headers={"Key": api_key},
                 )
 
                 if response.status != 200:
@@ -297,29 +293,34 @@ class RequestMPDS:
                     continue
 
                 # decode the response content
-                content_str = content.decode('utf-8')
+                content_str = content.decode("utf-8")
 
                 # split content by 'data_'
-                entries = content_str.split('data_')
+                entries = content_str.split("data_")
                 for entry_content in entries:
-                    if entry_content[0] != 'S':
+                    if entry_content[0] != "S":
                         continue
-                    
+
                     entry_content = entry_content.strip()
                     if not entry_content:
                         continue
 
                     # reconstruct full entry
-                    entry_full = 'data_' + entry_content
+                    entry_full = "data_" + entry_content
 
                     # get the first 6 characters of the entry for the filename
-                    entry_snippet = entry_content[:8].replace('/', '_').replace('\\', '_').replace(' ', '_')
+                    entry_snippet = (
+                        entry_content[:8]
+                        .replace("/", "_")
+                        .replace("\\", "_")
+                        .replace(" ", "_")
+                    )
 
                     # create the filename with year and entry 'S...'
                     filename = f"{year}_{entry_snippet}.cif"
                     file_path = os.path.join(output_dir, filename)
 
-                    with open(file_path, 'w') as fp:
+                    with open(file_path, "w") as fp:
                         fp.write(entry_full)
 
             except Exception as error:
@@ -328,6 +329,6 @@ class RequestMPDS:
 
         print("---Successfully saved all files")
 
-        
+
 if __name__ == "__main__":
-    RequestMPDS.request_cif('wkBcobukIiozTs3EpjibV5meOKs3wIDJZEwDtRn4cr9HWgrW')
+    RequestMPDS.request_cif("wkBcobukIiozTs3EpjibV5meOKs3wIDJZEwDtRn4cr9HWgrW")

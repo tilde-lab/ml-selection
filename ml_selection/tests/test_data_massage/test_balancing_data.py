@@ -6,7 +6,6 @@ import unittest
 
 import polars as pl
 import yaml
-
 from data_massage.balancing_data.oversampling import make_oversampling
 from data_massage.balancing_data.undersampling import make_undersampling
 

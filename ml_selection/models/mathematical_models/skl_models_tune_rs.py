@@ -1,16 +1,18 @@
 """
 Ml-models from sklearn with tuning hyperparameters by RandomizedSearchCV.
 """
-import yaml
+
 from typing import Union
+
+import yaml
+from data.poly_store import get_poly_info
 from models.hyperparameters_search.randomized_search_ml import run_tune_random_forest
 from skl_models_tune_optuna import load_data, make_descriptors
-from data.poly_store import get_poly_info
 
 
 def main(just_mp: bool = False):
-    """Run tune hyp-parameters """
-    with open("/root/projects/ml-selection/configs/config.yaml", "r") as yamlfile:
+    """Run tune hyp-parameters"""
+    with open("ml_selection/configs/config.yaml", "r") as yamlfile:
         yaml_f = yaml.load(yamlfile, Loader=yaml.FullLoader)
         raw_mpds = yaml_f["raw_mpds"]
 
@@ -37,6 +39,7 @@ def main(just_mp: bool = False):
             run_ml_models(poly_path, raw_mpds + "median_seebeck.parquet", f, cnt)
         else:
             run_ml_models(poly_path, raw_mpds + "mp_seebeck.parquet", f, cnt)
+
 
 def run_ml_models(
     poly_paths: list,

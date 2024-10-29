@@ -2,8 +2,7 @@ import polars as pl
 import yaml
 from yaml import Loader
 
-
-CONF = "/root/projects/ml-selection/configs/config.yaml"
+CONF = "ml_selection/configs/config.yaml"
 
 
 def check_same_features(dfrm: pl.DataFrame, columns: list) -> list:

@@ -1,12 +1,11 @@
 import polars as pl
 import torch
+import yaml
+from data_massage.normalization.normalization import make_normalization
 from torch.utils.data import Dataset
 from torch_geometric.data import Data
-from data_massage.normalization.normalization import make_normalization
-import yaml
 
-
-CONF = "/root/projects/ml-selection/configs/config.yaml"
+CONF = "ml_selection/configs/config.yaml"
 
 
 class PolyGraphDataset(Dataset):

@@ -1,18 +1,16 @@
 import torch
+import yaml
+from datasets.point_cloud_dataset import PointCloudDataset
+from metrics.statistic_metrics import theils_u
+from sklearn.metrics import explained_variance_score
 from torch import Tensor
 from torch.nn import Linear, ReLU, Sequential
 from torch_geometric.loader import DataLoader
 from torch_geometric.nn import MessagePassing, global_max_pool
 from torcheval.metrics import R2Score
 from torchmetrics import MeanAbsoluteError, MeanAbsolutePercentageError
-from sklearn.metrics import explained_variance_score
-from metrics.statistic_metrics import theils_u
-import yaml
 
-from datasets.point_cloud_dataset import PointCloudDataset
-
-
-CONF = "/root/projects/ml-selection/configs/config.yaml"
+CONF = "ml_selection/configs/config.yaml"
 
 with open(CONF, "r") as yamlfile:
     yaml_f = yaml.load(yamlfile, Loader=yaml.FullLoader)

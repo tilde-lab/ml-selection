@@ -4,19 +4,18 @@ Run Linear Regression model in ONNX format
 
 import polars as pd
 import torch
+from models.run_onnx import run_model_onnx
 from torcheval.metrics import R2Score
 from torchmetrics import MeanAbsoluteError
-
-from models.run_onnx import run_model_onnx
 
 mae = MeanAbsoluteError()
 r2 = R2Score()
 
 total = pd.read_csv(
-    "/root/projects/ml-selection/data/processed_data/under_str.csv",
+    "ml_selection/data/processed_data/under_str.csv",
 )
 Y = pd.read_csv(
-    "/root/projects/ml-selection/data/processed_data/under_seeb.csv",
+    "ml_selection/data/processed_data/under_seeb.csv",
 )
 
 train_size = int(0.9 * len(total))
@@ -26,7 +25,7 @@ distance = total["distance"][train_size:].values.tolist()
 seebeck = Y["Seebeck coefficient"][train_size:].values.tolist()
 
 preds = run_model_onnx(
-    "/root/projects/ml-selection/models/onnx/linear_regression_model.onnx",
+    "ml_selection/models/onnx/linear_regression_model.onnx",
     atom,
     distance,
 )

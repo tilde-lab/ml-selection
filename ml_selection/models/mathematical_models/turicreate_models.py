@@ -1,20 +1,19 @@
 """
 Any of the below regression models can be used for predicting Seebeck Coefficient values of binary compounds.
 """
-from scipy.stats import randint
 
 import pandas as pd
 import polars as pl
 import torch
-import yaml
 import turicreate as tc
+import yaml
+from data.poly_store import get_poly_info
+from metrics.statistic_metrics import theils_u
+from scipy.stats import randint
+from sklearn.metrics import explained_variance_score
 from torcheval.metrics import R2Score
 from torchmetrics import MeanAbsoluteError, MeanAbsolutePercentageError
 from turicreate import SFrame
-from sklearn.metrics import explained_variance_score
-from metrics.statistic_metrics import theils_u
-from data.poly_store import get_poly_info
-
 
 mae = MeanAbsoluteError()
 metric = R2Score()
@@ -49,10 +48,10 @@ def run_linear_regression(train, test, features):
     # LINEAR REGRESSION MODEL
     train_r, test_r = SFrame(train), SFrame(test)
     param_distributions = {
-        'n_estimators': randint(10, 200),
-        'max_depth': randint(1, 20),
-        'min_samples_split': randint(2, 20),
-        'min_samples_leaf': randint(1, 20)
+        "n_estimators": randint(10, 200),
+        "max_depth": randint(1, 20),
+        "min_samples_split": randint(2, 20),
+        "min_samples_leaf": randint(1, 20),
     }
 
     model_linear = tc.linear_regression.create(
@@ -86,19 +85,19 @@ def run_decision_tree(train, test, features):
     train_d, test_d = SFrame(train), SFrame(test)
 
     param_distributions = {
-        'max_depth': randint(1, 200),
-        'min_child_weight': randint(0.0, 1.0),
-        'min_loss_reduction': randint(0.0, 1.0)
+        "max_depth": randint(1, 200),
+        "min_child_weight": randint(0.0, 1.0),
+        "min_loss_reduction": randint(0.0, 1.0),
     }
     random_search = RandomizedSearchCV(
         estimator=model,
         param_distributions=param_distributions,
         n_iter=100,
-        scoring='accuracy',
+        scoring="accuracy",
         n_jobs=-1,
         cv=5,
         verbose=1,
-        random_state=42
+        random_state=42,
     )
     # Обучение модели
     random_search.fit(X_train, y_train)
@@ -231,7 +230,7 @@ def run_math_models(poly_paths: list, seebeck_path: str, features: list) -> None
 
 
 def main(just_mp: bool = False):
-    with open("/root/projects/ml-selection/configs/config.yaml", "r") as yamlfile:
+    with open("ml_selection/configs/config.yaml", "r") as yamlfile:
         yaml_f = yaml.load(yamlfile, Loader=yaml.FullLoader)
         raw_mpds = yaml_f["raw_mpds"]
 

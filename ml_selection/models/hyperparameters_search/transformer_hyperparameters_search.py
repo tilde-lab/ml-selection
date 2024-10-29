@@ -5,7 +5,6 @@ Selection of hyperparameters for GCN.
 import optuna
 import polars as pl
 import torch
-
 from models.neural_network_models.transformer.transformer_reg import TransformerModel
 
 BEST_WEIGHTS = None
@@ -17,7 +16,7 @@ def main(
 ):
     poly = pl.read_json(poly_path)
     seebeck = pl.read_json(
-        "/root/projects/ml-selection/data/raw_mpds/median_seebeck.json"
+        "ml_selection/data/raw_mpds/median_seebeck.json"
     )
     poly = poly.with_columns(pl.col("phase_id").cast(pl.Int64))
     dataset = seebeck.join(poly, on="phase_id", how="inner").drop(
@@ -84,7 +83,7 @@ def main(
 
 
 if __name__ == "__main__":
-    path = "/root/projects/ml-selection/data/processed_data/poly/3_features.json"
+    path = "ml_selection/data/processed_data/poly/3_features.json"
     features = 3
     temperature = False
     main(path, features, 1, temperature)

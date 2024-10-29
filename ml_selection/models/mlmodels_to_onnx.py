@@ -1,20 +1,19 @@
 """Convert skl models to ONNX"""
 
-import pandas as pd
-import numpy as np
-import yaml
-import onnxruntime as rt
-from skl2onnx.common.data_types import FloatTensorType
-import onnx
-
 from typing import Union
-from skl_models_tune_optuna import load_data, make_descriptors
-from data.poly_store import get_poly_info
-from sklearn.ensemble import RandomForestRegressor
-import torch
-from skl2onnx import convert_sklearn
 
+import numpy as np
+import onnx
+import onnxruntime as rt
+import pandas as pd
+import torch
+import yaml
+from data.poly_store import get_poly_info
 from metrics.compute_metrics import compute_metrics
+from skl2onnx import convert_sklearn
+from skl2onnx.common.data_types import FloatTensorType
+from skl_models_tune_optuna import load_data, make_descriptors
+from sklearn.ensemble import RandomForestRegressor
 
 
 def run_ml_model(
@@ -29,11 +28,15 @@ def run_ml_model(
     r2 = 0
 
     model = RandomForestRegressor(
-        n_estimators=259, max_depth=184,
-        min_samples_leaf=2, min_samples_split=0.0008226399734106349,
-        max_features=285
+        n_estimators=259,
+        max_depth=184,
+        min_samples_leaf=2,
+        min_samples_split=0.0008226399734106349,
+        max_features=285,
     )
-    model.fit(train_x.to_numpy().astype(np.float32), train_y.to_numpy().astype(np.float32))
+    model.fit(
+        train_x.to_numpy().astype(np.float32), train_y.to_numpy().astype(np.float32)
+    )
 
     pred = model.predict(test_x.to_numpy().astype(np.float32))
     r2, mae, evs, tur = compute_metrics(
@@ -54,7 +57,7 @@ def convert_to_onnx(model: RandomForestRegressor, num: str) -> None:
     model : RandomForestRegressor
         Trained model
     """
-    initial_type = [('input', FloatTensorType([None, 103]))]
+    initial_type = [("input", FloatTensorType([None, 103]))]
     onx = convert_sklearn(model, initial_types=initial_type, target_opset=10)
     onnx_model_path = f"random_forest_conductivity_{num}.onnx"
     onnx.save(onx, onnx_model_path)
@@ -62,7 +65,9 @@ def convert_to_onnx(model: RandomForestRegressor, num: str) -> None:
 
 def check_metrics_in_onnx(test_x: pd.DataFrame, test_y: pd.DataFrame):
     """Сheck metrics for ONNX model"""
-    sess = rt.InferenceSession("random_forest.onnx", providers=rt.get_available_providers())
+    sess = rt.InferenceSession(
+        "random_forest.onnx", providers=rt.get_available_providers()
+    )
     pred_ort = sess.run(None, {"input": test_x.to_numpy().astype(np.float32)})
     r2, mae, evs, tur = compute_metrics(
         torch.tensor(pred_ort).squeeze(-1).squeeze(-2), torch.tensor(test_y.values)
@@ -71,8 +76,8 @@ def check_metrics_in_onnx(test_x: pd.DataFrame, test_y: pd.DataFrame):
 
 
 def main():
-    """Run """
-    with open("/root/projects/ml-selection/configs/config.yaml", "r") as yamlfile:
+    """Run"""
+    with open("ml_selectionn/configs/config.yaml", "r") as yamlfile:
         yaml_f = yaml.load(yamlfile, Loader=yaml.FullLoader)
         raw_mpds = yaml_f["raw_mpds"]
 

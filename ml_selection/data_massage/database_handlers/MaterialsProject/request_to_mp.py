@@ -1,13 +1,15 @@
 # See here https://contribs-api.materialsproject.org/#/contributions/queryContributions
-import yaml
-from yaml import Loader
-from mpcontribs.client import Client
-from mp_api.client import MPRester
-from ml_selection.data_massage.data_handler import DataHandler
 import json
-import polars as pl
 
-conf_path = "/root/projects/ml-selection/configs/config.yaml"
+import polars as pl
+import yaml
+from mp_api.client import MPRester
+from mpcontribs.client import Client
+from yaml import Loader
+
+from ml_selection.data_massage.data_handler import DataHandler
+
+conf_path = "ml_selection/configs/config.yaml"
 
 
 class RequestMP:
@@ -159,6 +161,6 @@ class RequestMP:
 
 
 if __name__ == "__main__":
-    path = "/root/projects/ml-selection/configs/config.yaml"
+    path = "ml_selection/configs/config.yaml"
     dfrm = RequestMP().request_all_data()
     print()

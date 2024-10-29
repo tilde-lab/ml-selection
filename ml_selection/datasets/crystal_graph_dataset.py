@@ -1,10 +1,9 @@
 import polars as pl
 import torch
 from ase.data import chemical_symbols
+from data.mendeleev_table import get_periodic_number
 from torch.utils.data import Dataset
 from torch_geometric.data import Data
-
-from data.mendeleev_table import get_periodic_number
 
 
 class CrystalGraphDataset(Dataset):
@@ -17,7 +16,7 @@ class CrystalGraphDataset(Dataset):
     def __init__(self):
         super().__init__()
         self.transform = self.build_graph
-        self.file_path = "/root/projects/ml-selection/data/processed_data/total.json"
+        self.file_path = "ml_selection/data/processed_data/total.json"
         self.data_json = pl.read_json(self.file_path)
         self.data = [list(self.data_json.row(i)) for i in range(len(self.data_json))]
 

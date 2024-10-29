@@ -5,11 +5,10 @@ Test for build graph by CrystalGraphDataset
 import unittest
 
 import polars as pd
+from datasets.crystal_graph_dataset import CrystalGraphDataset
 from torch import Tensor
 from torch_geometric.data import Data
 from torch_geometric.loader import DataLoader
-
-from datasets.crystal_graph_dataset import CrystalGraphDataset
 
 
 class TestRequestMPDS(unittest.TestCase):
@@ -17,7 +16,7 @@ class TestRequestMPDS(unittest.TestCase):
         # DataFrame with columns:
         # ['phase_id', 'Formula', 'Seebeck coefficient', 'cell_abc', 'sg_n', 'basis_noneq', 'els_noneq']
         self.dfrm = self.data_csv = pd.read_csv(
-            "/root/projects/ml-selection/data/processed_data/total.csv"
+            "ml_selection/data/processed_data/total.csv"
         )
         self.dataset = CrystalGraphDataset()
 

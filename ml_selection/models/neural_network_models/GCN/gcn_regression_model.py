@@ -1,5 +1,12 @@
+import pickle
+
+import numpy as np
 import torch
 import torch.nn.functional as F
+import yaml
+from data.poly_store import get_poly_info
+from datasets.poly_graph_dataset import PolyGraphDataset
+from metrics.statistic_metrics import theils_u
 from sklearn.metrics import explained_variance_score
 from torch_geometric.loader import DataLoader
 from torch_geometric.nn import GCNConv, Linear
@@ -7,19 +14,12 @@ from torch_geometric.utils import scatter
 from torcheval.metrics import R2Score
 from torchmetrics import MeanAbsoluteError, MeanAbsolutePercentageError
 from tqdm import tqdm
-import pickle
-import yaml
-import numpy as np
-
-from data.poly_store import get_poly_info
-from metrics.statistic_metrics import theils_u
-from datasets.poly_graph_dataset import PolyGraphDataset
 
 r2 = R2Score()
 mae = MeanAbsoluteError()
 mape = MeanAbsolutePercentageError()
 
-CONF = "/root/projects/ml-selection/configs/config.yaml"
+CONF = "ml_selection/configs/config.yaml"
 
 with open(CONF, "r") as yamlfile:
     yaml_f = yaml.load(yamlfile, Loader=yaml.FullLoader)

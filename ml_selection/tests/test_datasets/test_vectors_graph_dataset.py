@@ -5,18 +5,17 @@ Test for build graph by CrystalGraphVectorsDataset
 import unittest
 
 import polars as pl
-from torch_geometric.data import Data
-
 from datasets.vectors_graph_dataset import CrystalGraphVectorsDataset
+from torch_geometric.data import Data
 
 
 class TestRequestMPDS(unittest.TestCase):
     def setUp(self):
         self.total = pl.read_csv(
-            "/root/projects/ml-selection/data/processed_data/rep_vect_str.csv",
+            "ml_selection/data/processed_data/rep_vect_str.csv",
         )
         self.seebeck = pl.read_csv(
-            "/root/projects/ml-selection/data/processed_data/rep_vect_seebeck.csv",
+            "ml_selection/data/processed_data/rep_vect_seebeck.csv",
         )
 
         self.dataset = CrystalGraphVectorsDataset()

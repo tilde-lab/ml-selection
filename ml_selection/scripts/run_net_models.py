@@ -1,19 +1,21 @@
 """
 Running hyperparameter selection for all models
 """
+
 import yaml
 from data.poly_store import get_poly_info
-from models.hyperparameters_search import (gat_hyperparameters_search,
-                                           gcn_hyperparameters_search,
-                                           point_net_hyperparameters_search,
-                                           transformer_hyperparameters_search)
-
-from models.neural_network_models.GCN import gcn_regression_model
+from models.hyperparameters_search import (
+    gat_hyperparameters_search,
+    gcn_hyperparameters_search,
+    point_net_hyperparameters_search,
+    transformer_hyperparameters_search,
+)
 from models.neural_network_models.GAT import gat_regression_model
+from models.neural_network_models.GCN import gcn_regression_model
 from models.neural_network_models.PointNet import pointnet_model
 from models.neural_network_models.transformer import transformer_reg
 
-CONF = "/root/projects/ml-selection/configs/config.yaml"
+CONF = "ml_selection/configs/config.yaml"
 
 with open(CONF, "r") as yamlfile:
     yaml_f = yaml.load(yamlfile, Loader=yaml.FullLoader)
@@ -22,12 +24,12 @@ with open(CONF, "r") as yamlfile:
 models_in_num = {"0": "GCN", "1": "GAT", "2": "Transformer", "3": "PointNet"}
 seebeck_path = f"{raw_mpds}median_seebeck.json"
 (
-        poly_dir_path,
-        poly_path,
-        poly_just_graph_models,
-        poly_features,
-        poly_temperature_features,
-    ) = get_poly_info()
+    poly_dir_path,
+    poly_path,
+    poly_just_graph_models,
+    poly_features,
+    poly_temperature_features,
+) = get_poly_info()
 point_features = [3, 4]
 
 total_features = []
@@ -35,13 +37,13 @@ total_features.append(poly_features), total_features.append(poly_temperature_fea
 
 
 def run_net_models(epoch: int, name_to_save_w: str, just_mp: bool = False):
-    print('START TRANSFORMER')
+    print("START TRANSFORMER")
     transformer_reg.main(epoch=epoch, name_to_save=name_to_save_w, just_mp=just_mp)
-    print('START GCN')
+    print("START GCN")
     gcn_regression_model.main(epoch=epoch, name_to_save=name_to_save_w, just_mp=just_mp)
-    print('START GAT')
+    print("START GAT")
     gat_regression_model.main(epoch=epoch, name_to_save=name_to_save_w, just_mp=just_mp)
-    print('START PONIT NET')
+    print("START PONIT NET")
     pointnet_model.main(epoch=epoch, name_to_save=name_to_save_w, just_mp=just_mp)
 
 
@@ -136,11 +138,15 @@ def run_hypp_search_net_models(with_except=True) -> list:
                 print(f"---------START TRAIN NET on descriptor {idx}---------")
 
                 print(f"\n\n---------GCN---------")
-                gcn_res = gcn_hyperparameters_search.main(path, len(features[idx]), idx, temperature)
+                gcn_res = gcn_hyperparameters_search.main(
+                    path, len(features[idx]), idx, temperature
+                )
                 total_res_gcn.append(gcn_res)
 
                 print(f"\n\n---------GAT---------")
-                gat_res = gat_hyperparameters_search.main(path, len(features[idx]), idx, temperature)
+                gat_res = gat_hyperparameters_search.main(
+                    path, len(features[idx]), idx, temperature
+                )
                 total_res_gat.append(gat_res)
 
                 print(f"\n\n---------Transformer---------")
@@ -208,4 +214,4 @@ def main_hypp():
 
 
 if __name__ == "__main__":
-    run_net_models(epoch=10, name_to_save_w='04_06', just_mp=True)
+    run_net_models(epoch=10, name_to_save_w="04_06", just_mp=True)

@@ -1,10 +1,11 @@
+import pandas as pd
+import polars as pl
 import yaml
 from yaml import Loader
-import polars as pl
-from ml_selection.data_massage.database_handlers.MPDS.request_to_mpds import RequestMPDS
-import pandas as pd
 
-CONF = "/root/projects/ml-selection/configs/config.yaml"
+from ml_selection.data_massage.database_handlers.MPDS.request_to_mpds import RequestMPDS
+
+CONF = "ml_selection/configs/config.yaml"
 
 
 class MPDS_MP_Adapter:

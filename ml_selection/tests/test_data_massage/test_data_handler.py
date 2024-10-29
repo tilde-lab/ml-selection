@@ -6,18 +6,17 @@ import unittest
 
 import polars as pl
 import yaml
-
 from data_massage.calculate_median_value import seebeck_median_value
 from data_massage.data_handler import DataHandler
 
 
 class TestDataHandler(unittest.TestCase):
     def setUp(self):
-        with open("/root/projects/ml-selection/configs/config.yaml", "r") as yamlfile:
+        with open("ml_selection/configs/config.yaml", "r") as yamlfile:
             self.api_key = yaml.load(yamlfile, Loader=yaml.FullLoader)["api_key"]
 
         self.raw_path = "/data/raw_mpds/"
-        self.processed_path = "/root/projects/ml-selection/data/processed_data/"
+        self.processed_path = "ml_selection/data/processed_data/"
         self.handler = DataHandler(True, self.api_key)
         self.phases = [
             65536,
