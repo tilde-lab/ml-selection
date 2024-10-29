@@ -17,9 +17,9 @@ def get_poly_elements(poly: list) -> list:
     elements  : list
          Periodic numbers of elements
     """
-    if poly[9] == None:
+    if poly == None:
         return [None]
-    formula = re.sub(r"(?<=\w)([A-Z])", r" \1", poly[9])
+    formula = re.sub(r"(?<=\w)([A-Z])", r" \1", poly)
     composition = formula.replace("<sub>", " ").replace("</sub>", " ").split(" ")
     elements = []
 

@@ -11,12 +11,8 @@ sys.path.append(os.getcwd())
 
 
 from ml_selection.structures_props.mendeleev_table import periodic_numbers
-from ml_selection.data_massage.polyhedra.create_polyhedra import (
-    get_poly_elements,
-    size_customization
-)
 from ml_selection.structures_props.mendeleev_table import get_periodic_number
-
+from ml_selection.data_massage.polyhedra.create_polyhedra import get_poly_elements
 from ase.data import atomic_numbers, chemical_symbols
 from ase.spacegroup import crystal
 
@@ -26,15 +22,14 @@ from ml_selection.data_massage.polyhedra.get_poly_from_ase import sg_to_crystal_
 # change path if another
 from metis_backend.structures.struct_utils import order_disordered
 
-poly_type_map = {
-    "cubic": 120,
-    "hexagonal": 120 + 1,
-    "orthorhombic": 70,
-    # typo... Must be 80 (TODO: change in next experiment)
-    "tetragonal": 80,
-    "monoclinic": 80 + 1,
-    "triclinic": 80 + 2,
-    "trigonal": 80 + 3,
+cell_map = {
+    "cubic": 1,
+    "hexagonal": 2,
+    "orthorhombic": 3,
+    "tetragonal": 4,
+    "monoclinic": 5,
+    "triclinic": 6,
+    "trigonal": 7,
 }
 
 class DataHandler:
@@ -490,7 +485,7 @@ class DataHandler:
         return count_el
 
     @classmethod
-    def process_polyhedra(cls, crystals_json_path: str) -> DataFrame:
+    def process_polyhedra_descriptor(cls, crystals_json_path: str) -> DataFrame:
         """
         Create descriptor from polyhedra
 
@@ -506,7 +501,7 @@ class DataHandler:
         -------
         dfrm : DataFrame
            Table with next columns:
-           "phase_id", "poly_elements", "poly_type"
+           "phase_id", "entry", "descriptor"
            
         Examples
         -------
@@ -534,14 +529,30 @@ class DataHandler:
                 all_poly_in_structure = []
                 last_entry = poly[5]
             
-            poly_type = poly_type_map[sg_to_crystal_system(poly[2])]
+            cell_type = cell_map[sg_to_crystal_system(poly[2])]
+            num_poly_vertex = len(get_poly_elements(poly[-1]))
+            
+            for i in range(0, 10):
+                poly[-3] = poly[-3].replace(str(i), '')
+                
+            try:
+                center_poly = get_periodic_number(poly[-3])
+            except:
+                # for M, T, M(O) and other case
+                center_poly = 119
+            
+            # split type of poly by '-' or '#'
+            # for example: '38#z' to ['38', 'z']. Next -> 38 * 100 + (122 - 26) = 3826
+            poly_type = int(poly[-2].replace('#', ',').replace('-', ',').split(',')[0]) * 100 + ord(poly[-2].replace('#', ',').replace('-', ',').split(',')[1]) - 96
+            
+            cell_feature = 1000000 * cell_type
+            poly_feature = num_poly_vertex * 1000 + center_poly + poly_type + cell_feature
+            
             a, b, c, alpha, beta, gamma = poly[1]
-    
             # Use the crystal function from ASE to create the Atoms object
             atoms = crystal(
                 symbols=poly[4],
                 basis=poly[3],
-                # spacegroup=int(poly[2]), 
                 cellpar=[a, b, c, alpha, beta, gamma]
             )
             atomic_numbers = atoms.get_atomic_numbers()
@@ -553,10 +564,10 @@ class DataHandler:
             distances = np.linalg.norm(positions, axis=1)    
             
             for atom, distance in zip(atomic_elements_periodic, distances):
-                # add atom and distance to descriptor
+                # add atom, poly and distance to descriptor
                 all_poly_in_structure.append(float(atom))
                 all_poly_in_structure.append(distance)
-                all_poly_in_structure.append(float(poly_type))
+                all_poly_in_structure.append(float(poly_feature))
 
         return pl.DataFrame(ready_descriptors, schema=columns)
 

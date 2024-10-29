@@ -70,11 +70,11 @@ def make_poly_descriptor(
     """
     # TODO: add another case: 'large_poly_mpds_mp_seebeck''; (see func combine_structure_and_poly)
     if phys_prop == "Seebeck coefficient":
-        descriptor = hand.process_polyhedra(
+        descriptor = hand.process_polyhedra_descriptor(
             raw_data + "large_poly_mpds_seebeck.json"
         )
     else:
-        descriptor = hand.process_polyhedra(
+        descriptor = hand.process_polyhedra_descriptor(
             raw_data + "large_poly_mpds_conductivity.json"
         )
     
@@ -95,14 +95,14 @@ def get_descriptor(phys_prop: str, just_mp: bool = False) -> None:
     """
     if phys_prop == "Conductivity":
         if not just_mp:
-            make_poly_descriptor("descriptor_mp_conductivity", phys_prop)
-        else:
             make_poly_descriptor("descriptor_mpds_conductivity", phys_prop)
+        else:
+            make_poly_descriptor("descriptor_mp_conductivity", phys_prop)
     else:
         if not just_mp:
-            make_poly_descriptor("descriptor_mp_seeb", phys_prop)
-        else:
             make_poly_descriptor("descriptor_mpds_seeb", phys_prop)
+        else:
+            make_poly_descriptor("descriptor_mp_seeb", phys_prop)
 
     print(
         f"Creating presents of descriptors for PolyDataset are completed"
@@ -121,10 +121,12 @@ def main(just_mp: bool = False, just_mpds: bool = False, structure_file_name: st
         If yes, then data was obtained only from MPDS, load from 'rep_structures_mpds.json'
     structure_file_name: str, "rep_structures_mpds_seeb"
         Name of file with structures
+    phys_prop : str
+        Physical property to create a poly_descriptor. Available: Seebeck coefficient, Conductivity
     """
-    combine_structure_and_poly(just_mp=just_mp, just_mpds=just_mpds, file_name_with_structures=structure_file_name, phys_prop=phys_prop)
+    # combine_structure_and_poly(just_mp=just_mp, just_mpds=just_mpds, file_name_with_structures=structure_file_name, phys_prop=phys_prop)
     get_descriptor(just_mp=just_mp, phys_prop=phys_prop)
 
 
 if __name__ == "__main__":
-    main(just_mpds=True, mpds_file_name="rep_structures_mpds_seeb")
+    main(just_mpds=True, structure_file_name="rep_structures_mpds_seeb", phys_prop="Seebeck coefficient")

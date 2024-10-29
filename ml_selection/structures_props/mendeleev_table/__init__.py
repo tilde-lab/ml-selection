@@ -124,7 +124,4 @@ periodic_numbers = [
 
 
 def get_periodic_number(atom):
-    try:
-        return periodic_numbers[chemical_symbols.index(atom)]
-    except IndexError:
-        raise RuntimeError("Unknown atomic symbol: %s" % atom)
+    return periodic_numbers[chemical_symbols.index(atom)]
