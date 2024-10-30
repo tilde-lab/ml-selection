@@ -42,7 +42,7 @@ def make_study(n_trials, objective_func):
     return res
 
 
-def run_tune_linear_regression(X_train, y_train, X_test, y_test, n_trials=1, num=250):
+def run_tune_linear_regression(X_train, y_train, X_test, y_test, n_trials=1, num=400):
     def objective(trial) -> int:
         """Search of hyperparameters"""
         global BEST_R2, BEST_model
@@ -65,7 +65,7 @@ def run_tune_linear_regression(X_train, y_train, X_test, y_test, n_trials=1, num
             BEST_R2 = r2
             BEST_model = model
             onx = convert_sklearn(model, initial_types=[('input', FloatTensorType([None, 101]))], target_opset=10)
-            onnx.save(onx, f"lr_cond_{num}.onnx")
+            onnx.save(onx, f"lr_cond_{num}_v2.onnx")
 
         return r2
 
@@ -73,7 +73,7 @@ def run_tune_linear_regression(X_train, y_train, X_test, y_test, n_trials=1, num
     return res
 
 
-def run_tune_boosted_trees(X_train, y_train, X_test, y_test, n_trials=1, num=250):
+def run_tune_boosted_trees(X_train, y_train, X_test, y_test, n_trials=1, num=400):
     def objective(trial) -> int:
         """Search of hyperparameters"""
         global BEST_R2, BEST_model
@@ -109,7 +109,7 @@ def run_tune_boosted_trees(X_train, y_train, X_test, y_test, n_trials=1, num=250
             BEST_R2 = r2
             BEST_model = model
             onx = convert_sklearn(model, initial_types=[('input', FloatTensorType([None, 101]))], target_opset=10)
-            onnx.save(onx, f"gb_cond_{num}.onnx")
+            onnx.save(onx, f"gb_cond_{num}_v2.onnx")
 
         return r2
 
@@ -117,7 +117,7 @@ def run_tune_boosted_trees(X_train, y_train, X_test, y_test, n_trials=1, num=250
     return res
 
 
-def run_tune_decision_tree(X_train, y_train, X_test, y_test, n_trials=1, num=250):
+def run_tune_decision_tree(X_train, y_train, X_test, y_test, n_trials=1, num=400):
     def objective(trial) -> int:
         """Search of hyperparameters"""
         global BEST_R2, BEST_model
@@ -150,7 +150,7 @@ def run_tune_decision_tree(X_train, y_train, X_test, y_test, n_trials=1, num=250
             BEST_R2 = r2
             BEST_model = model
             onx = convert_sklearn(model, initial_types=[('input', FloatTensorType([None, 101]))], target_opset=10)
-            onnx.save(onx, f"dt_cond_{num}.onnx")
+            onnx.save(onx, f"dt_cond_{num}_v2.onnx")
 
         return r2
 
@@ -159,7 +159,7 @@ def run_tune_decision_tree(X_train, y_train, X_test, y_test, n_trials=1, num=250
     return res
 
 
-def run_tune_random_forest(X_train, y_train, X_test, y_test, n_trials=1, num=250):
+def run_tune_random_forest(X_train, y_train, X_test, y_test, n_trials=1, num=400):
     def objective(trial) -> int:
         """Search of hyperparameters"""
         global BEST_R2, BEST_model
@@ -193,7 +193,7 @@ def run_tune_random_forest(X_train, y_train, X_test, y_test, n_trials=1, num=250
             BEST_R2 = r2
             BEST_model = model
             onx = convert_sklearn(model, initial_types=[('input', FloatTensorType([None, 101]))], target_opset=10)
-            onnx.save(onx, f"rf_cond_{num}.onnx")
+            onnx.save(onx, f"rf_cond_{num}_v2.onnx")
 
         return r2
 

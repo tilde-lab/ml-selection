@@ -489,7 +489,7 @@ class DataHandler:
         return count_el
 
     @classmethod
-    def process_polyhedra_descriptor(cls, crystals_json_path: str) -> DataFrame:
+    def process_polyhedra_descriptor(cls, crystals_json_path: str, type_of_descriptor: int = 2) -> DataFrame:
         """
         Create descriptor from polyhedra
 
@@ -500,7 +500,11 @@ class DataHandler:
             'phase_id': float, 'occs_noneq': list[float], 'cell_abc': list[list[float]],
             'sg_n': float, 'basis_noneq': list[list[float]], 'els_noneq': list[str],
             'entry': str, 'temperature': float, 'Site': str, 'Type': str, 'Composition': str
-
+        type_of_descriptor : int
+            Available types of descriptor:
+            1 - atom, distance, poly type
+            2 - atom, distance, cell type, number of vertex, type of poly, center atom in poly
+            
         Returns
         -------
         dfrm : DataFrame
@@ -575,7 +579,13 @@ class DataHandler:
                 # add atom, poly and distance to descriptor
                 all_poly_in_structure.append(float(atom))
                 all_poly_in_structure.append(distance)
-                all_poly_in_structure.append(float(poly_feature))
+                if type_of_descriptor == 1:
+                    all_poly_in_structure.append(float(poly_feature))
+                else:
+                    all_poly_in_structure.append(float(cell_feature/1000000))
+                    all_poly_in_structure.append(float(num_poly_vertex))
+                    all_poly_in_structure.append(float(poly_type))
+                    all_poly_in_structure.append(float(center_poly))
 
         return pl.DataFrame(ready_descriptors, schema=columns)
 
