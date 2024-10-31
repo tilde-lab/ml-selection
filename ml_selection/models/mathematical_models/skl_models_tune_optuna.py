@@ -48,7 +48,7 @@ def load_data(poly_path: str, property_path: str) -> pd.DataFrame:
 
 def make_descriptors(data: pd.DataFrame):
     """Create descriptor with same len"""
-    def repeat_to_length(lst, length=250):
+    def repeat_to_length(lst, length=400):
         while len(lst) < length:
             lst += lst
         return lst[:length]
@@ -60,14 +60,7 @@ def make_descriptors(data: pd.DataFrame):
     try:
         y = list(data["Seebeck coefficient"])
     except:
-        y = list(data["Conductivity"])
-        # filter by value
-        for idx, value in enumerate(y):
-            if  25 < value:
-                indexes_to_remove.append(idx)
-                
-        y = [item for i, item in enumerate(y) if i not in indexes_to_remove]
-        x = [item for i, item in enumerate(x) if i not in indexes_to_remove]
+        y = list(data["thermal conductivity"])
 
     train_size = int(0.9 * len(x))
     train_x, test_x = x[:train_size], x[train_size:]
@@ -92,6 +85,6 @@ def run_ml_models(
 
 if __name__ == "__main__":
     # path to file with next column: phase_id, entry, descriptor
-    main("ml_selection/structures_props/processed_data/descriptor_mpds_seeb.json", False, phys_prop='Seebeck coefficient')
-    main("ml_selection/structures_props/processed_data/descriptor_mpds_conductivity.json", False, phys_prop='Conductivity')
+    # main("ml_selection/structures_props/processed_data/descriptor_mpds_seeb_v2.json", False, phys_prop='Seebeck coefficient')
+    main("ml_selection/structures_props/processed_data/descriptor_mpds_conductivity_v1.json", False, phys_prop='Conductivity')
 

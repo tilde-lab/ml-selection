@@ -99,12 +99,12 @@ def get_descriptor(phys_prop: str, just_mp: bool = False) -> None:
     """
     if phys_prop == "Conductivity":
         if not just_mp:
-            make_poly_descriptor("descriptor_mpds_conductivity_v2", phys_prop)
+            make_poly_descriptor("descriptor_mpds_conductivity_v1", phys_prop)
         else:
             make_poly_descriptor("descriptor_mp_conductivity", phys_prop)
     else:
         if not just_mp:
-            make_poly_descriptor("descriptor_mpds_seeb_v2", phys_prop)
+            make_poly_descriptor("descriptor_mpds_seeb_v1", phys_prop)
         else:
             make_poly_descriptor("descriptor_mp_seeb", phys_prop)
 

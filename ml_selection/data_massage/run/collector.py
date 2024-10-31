@@ -124,7 +124,7 @@ def get_structures_and_phys_prop(
             if phys_prop == "Seebeck coefficient":
                 file_path = path_to_save + "rep_structures_mpds_seeb.json"
             else:
-                file_path = path_to_save + "rep_structures_mpds_conductivity.json"
+                file_path = path_to_save + "rep_structures_mpds_conductivity_2.json"
             structures_dfrm.write_json(file_path)
         else:
             try:
@@ -165,23 +165,23 @@ def main():
         is_uniq_structure_for_phase,
         path_to_save=raw_path,
         just_mpds=True,
-        phys_prop="Conductivity",
+        phys_prop="thermal conductivity",
         # !!!will use ordered structures for getting poly (by 'entry') - SEEBECK COEFFICIENT
         # phys_prop="Seebeck coefficient",
         # raw_str_path="ml_selection/structures_props/raw_mpds/rep_structures_mpds_seeb.json",
         # raw_prop_path="ml_selection/structures_props/raw_mpds/seebeck.json",
         # !!!will use for Conductivity
-        raw_str_path="ml_selection/structures_props/raw_mpds/rep_structures_mpds_conductivity.json",
-        raw_prop_path="ml_selection/structures_props/raw_mpds/conductivity.json",
-        min_value=-150,
-        max_value=200,
+        # raw_str_path="ml_selection/structures_props/raw_mpds/rep_structures_mpds_conductivity.json",
+        # raw_prop_path="ml_selection/structures_props/raw_mpds/conductivity.json",
+        # min_value=-150,
+        # max_value=200,
         not_clean_not_ordered_str=False,
     )
     run_processing_polyhedra.main(
         just_mpds=True,
         # !!!for Seebeck
         # mpds_file_name='rep_structures_mpds_seeb',
-        structure_file_name="rep_structures_mpds_conductivity",
+        # structure_file_name="rep_structures_mpds_conductivity",
         phys_prop="Conductivity",
     )
 

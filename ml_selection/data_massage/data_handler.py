@@ -489,7 +489,7 @@ class DataHandler:
         return count_el
 
     @classmethod
-    def process_polyhedra_descriptor(cls, crystals_json_path: str, type_of_descriptor: int = 2) -> DataFrame:
+    def process_polyhedra_descriptor(cls, crystals_json_path: str, type_of_descriptor: int = 1) -> DataFrame:
         """
         Create descriptor from polyhedra
 
