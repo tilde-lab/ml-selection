@@ -1,3 +1,19 @@
+# The dictionary stores information about each of the coordination polyhedra presented in the Pauling File.
+# 
+# It the following format: {polyhedron_type: features}.
+# these features have the format: {vertices, aet, atom_inside, coplanar} 
+# where: vertices - vertices of the polyhedron;
+# aet - [[number of vertex : {figures-faces into which these vertices have}, ...]], 
+# the keys inside {figures-faces into which these vertices have} indicate the number 
+# of vertices of the 2D figure, the values ​​indicate the number;
+# atom_inside - is the central atom inside the polyhedron (bool);
+# coplanar - is the polyhedron coplanar (bool).
+# 
+# For example:
+# "8-c": {"vertices": 8, "aet": [{'6': {'3': 4}}, {'2': {'3': 6}}]},
+# "8-c" is hexagonal bipyramid. It has 8 vertices.
+# Based on "aet", it can be seen that 4 triangles come out of 6 vertices, 6 triangles come out of 2 vertices
+
 polyhedra_properties = {
             "1#a": {"vertices": 1, "aet": [{'1': {}}], "atom_inside": True},
             "2#a": {"vertices": 2, "aet": [{'2': {}}], "atom_inside": True},
@@ -26,12 +42,10 @@ polyhedra_properties = {
             "7-f": {"vertices": 7, "aet": [{'3': {'3': 5}}, {'3': {'3': 3}}, {'1': {'3': 6}}]},
             "7-g": {"vertices": 7, "aet": [{'3': {'3': 5}}, {'3': {'3': 4}}, {'1': {'3': 3}}]},
             "7-h": {"vertices": 7, "aet": [{'5': {'3': 4}}, {'2': {'3': 5}}]},
-            
             "8-a": {"vertices": 8, "aet": [{'8': {'4': 3}}]},
             "8-b": {"vertices": 8, "aet": [{'8': {'3': 3, '4': 1}}]},
             "8-c": {"vertices": 8, "aet": [{'6': {'3': 4}}, {'2': {'3': 6}}]},
             "8-d": {"vertices": 8, "aet": [{'4': {'3': 5}}, {'4': {'3': 4}}]},
-            
             "8-e": {"vertices": 8, "aet": [{'2': {'3': 4, '4': 1}}, {'2': {'3': 3, '4': 1}}, {'2': {'3': 1, '4': 2}}, {'1': {'3': 5}}, {'1': {'3': 3}}]},
             "8-f": {"vertices": 8, "aet": [{'6': {'3': 2, '4': 2}}, {'2': {'3': 3}}]},
             "9-a": {"vertices": 9, "aet": [{'6': {'3': 5}}, {'3': {'3': 4}}]},
@@ -39,7 +53,6 @@ polyhedra_properties = {
             "9-c": {"vertices": 9, "aet": [{'3': {'3': 6}}, {'3': {'3': 5}},  {'3': {'3': 3}}]},
             "9-d": {"vertices": 9, "aet": [{'6': {'3': 1, '4': 1, '6': 1}}, {'3': {'3': 2, '4': 2}}]},
             "9-e": {"vertices": 9, "aet": [{'4': {'3': 5}}, {'4': {'3': 4}},  {'1': {'3': 6}}]},
-            
             "10-a": {"vertices": 10, "aet": [{'6': {'3': 4}}, {'4': {'3': 3}}]},
             "10-b": {"vertices": 10, "aet": [{'6': {'3': 5}}, {'3': {'3': 4}}, {'1': {'3': 6}}]},
             "10-c": {"vertices": 10, "aet": [{'8': {'3': 5}}, {'2': {'3': 4}}]},
@@ -50,7 +63,6 @@ polyhedra_properties = {
             "10-l": {"vertices": 10, "aet": [{'3': {'3': 6}}, {'3': {'3': 5}}, {'3': {'3': 4}}, {'1': {'3': 3}}]},
             "11-a": {"vertices": 11, "aet": [{'9': {'3': 2, '4': 2}}, {'2': {'4': 3}}]},
             "11-b": {"vertices": 11, "aet": [{'8': {'3': 5}}, {'2': {'3': 4}}, {'1': {'3': 5}}]},
-
             "11-d": {"vertices": 11, "aet": [{'4': {'3': 4, '4': 1}}, {'2': {'3': 3, '4': 1}}, {'2': {'3': 2, '4': 2}}, {'2': {'3': 1, '4': 2}},  {'1': {'3': 6}}]},
             "11-e": {"vertices": 11, "aet": [{'4': {'3': 6}}, {'3': {'3': 5}}, {'3': {'3': 4}}, {'1': {'3': 3}}]},
             "11-f": {"vertices": 11, "aet": [{'6': {'3': 5}}, {'3': {'3': 3}}, {'1': {'3': 9}}]},
