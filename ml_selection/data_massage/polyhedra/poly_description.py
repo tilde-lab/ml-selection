@@ -20,10 +20,10 @@ polyhedra_properties = {
             "2#b": {"vertices": 2, "aet": [], "atom_inside": True},
             "3#a": {"vertices": 3, "aet": [], "atom_inside": True},
             "3#b": {"vertices": 3, "aet": [], "atom_inside": False},
-            "4-a": {"vertices": 4, "aet": [], "atom_inside": True}, 
+            "4-a": {"vertices": 4, "aet": [], "atom_inside": True}, # tetrahedron
             "4#b": {"vertices": 4, "aet": [], "atom_inside": False},  # tetrahedron; central atom outside
-            "4#c": {"vertices": 4, "aet": [], "atom_inside": True},  
-            "4#d": {"vertices": 4, "aet": [], "atom_inside": False},  # central atom outside
+            "4#c": {"vertices": 4, "aet": [], "atom_inside": True, "coplanar": True},  
+            "4#d": {"vertices": 4, "aet": [], "atom_inside": False, "coplanar": True},  # central atom outside
             "5-a": {"vertices": 5, "aet": [{'4': {'3': 2, '4': 1}}, {'1': {'3': 4}}]},
             "5-c": {"vertices": 5, "aet": [{'3': {'3': 4}}, {'2': {'3': 3}}]},
             "5#d": {"vertices": 5, "aet": [], "atom_inside": False},  # central atom outside

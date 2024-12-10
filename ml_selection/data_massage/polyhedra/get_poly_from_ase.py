@@ -30,7 +30,7 @@ class Identifier():
     def __init__(self):
         self.poly_PF = polyhedra_properties
         
-    def shapes_count(self, shapes_in_faces: list[list[tuple]]) -> dict:
+    def _shapes_count(self, shapes_in_faces: list[list[tuple]]) -> dict:
         shapes_vertex_count = {}
         
         for shape in shapes_in_faces:
@@ -107,17 +107,63 @@ class Identifier():
             edge_set.update(boundary_edges)
         
         polyhedron_edges = list(edge_set)
-        shapes_vertex_map = self.shapes_count(shapes_2d)
+        shapes_vertex_map = self._shapes_count(shapes_2d)
         return polyhedron_edges, shapes_vertex_map
     
-    def determine_type_poly_pf(self, points: list):
+    def _center_is_outside(self, points: list, center: list) -> bool:
+        structure_set = ConvexHull(points).vertices
+        structure_center_set = ConvexHull(points + [center]).vertices
+        
+        if structure_center_set.tolist() == structure_set.tolist():
+            return True
+        return False
+    
+    def _is_coplanar(self, points: list) -> bool:
+        p1, p2, p3 = points[:3]
+        v1 = np.array(p2) - np.array(p1)
+        v2 = np.array(p3) - np.array(p1)
+
+        normal_vector = np.cross(v1, v2)
+
+        for point in points[3:]:
+            v = np.array(point) - np.array(p1)
+            if not np.isclose(np.dot(normal_vector, v), 0):
+                return False
+
+        return True
+        
+    def determine_type_poly_pf(self, points: list, center_coord: list):
         if len(points) > 4:
             _, shapes_vertex_map = self.get_polyhedron_edges_polygons(points)
-        elif len(points) > 2:
-            NotImplementedError
-            # check atom outside/inside
         elif len(points) == 2:
             return '2#a'
+        elif len(points) > 2:
+            if len(points) == 3:
+                try:
+                    is_inside = not(self._center_is_outside(points + center_coord, center_coord))
+                    return '3#b'
+                except:
+                    return '3#a'
+            if len(points) == 4:
+                try:
+                    is_inside = not(self._center_is_outside(points, center_coord))
+                    if is_inside:
+                        return '4#a'
+                    else:
+                        return '4#b'
+                except:
+                    is_coplanar = self._is_coplanar(points)
+                    # if True -> is inside (cos points + center_coord)
+                    try:
+                        is_inside = self._center_is_outside(points + center_coord, center_coord)
+                        if is_coplanar and is_inside:
+                            return '4#d'
+                        elif is_inside:
+                            return '4#a'
+                        else:
+                            return '4#b'
+                    except:
+                        return '4#c'
         else:
             return '1#a'
         
@@ -141,9 +187,13 @@ class Identifier():
             else:
                 if description_target['aet'] == []:
                     if 'atom_inside' in description_target.keys():
-                        NotImplemented
+                        is_outside = self._center_is_outside(points, center_coord)
+                        if description_target['aet']['atom_inside'] != (is_outside):
+                            return type
                     if 'coplanar' in description_target.keys():
-                        NotImplemented
+                        is_coplanar = self._is_coplanar(points)
+                        if description_target['aet']['coplanar'] != (is_coplanar):
+                            return type
                 else:
                     is_match = True
                     for sample in description_target['aet']:
@@ -225,14 +275,10 @@ def extract_poly(crystal_obj=None, cutoff=None) -> list[dict]:
                 comp[e] = [crystal_obj.symbols[j] for j in indices].count(e)
 
             if (center_atom, comp) not in polyhedrons:
-                print(center_atom, comp)
                 
                 # poly_coords = [crystal_obj.positions[i]]  # start with central atom's position
                 poly_coords = []
                 poly_coords.extend(neighbor_coords)       # Add all neighbor positions
-
-                lattice = sg_to_crystal_system(crystal_obj.info["spacegroup"].no)
-                print(f"Type оf lattice is: {lattice}")
                 
                 try:
                     polyhedron = {
@@ -241,12 +287,8 @@ def extract_poly(crystal_obj=None, cutoff=None) -> list[dict]:
                         "distances": [0.0] + distances.tolist()  # 0.0 for central atom
                     }
                     polyhedrons.append(polyhedron)
-                    print(comp)
-                    print('')           
-                    print('Defined type of polyhedron №', len(polyhedrons))
-                    print('-----------------------------')
                 except:
-                    print('Is not polyhedron')
+                    pass
 
     return polyhedrons
 
@@ -301,6 +343,10 @@ if __name__ == "__main__":
         print(file)
         polyhedrons = get_polyhedrons("ml_selection/structures_props/cif/" + file)
         
+        polyhedrons_types = []
+
         for poly in polyhedrons[0]:
-            poly_type_pf = Identifier().determine_type_poly_pf([i.tolist() for i in poly['neighbors'][1]])
-            print(poly_type_pf)
+            poly_type_pf = Identifier().determine_type_poly_pf([i.tolist() for i in poly['neighbors'][1]], [i for i in poly['center_atom'][1]])
+            if poly_type_pf not in polyhedrons_types:
+                polyhedrons_types.append(poly_type_pf)
+        print('Type of poly is:', polyhedrons_types)
