@@ -15,25 +15,25 @@
 # Based on "aet", it can be seen that 4 triangles come out of 6 vertices, 6 triangles come out of 2 vertices
 
 polyhedra_properties = {
-            "1#a": {"vertices": 1, "aet": [{'1': {}}], "atom_inside": True},
-            "2#a": {"vertices": 2, "aet": [{'2': {}}], "atom_inside": True},
-            "2#b": {"vertices": 2, "aet": [{'2': {}}], "atom_inside": True},
-            "3#a": {"vertices": 3, "aet": [{'3': {}}], "atom_inside": True},
-            "3#b": {"vertices": 3, "aet": [{'3': {}}], "atom_inside": False},
-            "4-a": {"vertices": 4, "aet": [{'4': {}}], "atom_inside": True}, 
-            "4#b": {"vertices": 4, "aet": [{'4': {}}], "atom_inside": False},  # tetrahedron; central atom outside
-            "4#c": {"vertices": 4, "aet": [{'4': {}}], "atom_inside": True},  # central atom outside
-            "4#d": {"vertices": 4, "aet": [{'4': {}}], "atom_inside": False},  # central atom outside
+            "1#a": {"vertices": 1, "aet": [], "atom_inside": True},
+            "2#a": {"vertices": 2, "aet": [], "atom_inside": True},
+            "2#b": {"vertices": 2, "aet": [], "atom_inside": True},
+            "3#a": {"vertices": 3, "aet": [], "atom_inside": True},
+            "3#b": {"vertices": 3, "aet": [], "atom_inside": False},
+            "4-a": {"vertices": 4, "aet": [], "atom_inside": True}, 
+            "4#b": {"vertices": 4, "aet": [], "atom_inside": False},  # tetrahedron; central atom outside
+            "4#c": {"vertices": 4, "aet": [], "atom_inside": True},  
+            "4#d": {"vertices": 4, "aet": [], "atom_inside": False},  # central atom outside
             "5-a": {"vertices": 5, "aet": [{'4': {'3': 2, '4': 1}}, {'1': {'3': 4}}]},
             "5-c": {"vertices": 5, "aet": [{'3': {'3': 4}}, {'2': {'3': 3}}]},
-            "5#d": {"vertices": 5, "aet": [{'5': {}}], "atom_inside": False},  # central atom outside
-            "5#e": {"vertices": 5, "aet": [{'5': {}}], "atom_inside": True, "coplanar": True},
+            "5#d": {"vertices": 5, "aet": [], "atom_inside": False},  # central atom outside
+            "5#e": {"vertices": 5, "aet": [], "atom_inside": True, "coplanar": True},
             "6-a": {"vertices": 6, "aet": [{'6': {'3': 4}}]},
             "6-b": {"vertices": 6, "aet": [{'6': {'3': 1, '4': 2}}]},
             "6-d": {"vertices": 6, "aet": [{'5': {'3': 2, '5': 1}}, {1: {'3': 5}}]},
             "6-h": {"vertices": 6, "aet": [{'2': {'3': 4}}, {'2': {'3': 2, '4': 1}}, {'2': {'3': 3, '4': 1}}]},
-            "6#c": {"vertices": 6, "aet": [{'6': {}}], "coplanar": True},  # coplanar hexagon
-            "6#e": {"vertices": 6, "aet": [{'6': {}}], "atom_inside": False, "coplanar": True},  # non-coplanar hexagon
+            "6#c": {"vertices": 6, "aet": [], "coplanar": True},  # coplanar hexagon
+            "6#e": {"vertices": 6, "aet": [], "atom_inside": False, "coplanar": True},  # non-coplanar hexagon
             "7-a": {"vertices": 7, "aet": [{'3': {'3': 5}}, {'3': {'3': 4}}, {'1': {'3': 3}}]},
             "7-b": {"vertices": 7, "aet": [{'3': {'3': 5}}, {'3': {'3': 3}}, {'1': {'3': 6}}]},
             "7-c": {"vertices": 7, "aet": [{'3': {'3': 2, '4': 2}}, {'3': {'3': 1, '4': 2}}, {'1': {'3': 3}}]},
