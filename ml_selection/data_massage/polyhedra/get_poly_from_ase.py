@@ -11,7 +11,8 @@ from metis_backend.structures.struct_utils import optimade_to_ase, poscar_to_ase
 from scipy.spatial import ConvexHull
 from collections import Counter
 from ml_selection.data_massage.polyhedra.poly_description import polyhedra_properties
-
+from cifkit import Cif
+from cifkit.coordination.geometry import get_polyhedron_coordinates_labels
 
 radius = {
     "cubic": 1.3,
@@ -188,11 +189,11 @@ class Identifier():
                 if description_target['aet'] == []:
                     if 'atom_inside' in description_target.keys():
                         is_outside = self._center_is_outside(points, center_coord)
-                        if description_target['aet']['atom_inside'] != (is_outside):
+                        if description_target['atom_inside'] != (is_outside):
                             return type
                     if 'coplanar' in description_target.keys():
                         is_coplanar = self._is_coplanar(points)
-                        if description_target['aet']['coplanar'] != (is_coplanar):
+                        if description_target['coplanar'] != (is_coplanar):
                             return type
                 else:
                     is_match = True
@@ -226,6 +227,24 @@ def sg_to_crystal_system(num: int):
     else:
         raise RuntimeError("Space group number %s is invalid!" % num)
 
+def extract_poly_by_ciftoolkit(cif_path: str) -> list[list]:
+    cif = Cif(cif_path)
+    site_labels = cif.site_labels
+    
+    poly_store = []
+    
+    # Loop through each site label
+    for label in site_labels:
+        try:
+            connections = cif.CN_connections_by_best_methods
+            coord, _ = get_polyhedron_coordinates_labels(connections, label)
+            # the central atom is last
+            center_atom = coord[-1]
+            composition = coord
+            poly_store.append([composition, center_atom])
+        except:
+            print(f'{label} connection not found')
+    return poly_store
 
 def extract_poly(crystal_obj=None, cutoff=None) -> list[dict]:
     """
@@ -293,7 +312,7 @@ def extract_poly(crystal_obj=None, cutoff=None) -> list[dict]:
     return polyhedrons
 
 
-def get_polyhedrons(path_structures: str = None, structures: str = None) -> list[tuple]:
+def get_polyhedrons_custom(path_structures: str = None, structures: str = None) -> list[tuple]:
     """
     Open structure in file, convert to ASE object and run getting polyhedrons.
 
@@ -334,19 +353,62 @@ def get_polyhedrons(path_structures: str = None, structures: str = None) -> list
     return [poly, spacegroup]
 
 
-if __name__ == "__main__":
+def run_getting_polyhedrons(type_extraction: str = "ciftoolkit", path_to_dir: str = None) -> dict:
+    """
+    Run getting polyhedrons.
+    
+    Parameters
+    ----------
+    type_extraction : str, optional
+        Type of extraction: ciftoolkit, custom. Ciftoolkit supports only cif format.
+    path_to_dir : str, optional
+        Path to directory with structures
+        
+    Returns
+    -------
+    store : dict
+        Store polyhedrons, where key is cif name, value is list of polyhedrons type
+    """
+    store = {}
     onlyfiles = [
-        f for f in listdir("ml_selection/structures_props/cif") if isfile(join("ml_selection/structures_props/cif", f))
+        f for f in listdir(path_to_dir) if isfile(join(path_to_dir, f))
     ]
 
     for file in onlyfiles:
-        print(file)
-        polyhedrons = get_polyhedrons("ml_selection/structures_props/cif/" + file)
-        
         polyhedrons_types = []
 
-        for poly in polyhedrons[0]:
-            poly_type_pf = Identifier().determine_type_poly_pf([i.tolist() for i in poly['neighbors'][1]], [i for i in poly['center_atom'][1]])
-            if poly_type_pf not in polyhedrons_types:
-                polyhedrons_types.append(poly_type_pf)
-        print('Type of poly is:', polyhedrons_types)
+        if type_extraction == "ciftoolkit":
+            try:
+                polyhedrons = extract_poly_by_ciftoolkit(path_to_dir + '/' + file)
+            except Exception as e:
+                print(e)
+                continue
+            for sample in polyhedrons:
+                comp, center = sample
+                poly_type_pf = \
+                Identifier().determine_type_poly_pf(
+                    comp, center
+                )
+                if poly_type_pf not in polyhedrons_types:
+                    polyhedrons_types.append(poly_type_pf)
+        elif type_extraction == "custom":
+            polyhedrons = get_polyhedrons_custom(path_to_dir + '/' + file)
+            for poly in polyhedrons[0]:
+                poly_type_pf = Identifier().determine_type_poly_pf(
+                    [i.tolist() for i in poly['neighbors'][1]], [i for i in poly['center_atom'][1]]
+                )
+                if poly_type_pf not in polyhedrons_types:
+                    polyhedrons_types.append(poly_type_pf)
+        else:
+            raise ValueError("Type of extraction is not supported")
+        store[file] = polyhedrons_types
+        
+    return store
+
+
+if __name__ == "__main__":
+    results = run_getting_polyhedrons(type_extraction="ciftoolkit", path_to_dir="ml_selection/structures_props/cif")
+    for file in results.keys():
+        print(file)
+        print(results[file])
+        print('----------')
