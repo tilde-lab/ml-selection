@@ -1,6 +1,6 @@
 from os import listdir
 from os.path import isfile, join
-
+import time
 import numpy as np
 from ase.neighborlist import NeighborList
 
@@ -236,7 +236,9 @@ def extract_poly_by_ciftoolkit(cif_path: str) -> list[list]:
     # Loop through each site label
     for label in site_labels:
         try:
+            start_time = time.time()
             connections = cif.CN_connections_by_best_methods
+            print(f"Method execution time: {time.time() - start_time:.2f} seconds")
             coord, _ = get_polyhedron_coordinates_labels(connections, label)
             # the central atom is last
             center_atom = coord[-1]
