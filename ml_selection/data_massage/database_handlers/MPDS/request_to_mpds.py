@@ -254,6 +254,31 @@ class RequestMPDS:
         print(f"Answers without table Atomic environments: {loss_data}")
 
         return update_res
+    
+    @staticmethod
+    def request_cif_by_entry(entry: str, sid: str) -> str:
+        """
+        Request CIF file for specific entry.
+        """
+        print("---Started receiving: atomic structure")
+        
+        url = f"https://api.mpds.io/v0/download/s?q={entry}&fmt=cif&sid={sid}&export=1&ed=0"
+        save_path = f"./ml_selection/cif/{entry}.cif"
+        
+        try:
+            response = requests.get(url, stream=True)
+            ans = response.content
+            response.raise_for_status()  
+            with open(save_path, 'wb') as file:
+                for chunk in response.iter_content(chunk_size=8192):  
+                    file.write(chunk)
+            print(f"File successfully downloaded: {save_path}")
+            
+            return ans
+        except requests.exceptions.RequestException as e:
+            print(f"Error during file download: {e}")
+            return False
+        
 
     @staticmethod
     def request_cif(api_key: str):

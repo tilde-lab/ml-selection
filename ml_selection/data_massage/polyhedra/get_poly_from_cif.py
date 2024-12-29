@@ -135,7 +135,10 @@ class Identifier():
         
     def determine_type_poly_pf(self, points: list, center_coord: list):
         if len(points) > 4:
-            _, shapes_vertex_map = self.get_polyhedron_edges_polygons(points)
+            try:
+                _, shapes_vertex_map = self.get_polyhedron_edges_polygons(points)
+            except:
+                return str(len(points)) + '-a'
         elif len(points) == 2:
             return '2#a'
         elif len(points) > 2:
@@ -149,7 +152,7 @@ class Identifier():
                 try:
                     is_inside = not(self._center_is_outside(points, center_coord))
                     if is_inside:
-                        return '4#a'
+                        return '4-a'
                     else:
                         return '4#b'
                 except:
@@ -160,7 +163,7 @@ class Identifier():
                         if is_coplanar and is_inside:
                             return '4#d'
                         elif is_inside:
-                            return '4#a'
+                            return '4-a'
                         else:
                             return '4#b'
                     except:
@@ -206,7 +209,7 @@ class Identifier():
                     else:
                         continue
         
-        return str(len(points)) + '#a'
+        return str(len(points)) + '-a'
         
 
 def sg_to_crystal_system(num: int):
@@ -400,7 +403,7 @@ def run_getting_polyhedrons(type_extraction: str = "ciftoolkit", path_to_dir: st
                     [i.tolist() for i in poly['neighbors'][1]], [i for i in poly['center_atom'][1]]
                 )
                 if poly_type_pf not in polyhedrons_types:
-                    polyhedrons_types.append(poly_type_pf)
+                    polyhedrons_types.append([poly_type_pf, poly['neighbors'][0]])
         else:
             raise ValueError("Type of extraction is not supported")
         store[file] = polyhedrons_types

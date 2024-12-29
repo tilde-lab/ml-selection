@@ -5,6 +5,8 @@ from random import randrange
 from ml_selection.data_massage.database_handlers.MPDS.request_to_mpds import RequestMPDS
 from ml_selection.data_massage.polyhedra.search_poly import search_poly_by_entry
 
+import time
+
 
 def get_random_s_entry() -> str:
     """Return a random existing entry from MPDS"""
@@ -389,6 +391,7 @@ def get_structure_with_exist_poly(
 
     if not from_dir:
         while not (succes):
+            time.sleep(3)
             entry = get_random_s_entry()
 
             poly = RequestMPDS.request_polyhedra(sid, [entry])
@@ -399,12 +402,16 @@ def get_structure_with_exist_poly(
                 if poly[0][1] == []:
                     continue
                 else:
-                    cif = RequestMPDS.request_cif(api_key, entry.replace(" ", ""))
-                    if str(cif) != '{"error":"Unknown entry type"}' and cif != None:
+                    cif = RequestMPDS.request_cif_by_entry(entry, sid)
+                    if not(cif):
+                        succes = False
+                    else:
                         succes = True
             else:
-                cif = RequestMPDS.request_cif(api_key, entry.replace(" ", ""))
-                if str(cif) != '{"error":"Unknown entry type"}' and cif != None:
+                cif = RequestMPDS.request_cif_by_entry(entry, sid)
+                if not(cif):
+                    succes = False
+                else:
                     succes = True
     # get cif from local dir, by entry
     else:

@@ -19,7 +19,7 @@ from ase.spacegroup import crystal
 from metis_backend.structures.struct_utils import order_disordered
 from ml_selection.data_massage.database_handlers.MPDS.request_to_mpds import RequestMPDS
 from ml_selection.data_massage.polyhedra.create_polyhedra import get_poly_elements
-from ml_selection.data_massage.polyhedra.get_poly_from_ase import sg_to_crystal_system
+from ml_selection.data_massage.polyhedra.get_poly_from_cif import sg_to_crystal_system
 from ml_selection.structures_props.mendeleev_table import (
     get_periodic_number,
     periodic_numbers,
@@ -558,8 +558,11 @@ class DataHandler:
             )
 
             cell_feature = 1000000 * cell_type
+            # poly_feature = (
+            #     num_poly_vertex * 1000 + center_poly + poly_type + cell_feature
+            # )
             poly_feature = (
-                num_poly_vertex * 1000 + center_poly + poly_type + cell_feature
+                num_poly_vertex * 1000 + cell_feature
             )
 
             a, b, c, alpha, beta, gamma = poly[1]

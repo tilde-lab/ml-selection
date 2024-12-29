@@ -7,7 +7,7 @@ import chemparse
 from ml_selection.data_massage.database_handlers.MPDS.mpds_utils import (
     get_structure_with_exist_poly,
 )
-from ml_selection.data_massage.polyhedra.get_poly_from_ase import get_polyhedrons
+from ml_selection.data_massage.polyhedra.get_poly_from_cif import get_polyhedrons
 
 
 def compare_poly(sid: str, api_key: str, num: int):
