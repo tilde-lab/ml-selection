@@ -58,12 +58,19 @@ def run_comparison(api_key: str, sid: str, n_iteration: int = 10, type_extractio
         except:
             print('CIF in invalid format, polyhedron definition ended in error')
             continue
-        poly_true = [[i[1], formula_to_dict_pymatgen(i[2])] for i in clean_repeat(poly[0][1])]
         
+        if type_extraction == 'custom':
+            poly_true = [[i[1], formula_to_dict_pymatgen(i[2])] for i in clean_repeat(poly[0][1])]
+        else:
+            poly_true = [i[1] for i in clean_repeat(poly[0][1])]
+            
         try:
-            poly_pred = [[polyhedra_types[key[0]], key[1]] for key in clean_repeat(list(custom_poly.items())[-1][1])]
+            if type_extraction == 'custom':
+                poly_pred = [[polyhedra_types[key[0]], key[1]] for key in clean_repeat(list(custom_poly.items())[-1][1])]
+            else:
+                poly_pred = [polyhedra_types[key] for key in clean_repeat(list(custom_poly.items())[-1][1])]
         except:
-            print('The found polyhedron does not exist in the annotation PF. Probable cause: too many vertices')
+            print('The found polyhedron does not exist in the annotation PF. Probable cause: too many vertices or no poly')
             store_acc.append(0)
             continue
         
@@ -82,4 +89,4 @@ def run_comparison(api_key: str, sid: str, n_iteration: int = 10, type_extractio
         
     print('Average percentage of correct polyhedra: ', sum(store_acc)/len(store_acc))
         
-run_comparison('KEY', 'SID')
+run_comparison('API_KEY', 'SID', 10, 'ciftoolkit')

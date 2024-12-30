@@ -245,7 +245,7 @@ def extract_poly_by_ciftoolkit(cif_path: str) -> list[list]:
             coord, _ = get_polyhedron_coordinates_labels(connections, label)
             # the central atom is last
             center_atom = coord[-1]
-            composition = coord
+            composition = coord[:-1]
             poly_store.append([composition, center_atom])
         except:
             print(f'{label} connection not found')
