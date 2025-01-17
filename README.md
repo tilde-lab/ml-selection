@@ -18,7 +18,7 @@ The folder `summary` includes experiment metrics.
 
 ## Reproducing this work
 
-Training data is obtained from [MPDS database](https://developer.mpds.io) and compared to [Materials Project](https://materialsproject.org).
+Training data is obtained from [MPDS database](https://developer.mpds.io) and compared to [Materials Project](https://materialsproject.org). This work was started in the [other repository](https://github.com/tilde-lab/ml-playground).
 
 
 ## References
