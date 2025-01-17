@@ -1,6 +1,6 @@
 # Machine learning for atomistic modeling: descriptor selection
 
-Alina Zhidkovskaya, [Tirtha Vinchurkar](https://orcid.org/0000-0001-5274-3592), and [Evgeny Blokhin](https://orcid.org/0000-0002-5333-3947)<br />
+[Alina Zhidkovskaya](https://orcid.org/0009-0003-9305-0030), [Tirtha Vinchurkar](https://orcid.org/0000-0001-5274-3592), and [Evgeny Blokhin](https://orcid.org/0000-0002-5333-3947)<br />
 Tilde Materials Informatics and Materials Platform for Data Science LLC
 
 
