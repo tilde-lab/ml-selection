@@ -353,7 +353,3 @@ class RequestMPDS:
                 continue
 
         print("---Successfully saved all files")
-
-
-if __name__ == "__main__":
-    RequestMPDS.request_cif("wkBcobukIiozTs3EpjibV5meOKs3wIDJZEwDtRn4cr9HWgrW")
